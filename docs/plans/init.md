@@ -1,5 +1,5 @@
 ---
-status: ACTIVE
+status: IMPLEMENTING
 planning_mode: PRODUCT
 design_doc: /Users/robertkarl/.gauntlette/designs/cinderella/init-design-20260422-170500.md
 ---
@@ -818,10 +818,10 @@ Idle screen copy is project-specific: "Working in myproject/ (47 files). Ask me 
 | Design Review | `/gauntlette-design-review` | 1 | CLEAR | 7 wireframes, 7 dimension ratings (avg 6.7). Keybindings: Claude Code parity (raises TUI effort M→L). Tool display: always expanded. Status bar: all 5 metrics. Quants: raw in status, explained on download screen. NO_COLOR baseline for a11y. No slop. |
 | Engineering Review | `/gauntlette-eng-review` | 1 | CLEAR | 8 architectural decisions resolved. Drop llmfit (read RAM directly). Hardcoded model registry. Bundle 9B GGUF + llama-server in release (one green button). Single crate flat layout. yah-core for bash safety. Tool call reliability is first-class (JSON repair + retry). Auto-restart llama-server on crash. macOS 13+ minimum. |
 | Fresh Eyes | `/gauntlette-fresh-eyes` | 1 | CLEAR | 16 findings: 3 critical, 6 important, 7 minor. User accepted 6 (CDN hosting, code signing, context mgmt, bash timeout, KV cache RAM, streaming). Skipped 5 minor items. Model confirmed: Qwen3.5-9B-abliterated Q4_K_M. |
-| Implementation | `/gauntlette-implement` | 0 | — | — |
+| Implementation | `/gauntlette-implement` | 1 | DONE | Full v0.1.0 implementation. 14 source files, 32 tests passing. SSE streaming LLM client with JSON repair. Agent loop with context management. 5 tools (read/write/edit/bash/ls). Ratatui TUI with status bar + keybindings. HW detection via sysctl. llama-server lifecycle with auto-restart. yah-core bash safety classification. Hardcoded Qwen 3.5 model registry. |
 | Code Review | `/gauntlette-code-review` | 0 | — | — |
 | QA | `/gauntlette-quality-check` | 0 | — | — |
 | Human Review | `/gauntlette-human-review` | 0 | — | — |
 | Ship It | `/gauntlette-ship-it` | 0 | — | — |
 
-**VERDICT:** CLEAR — All reviews passed. CEO CLEAR, design CLEAR, engineering CLEAR, fresh eyes CLEAR. Proceed to /gauntlette-implement.
+**VERDICT:** IMPLEMENTING — All reviews passed. Implementation complete. Proceed to /gauntlette-code-review.
