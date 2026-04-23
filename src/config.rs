@@ -219,3 +219,59 @@ pub fn tool_definitions() -> Vec<serde_json::Value> {
     .unwrap()
     .clone()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_bundled_model_sanity() {
+        assert!(!BUNDLED_MODEL.name.is_empty());
+        assert!(!BUNDLED_MODEL.filename.is_empty());
+        assert!(BUNDLED_MODEL.size_gb > 0.0);
+        assert!(BUNDLED_MODEL.total_ram_required_gb > BUNDLED_MODEL.size_gb);
+        assert!(BUNDLED_MODEL.ctx_size > 0);
+        assert!(BUNDLED_MODEL.n_gpu_layers > 0);
+    }
+
+    #[test]
+    fn test_server_config_args() {
+        let cfg = ServerConfig::from_model(
+            std::path::PathBuf::from("/tmp/model.gguf"),
+            8787,
+            &BUNDLED_MODEL,
+        );
+        let args = cfg.to_args();
+        assert!(args.contains(&"--model".to_string()));
+        assert!(args.contains(&"--jinja".to_string()));
+        assert!(args.contains(&"--port".to_string()));
+        assert!(args.contains(&"8787".to_string()));
+    }
+
+    #[test]
+    fn test_tool_definitions_valid() {
+        let tools = tool_definitions();
+        assert_eq!(tools.len(), 5);
+        let names: Vec<&str> = tools
+            .iter()
+            .filter_map(|t| t.get("function").and_then(|f| f.get("name")).and_then(|n| n.as_str()))
+            .collect();
+        assert!(names.contains(&"read_file"));
+        assert!(names.contains(&"write_file"));
+        assert!(names.contains(&"edit_file"));
+        assert!(names.contains(&"bash"));
+        assert!(names.contains(&"ls"));
+    }
+
+    #[test]
+    fn test_cinderella_home() {
+        let home = cinderella_home();
+        assert!(home.to_str().unwrap().contains(".cinderella"));
+    }
+
+    #[test]
+    fn test_models_dir() {
+        let dir = models_dir();
+        assert!(dir.to_str().unwrap().contains("models"));
+    }
+}
