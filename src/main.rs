@@ -29,6 +29,11 @@ struct Cli {
     /// Path to llama-server binary.
     #[arg(long)]
     llama_server: Option<PathBuf>,
+
+    /// Connect to a remote OpenAI-compatible API instead of launching a local llama-server.
+    /// Example: --api-url http://192.168.50.4:11434
+    #[arg(long)]
+    api_url: Option<String>,
 }
 
 #[tokio::main]
@@ -49,6 +54,18 @@ async fn main() -> Result<()> {
         std::process::exit(1);
     }
 
+    if let Some(api_url) = cli.api_url {
+        // Remote mode: skip local server, connect directly
+        let cfg = orchestrator::OrchestratorConfig {
+            project_dir,
+            model_path: cli.model,
+            port: cli.port,
+            llama_server_path: PathBuf::new(),
+            api_url: Some(api_url),
+        };
+        return orchestrator::run(cfg).await;
+    }
+
     // Find llama-server
     let llama_server_path =
         orchestrator::find_llama_server(cli.llama_server.as_deref()).unwrap_or_else(|e| {
@@ -61,6 +78,7 @@ async fn main() -> Result<()> {
         model_path: cli.model,
         port: cli.port,
         llama_server_path,
+        api_url: None,
     };
 
     orchestrator::run(cfg).await

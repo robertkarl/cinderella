@@ -16,10 +16,18 @@ pub struct OrchestratorConfig {
     pub port: u16,
     /// Path to llama-server binary (bundled or system).
     pub llama_server_path: PathBuf,
+    /// Remote API URL — skip local server if set.
+    pub api_url: Option<String>,
 }
 
 /// Run the full orchestration flow.
 pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
+    // Remote mode: skip local server entirely
+    if let Some(ref api_url) = cfg.api_url {
+        println!("Connecting to remote API: {}", api_url);
+        return run_remote(api_url, &cfg).await;
+    }
+
     // Step 1: Detect hardware
     let hw = hw::detect().context("Hardware detection failed")?;
     println!("Hardware: {}", hw);
@@ -131,6 +139,70 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
     agent_handle.abort();
     server.stop().await;
 
+    Ok(())
+}
+
+/// Run with a remote API — no local server.
+async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
+    let (agent_tx, agent_rx) = mpsc::channel::<crate::agent::AgentEvent>(256);
+    let (cmd_tx, mut cmd_rx) = mpsc::channel::<TuiCommand>(32);
+
+    let project_name = cfg
+        .project_dir
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("project")
+        .to_string();
+
+    let initial_status = tui::StatusBar {
+        model_name: "remote".to_string(),
+        quant: String::new(),
+        tok_per_sec: None,
+        ram_used_gb: 0.0,
+        ram_total_gb: 0.0,
+        ctx_used: 0,
+        ctx_max: BUNDLED_MODEL.ctx_size as usize,
+        gpu_layers: "remote".to_string(),
+    };
+
+    let api_url = api_url.to_string();
+    let project_dir = cfg.project_dir.clone();
+    let ctx_size = BUNDLED_MODEL.ctx_size;
+
+    let agent_handle = tokio::spawn(async move {
+        let mut agent = Agent::new(&api_url, project_dir, ctx_size);
+
+        while let Some(cmd) = cmd_rx.recv().await {
+            match cmd {
+                TuiCommand::SendMessage(msg) => {
+                    let tx = agent_tx.clone();
+                    if let Err(e) = agent
+                        .process_message(&msg, |event| {
+                            let _ = tx.try_send(event);
+                        })
+                        .await
+                    {
+                        let _ = agent_tx.send(crate::agent::AgentEvent::Warning(
+                            format!("Error: {}", e),
+                        )).await;
+                    }
+                }
+                TuiCommand::Clear => {
+                    agent.clear();
+                }
+                TuiCommand::Cancel => {
+                    let _ = agent_tx.try_send(crate::agent::AgentEvent::Warning(
+                        "Cancel requested but not yet implemented for in-flight operations.".to_string(),
+                    ));
+                }
+                TuiCommand::Quit => break,
+            }
+        }
+    });
+
+    tui::run(agent_rx, cmd_tx, &project_name, initial_status).await?;
+
+    agent_handle.abort();
     Ok(())
 }
 
