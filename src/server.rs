@@ -54,7 +54,6 @@ impl ServerManager {
             .args(&args)
             .stdout(Stdio::null())
             .stderr(Stdio::null())
-            .process_group(0)
             .spawn()
             .with_context(|| {
                 format!(

@@ -37,6 +37,8 @@ pub struct FunctionCall {
 pub enum StreamEvent {
     /// A chunk of text content.
     TextDelta(String),
+    /// A chunk of thinking/reasoning content.
+    ThinkingDelta(String),
     /// A complete tool call (buffered from stream).
     ToolCallComplete(ToolCall),
     /// Stream finished.
@@ -65,6 +67,7 @@ struct SseChoice {
 #[derive(Deserialize)]
 struct SseDelta {
     content: Option<String>,
+    reasoning_content: Option<String>,
     tool_calls: Option<Vec<SseToolCallDelta>>,
 }
 
@@ -152,6 +155,14 @@ impl LlmClient {
                 if let Some(data) = line.strip_prefix("data: ") {
                     if let Ok(chunk) = serde_json::from_str::<SseChunk>(data) {
                         for choice in &chunk.choices {
+                            // Handle thinking/reasoning content
+                            if let Some(ref text) = choice.delta.reasoning_content {
+                                if !text.is_empty() {
+                                    token_count += 1;
+                                    on_event(StreamEvent::ThinkingDelta(text.clone()));
+                                }
+                            }
+
                             // Handle text content
                             if let Some(ref text) = choice.delta.content {
                                 if !text.is_empty() {

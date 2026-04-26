@@ -17,6 +17,8 @@ const MAX_RETRY_ON_PARSE_FAILURE: u32 = 2;
 pub enum AgentEvent {
     /// Streaming text from the LLM.
     TextDelta(String),
+    /// Streaming thinking/reasoning from the LLM.
+    ThinkingDelta(String),
     /// A tool is about to be executed.
     ToolStart { name: String, args_display: String },
     /// Tool execution completed.
@@ -116,6 +118,9 @@ impl Agent {
                     StreamEvent::TextDelta(text) => {
                         response_text.push_str(&text);
                         on_event(AgentEvent::TextDelta(text));
+                    }
+                    StreamEvent::ThinkingDelta(text) => {
+                        on_event(AgentEvent::ThinkingDelta(text));
                     }
                     StreamEvent::ToolCallComplete(tc) => {
                         response_tool_calls.push(tc);

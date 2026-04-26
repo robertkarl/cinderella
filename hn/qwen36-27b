@@ -1,0 +1,2133 @@
+	Hacker Newsnew | threads | past | comments | ask | show | jobs | submit	robertkarl (88) | logout
+	
+	Qwen3.6-27B: Flagship-Level Coding in a 27B Dense Model (qwen.ai)
+	441 points by mfiguiere 6 hours ago | flag | hide | past | favorite | 231 comments
+	
+	
+ help
+
+
+	
+	
+simonw 3 hours ago | next [–]
+
+The pelican is excellent for a 16.8GB quantized local model: https://simonwillison.net/2026/Apr/22/qwen36-27b/
+
+I ran it on an M5 Pro with 128GB of RAM, but it only needs ~20GB of that. I expect it will run OK on a 32GB machine.
+
+Performance numbers:
+
+  Reading: 20 tokens, 0.4s, 54.32 tokens/s
+  Generation: 4,444 tokens, 2min 53s, 25.57 tokens/s
+
+I like it better than the pelican I got from Opus 4.7 the other day: https://simonwillison.net/2026/Apr/16/qwen-beats-opus/
+
+reply
+	
+	
+throwaw12 2 hours ago | parent | next [–]
+
+I feel like this time it is indeed in the training set, because it is too good to be true.
+
+Can you run your other tests and see the difference?
+
+reply
+	
+	
+simonw 2 hours ago | root | parent | next [–]
+
+It went pretty wild with "Generate an SVG of a NORTH VIRGINIA OPOSSUM ON AN E-SCOOTER":
+
+https://gist.github.com/simonw/95735fe5e76e6fdf1753e6dcce360...
+
+reply
+	
+	
+throwaw12 2 hours ago | root | parent | next [–]
+
+compared to your test with GLM 5.1, this indeed looks off
+
+https://xcancel.com/simonw/status/2041646779553476801
+
+reply
+	
+	
+simonw 2 hours ago | root | parent | next [–]
+
+Yeah GLM 5.1 did an outstanding job on the possum - better than Opus 4.7 or GPT-5.4 and I think better than Gemini 3.1 Pro too.
+
+But GLM 5.1 is a 1.51TB model, the Qwen 3.6 I used here was 17GB - that's 1/88 the size.
+
+reply
+	
+	
+zamadatix 1 hour ago | root | parent | next [–]
+
+The point is in the relative difference between the Pelican vs "other" test for each model suggesting the Pelican is being treated special these days (could be as simple as being common in recent data), not the relative difference between the models on the "other" case in isolation.
+
+reply
+	
+	
+refulgentis 2 hours ago | root | parent | prev | next [–]
+
+Hoping this doesn't turn into a pelican-SVG back-and-forth: yesterday's GPT Image 2 thread ended up being three screenfuls of "I tried the prompt too" replies, and nothing on the model until you scroll past it. I appreciate the testing, and I know this sounds like fun police, but there's a pattern where well-known commenter + one-off vibe test + 1:1 sub-threads eats the whole discussion. It being fun makes it hard to push back on without looking picky.
+
+reply
+	
+	
+simonw 2 hours ago | root | parent | next [–]
+
+You can collapse the pelican thread with the little [-] toggle at the top.
+
+reply
+	
+	
+taspeotis 2 hours ago | root | parent | next [–]
+
+Why would you though?
+
+And by the way: Thanks for relentlessly holding new models’ feet to the pelican SVG fire.
+
+reply
+	
+	
+refulgentis 2 hours ago | root | parent | next [–]
+
+Because I want to read about Qwen, not someone's one-off vibe test followed by 1:1 conversations. (case in miniature here: which is the last comment in this thread that says something about Qwen? The root post. Is that fun policing? Yes, apologies.)
+
+reply
+	
+	
+simonw 1 hour ago | root | parent | next [–]
+
+There's a bunch of useful information in my comment that's independent of the fact that it drew a pelican:
+
+1. You can run this on a Mac using llama-server and a 17GB downloaded file
+
+2. That version does indeed produce output (for one specific task) that's of a good enough quality to be worth spending more time checking out this model
+
+3. It generated 4,444 tokens in 2min 53s, which is 25.57 tokens/s
+
+reply
+	
+	
+refulgentis 1 hour ago | root | parent | next [–]
+
+Right, that is exactly what I meant by "the root post [had info about Qwen]" - you shouldn't feel I'm being critical of you or asking you to do anything different, at all. I admire you deeply and feel humbled* by interacting with you, so I really want that to be 100% clear, because this is the 2nd time I'm reading that it might be personal.
+
+* er, that probably sounds strange, but I did just spend 6 weeks working on integrating the Willison Trifecta for my app I've been building for 2.5 years, and I considered it a release blocker. It's a simple mental model that is a significant UX accomplishment IMHO.
+
+reply
+	
+	
+mlyle 14 minutes ago | root | parent | next [–]
+
+I like the pelican-bicycle test because it's pretty predictive of how the model does helping me with TikZ. And I hate writing TikZ.
+
+	
+	
+interstice 15 minutes ago | root | parent | prev | next [–]
+
+Somewhat ironically - as of when I write this this tangent is dominating the size of this topic.
+
+	
+	
+rob 1 hour ago | root | parent | prev | next [–]
+
+I think it's to help drive traffic to his blog now that he's accepted sponsors in the header of every page. I do see this pelican thing come up from him on every model post that gets released.
+
+reply
+	
+	
+simonw 1 hour ago | root | parent | next [–]
+
+The traffic I get from a comment with a link to a pelican is pretty tiny.
+
+reply
+	
+	
+ai_critic 51 minutes ago | root | parent | next [–]
+
+"Create me an SVG to drive MAXIMUM ENGAGEMENT for my sponsors".
+
+Missing an opportunity here, lol.
+
+reply
+	
+	
+m3kw9 2 hours ago | root | parent | prev | next [–]
+
+if they cook these in, i wonder what else was cooked in there to make it look good.
+
+reply
+	
+	
+zargon 2 hours ago | root | parent | next [–]
+
+Everything is benchmaxxed. Whack-a-mole training is at least as representative of what is getting added to models as more general training advances.
+
+reply
+	
+	
+echelon 4 minutes ago | parent | prev | next [–]
+
+Metrics and toy examples can be gamed. Rather than these silly examples, how does it feel?
+
+Can you replace Claude Code Opus or Codex with this?
+
+Does it feel >80% as good on "real world" tasks you do on a day to day basis.
+
+reply
+	
+	
+ahoog42 1 hour ago | parent | prev | next [–]
+
+at what point do model providers optimize for the "pelican riding a bicycle" test so they place well on Simon's influential benchmark? :-)
+
+reply
+	
+	
+hansonkd 1 hour ago | root | parent | next [–]
+
+They almost certainly are, even if unknowingly, because HN and all blogs get piped continuously into all models' training corpus.
+
+reply
+	
+	
+simonw 1 hour ago | root | parent | prev | next [–]
+
+See https://simonwillison.net/2025/Nov/13/training-for-pelicans-...
+
+reply
+	
+	
+anonzzzies 4 hours ago | prev | next [–]
+
+I wish that all announcements of models would show what (consumer) hardware you can run this on today, costs and tok/s.
+
+reply
+	
+	
+Aurornis 4 hours ago | parent | next [–]
+
+The 27B model they release directly would require significant hardware to run natively at 16-bit: A Mac or Strix Halo 128GB system, multiple high memory consumer GPUs, or an RTX 6000 workstation card.
+
+This is why they don’t advertise which consumer hardware it can run on: Their direct release that delivers these results cannot fit on your average consumer system.
+
+Most consumers don’t run the model they release directly. They run a quantized model that uses a lower number of bits per weight.
+
+The quantizations come with tradeoffs. You will not get the exact results they advertise using a quantized version, but you can fit it on smaller hardware.
+
+The previous 27B Qwen3.5 model had reasonable performance down to Q5 or Q4 depending on your threshold for quality loss. This was usable on a unified memory system (Mac, Strix Halo) with 32GB of extra RAM, so generally a 64GB Mac. They could also be run on an nVidia 5090 with 32GB RAM or a pair of 16GB or 24GB GPUs, which would not run as fast due to the split.
+
+Watch out for some of the claims about running these models on iPhones or smaller systems. You can use a lot of tricks and heavy quantization to run it on very small systems but the quality of output will not be usable. There is a trend of posting “I ran this model and this small hardware” repos for social media bragging rights but the output isn’t actually good.
+
+reply
+	
+	
+ryandrake 3 hours ago | root | parent | next [–]
+
+Yea, this is currently the confusing part of running local models for newbies: Even after you have decided which model you want to run, and which org's quantizations to use (let's just assume Unsloth's for example), there are often dozens of quantizations offered, and choosing among them is confusing.
+
+Say you have a GPU with 20GB of VRAM. You're probably going to be able to run all the 3-bit quantizations with no problem, but which one do you choose? Unsloth offers[1] four of them: UD-IQ3_XXS, Q3_K_S, Q3_K_M, UD-Q3_K_XL. Will they differ significantly? What are each of them good at? The 4-bit quantizations will be a "tight squeeze" on your 20GB GPU. Again, Unsloth steps up to the plate with seven(!!) choices: IQ4_XS, Q4_K_S, IQ4_NL, Q4_0, Q4_1, Q4_K_M, UD-Q4_K_XL. Holy shit where do I even begin? You can try each of them to see what fits on your GPU, but that's a lot of downloading, and then...
+
+Once you [guess and] commit to one of the quantizations and do a gigantic download, you're not done fiddling. You need to decide at the very least how big a context window you need, and this is going to be trial and error. Choose a value, try to load the model, if it fails, you chose too large. Rinse and repeat.
+
+Then finally, you're still not done. Don't forget the parameters: temperature, top_p, top_k, and so on. It's bewildering!
+
+1: https://huggingface.co/unsloth/Qwen3.6-27B-GGUF
+
+reply
+	
+	
+danielhanchen 3 hours ago | root | parent | next [–]
+
+We made Unsloth Studio which should help :)
+
+1. Auto best official parameters set for all models
+
+2. Auto determines the largest quant that can fit on your PC / Mac etc
+
+3. Auto determines max context length
+
+4. Auto heals tool calls, provides python & bash + web search :)
+
+reply
+	
+	
+ryandrake 2 hours ago | root | parent | next [–]
+
+Yea, I actually tried it out last time we had one of these threads. It's undeniably easy to use, but it is also very opinionated about things like the directory locations/layouts for various assets. I don't think I managed to get it to work with a simple flat directory full of pre-downloaded models on an NFS mount to my NAS. It also insists on re-downloading a 3GB model every time it is launches, even after I delete the model file. I probably have to just sit down and do some Googleing/searching in order to rein the software in and get it to work the way I want it to on my system.
+
+reply
+	
+	
+hypercube33 1 hour ago | root | parent | prev | next [–]
+
+Sadly doesn't support fine tuning on AMD yet which gave me a sad since I wanted to cut one of these down to be specific domain experts. Also running the studio is a bit of a nightmare when it calls diskpart during its install (why?)
+
+reply
+	
+	
+WanderPanda 1 hour ago | root | parent | prev | next [–]
+
+I applaud that you recently started providing the KL divergence plots that really help understand how different quantizations compare. But how well does this correlate with closed loop performance? How difficult/expensive would it be to run the quantizations on e.g. some agentic coding benchmarks?
+
+reply
+	
+	
+jbellis 1 hour ago | root | parent | prev | next [–]
+
+what are you using for web search?
+
+reply
+	
+	
+wuschel 3 hours ago | root | parent | prev | next [–]
+
+Great project! Thank you for that!
+
+reply
+	
+	
+cyanydeez 1 hour ago | root | parent | prev | next [–]
+
+Is unsloth working on managing remote servers, like how vscode integrates with a remote server via ssh?
+
+reply
+	
+	
+kristjansson 1 hour ago | root | parent | next [–]
+
+Lmstudio Link is GREAT for that right now
+
+reply
+	
+	
+Aurornis 3 hours ago | root | parent | prev | next [–]
+
+> Say you have a GPU with 20GB of VRAM. You're probably going to be able to run all the 3-bit quantizations with no problem, but which one do you choose? Unsloth offers[1] four of them: UD-IQ3_XXS, Q3_K_S, Q3_K_M, UD-Q3_K_XL
+
+There are actually two problems with this:
+
+First, the 3-bit quants are where the quality loss really becomes obvious. You can get it to run, but you’re not getting the quality you expected. The errors compound over longer sessions.
+
+Second, you need room for context. If you have become familiar with the long 200K contexts you get with SOTA models, you will not be happy with the minimal context you can fit into a card with 16-20GB of RAM.
+
+The challenge for newbies is learning to identify the difference between being able to get a model to run, and being able to run it with useful quality and context.
+
+reply
+	
+	
+zargon 1 hour ago | root | parent | next [–]
+
+Qwen3.5 series is a little bit of an exception to the general rule here. It is incredibly kv cache size efficient. I think the max context (262k) fits in 3GB at q8 iirc. I prefer to keep the cache at full precision though.
+
+reply
+	
+	
+smallerize 1 hour ago | root | parent | prev | next [–]
+
+I found the KLD benchmark image at the bottom of https://unsloth.ai/docs/models/qwen3.6 to be very helpful when choosing a quant.
+
+reply
+	
+	
+ryandrake 3 hours ago | root | parent | prev | next [–]
+
+Yea, I'm also kind of jealous of Apple folks with their unified RAM. On a traditional homelab setup with gobs of system RAM and a GPU with relatively little VRAM, all that system RAM sits there useless for running LLMs.
+
+reply
+	
+	
+zozbot234 2 hours ago | root | parent | next [–]
+
+That "traditional" setup is the recommended setup for running large MoE models, leaving shared routing layers on the GPU to the extent feasible. You can even go larger-than-system-RAM via mmap, though at a non-trivial cost in throughput.
+
+reply
+	
+	
+khimaros 2 hours ago | root | parent | prev | next [–]
+
+Strix Halo is another option
+
+reply
+	
+	
+ndriscoll 3 hours ago | root | parent | prev | next [–]
+
+Note that you could also run them on AMD (and presumably Intel) dGPUs. e.g. I have a 32GB R9700, which is much cheaper than a 5090, and runs 27B dense models at ~20 t/s (or MoE models with 3-4B active at ~80t/s). I expect an Arc B70 would also work soon if it doesn't already, and would likely be the price/perf sweet spot right now.
+
+My R9700 does seem to have an annoying firmware or driver bug[0] that causes the fan to usually be spinning at 100% regardless of temperature, which is very noisy and wastes like 20+ W, but I just moved my main desktop to my basement and use an almost silent N150 minipc as my daily driver now.
+
+[0] Or manufacturing defect? I haven't seen anyone discussing it online, but I don't know how many owners are out there. It's a Sapphire fwiw. It does sometimes spin down, the reported temperatures are fine, and IIRC it reports the fan speed as maxed out, so I assume software bug where it's just not obeying the fan curve
+
+reply
+	
+	
+acrispino 1 hour ago | root | parent | next [–]
+
+I have 2x asrock R9700. One of the them was noticeably noisier than the other and eventually developed an annoying vibration while in the middle of its fan curve. Asrock replaced it under RMA.
+
+reply
+	
+	
+zozbot234 3 hours ago | root | parent | prev | next [–]
+
+Yup, I suppose that these smaller, dense models are in the lead wrt. fast inference with consumer dGPUs (or iGPUs depending on total RAM) with just enough VRAM to contain the full model and context. That won't give you anywhere near SOTA results compared to larger MoE models with a similar amount of active parameters, but it will be quite fast.
+
+reply
+	
+	
+muyuu 3 hours ago | root | parent | prev | next [–]
+
+i have a Strix Halo machine
+
+typically those dense models are too slow on Strix Halo to be practical, expect 5-7 tps
+
+you can get an idea by looking at other dense benchmarks here: https://strixhalo.zurkowski.net/experiments - i'd expect this model to be tested here soon, i don't think i will personally bother
+
+reply
+	
+	
+hedgehog 3 hours ago | root | parent | next [–]
+
+This one is around 250 t/s prefill and 12.4 generation in my testing.
+
+reply
+	
+	
+anonym29 8 minutes ago | root | parent | next [–]
+
+similar numbers here - slightly higher PP. slightly better peak speed and retention w/ q8_0 kv cache quants too. llama-bench results here, cba to format for hn: https://pastebin.com/raw/zgJeqRbv
+
+GTR 9 Pro, "performance" profile in BIOS, GTT instead of GART, Fedora 44
+
+reply
+	
+	
+wuschel 3 hours ago | root | parent | prev | next [–]
+
+> but the quality of output will not be usable
+
+Making the the right pick for model is one of the key problems as a local user. Do you have any references where one can see a mapping of problem query to model response quality?
+
+reply
+	
+	
+alex7o 1 hour ago | root | parent | prev | next [–]
+
+Because when you pay for a subscription they don't silently quantize the model a few week after release, and you can no longer get the full model running.
+
+Otherwise no need for full fp16, int8 works 99% as well for half the mem, and the lower you go the more you start to pay for the quants. But int8 is super safe imo.
+
+reply
+	
+	
+Oras 3 hours ago | root | parent | prev | next [–]
+
+If these models reach quality of Opus 4.5, then DGX could be a good alternative for serious dev teams to run local models. It is not that expensive and has short time to make ROI
+
+reply
+	
+	
+czk 16 minutes ago | root | parent | next [–]
+
+Memory bandwidth is the biggest L on the dgx spark, it’s half my MacBook from 2023 and that’s the biggest tok/sec bottleneck
+
+reply
+	
+	
+varispeed 1 hour ago | root | parent | prev | next [–]
+
+Is it the same idea that when you go to luxury store you don't see prices on display?
+
+Seems like nobody wants to admit they exclude working class from the ride.
+
+reply
+	
+	
+anonym29 2 hours ago | root | parent | prev | next [–]
+
+You absolutely do not need to run at full BF16. The quality loss between BF16 (55.65 GB in GGUF) and Q8_0 (30.44 GB in GGUF) is essentially zero - think on the order of magnitude of +0.01-0.03 perplexity, or ~0.1-0.3% relative PPL increase. The quality loss between BF16 and Q4_K_M (18.66 GB in GGUF) is close to imperceptible, with perplexity changes in the +0.1-0.3 ballpark, or ~1-3% relative PPL increase. This would correlate to a 0-2% drop on downstream tasks like MMLU/GSM8K/HellaSwag: essentially indistinguishable.
+
+You absolutely do NOT need a $3000 Strix Halo rig or a $4000 Mac or a $9000 RTX 6000 or "multiple high memory consumer GPUs" to run this model at extremely high accuracy. I say this as a huge Strix Halo fanboy (Beelink GTR 9 Pro), mind you. Where Strix Halo is more necessary (and actually offers much better performance) are larger but sparse MoE models - think Qwen 3.5 122B A10B - which offers the total knowledge (and memory requirements) of a 122B model, with processing and generation speed more akin to a 10B dense model, which is a big deal with the limited MBW we get in the land of Strix Halo (256 GB/s theoretical, ~220 GB/s real-world) and DGX Spark (273 GB/s theoretical - not familiar with real-world numbers specifically off the top of my head).
+
+I would make the argument, as a Strix Halo owner, that 27B dense models are actually not particularly pleasant or snappy to run on Strix Halo, and you're much better off with those larger but sparse MoE models with far fewer active parameters on such systems. I'd much rather have an RTX 5090, an Arc B70 Pro, or an AMD AI PRO R9700 (dGPUs with 32GB of GDDR6/7) for 27B dense models specifically.
+
+reply
+	
+	
+zozbot234 2 hours ago | root | parent | next [–]
+
+I'm all for running large MoE models on unified memory systems, but developers of inference engines should do a better job of figuring out how to run larger-than-total-RAM models on such systems, streaming in sparse weights from SSD but leveraging the large unified memory as cache. This is easily supported with pure-CPU inference via mmap, but there is no obvious equivalent when using the GPU for inference.
+
+reply
+	
+	
+anonym29 2 hours ago | root | parent | next [–]
+
+I use llama.cpp, and there is a way to do this - some layers to (i)GPU, the rest to CPU. I was just trying this out with Kimi K2.5 (in preparation for trying it out with Kimi K2.6 the other night. Check out the --n-cpu-moe flag in llama.cpp.
+
+That said, my Strix Halo rig only has PCIe 4.0 for my NVMe, and I'm using a 990 Evo that had poor sustained random read, being DRAM-less. My effective read speeds from disk were averaging around 1.6-2.0 GB/s, and with unsloth's K2.5, even in IQ2_XXS at "just" 326 GB, with ~64 GB worth of layers in iGPU and the rest free for KV cache + checkpoints. Even still, that was over 250 GB of weights streaming at ~2 GB/s, so I was getting 0.35 PP tok/s and 0.22 TG tok/s.
+
+I could go a little faster with a better drive, or a little faster still if I dropping in two of em in raid0, but it would still be on the order of magnitude of sub-1 tok/s PP (compute limited) and TG (bandwidth limited).
+
+reply
+	
+	
+adrian_b 1 hour ago | root | parent | next [–]
+
+In a computer with 2 PCIe 5.0 SSDs or one with a PCIe 5.0 SSDs and a PCIe 4.0 SSD, it should be possible to stream weights from the SSDs at 20 GB/s, or even more.
+
+This is not a little faster, but 10 times faster than on your system. So a couple of tokens per second generation speed should be achievable.
+
+Nowadays even many NUCs or NUC-like mini-PCs have such SSD slots.
+
+I have actually started working at optimizing such an inference system, so your data is helpful for comparison.
+
+reply
+	
+	
+anonym29 1 hour ago | root | parent | next [–]
+
+Strix Halo, to my knowledge, does not support PCIe 5.0 NVMe drives, unfortunately, despite it being Zen 5, and Zen 5 supporting the PCIe 5.0 standard.
+
+While many other NUCs may support them, what most of them lack compared to Strix Halo is a 128 GB pool of unified LPDDR5x-8000 on a 256 bit bus and the Radeon 8060S iGPU with 40 CU of RDNA 3.5, which is roughly equivalent in processing power to a laptop 4060 or desktop 3060.
+
+The Radeon 780M and Radeon 890M integrated graphics that come on most AMD NUCs don't hold a candle to Strix Halo's 8060S, and what little you'd gain in this narrow use case with PCIe gen 5, you'd lose a lot in the more common use cases of models that can fit into a 128 GB pool of unified memory, and there are some really nice ones.
+
+Also, the speeds you're suggesting seem rather optimistic. Gen 5 drives, as I understand, hit peak speeds of about 28-30 GB/s (with two in RAID0, at 14-15 GB/s each), but that's peak sequential reads, which is neither reflective of sustained reads, nor the random read workloads that dominate reading model weights.
+
+Maybe there are some Intel NUCs that compete in this space that I'm less up to speed with which do support PCIe 5. I know Panther Lake costs about as much to manufacture as Strix Halo, and while it's much more power efficient and achieves a lot more compute per Xe3 graphics core than Strix Halo achieves per RDNA 3.5 CU, they Panther Lake that's actually shipping ships with so many fewer Xe3 cores that it's still a weaker system overall.
+
+Maybe DGX Spark supports PCIe 5.0, I don't own one and am admittedly not as familiar with that platform either, though it's worth mentioning that the price gap between Strix Halo and DGX Spark at launch ($2000 vs $4000) has closed a bit (many Strix Halo run $3000 now, vs $4700 for DGX Spark, and I think some non-Nvidia GB10 systems are a bit cheaper still)
+
+reply
+	
+	
+greybcg 1 hour ago | root | parent | prev | next [–]
+
+Now I want to put two p5800x's to use. I wonder how much tinkering would be necessary to mmap a raid setup with them directly to the gpu. Im not fully busy with LLM's and more with graphics and systems, but this seems like a fun project to try out.
+
+reply
+	
+	
+p_stuart82 2 hours ago | root | parent | prev | next [–]
+
+tbh ~1-3% PPL hit from Q4_K_M stopped being the bottleneck a while ago. the bottleneck is the 48 hours of guessing llama.cpp flags and chat template bugs before the ecosystem catches up. you are doing unpaid QA.
+
+reply
+	
+	
+anonym29 1 hour ago | root | parent | next [–]
+
+Just wait a week for model bugs to be worked out. This is well-known advice and a common practice within r/localllama. The flags are not hard at all if you're using llama.cpp regularly. If you're new to the ecosystem, that's closer to a one-time effort with irregular updates than it is to something you have to re-learn for every model.
+
+reply
+	
+	
+SlavikCA 22 minutes ago | parent | prev | next [–]
+
+I'm getting 30 t/s on RTX 4090D (using 42 out of 48GB VRAM) with UD-Q6_K_XL
+
+https://huggingface.co/unsloth/Qwen3.6-27B-GGUF/discussions/...
+
+reply
+	
+	
+maxloh 17 minutes ago | root | parent | next [–]
+
+I thought Q4_K_M is the standard. Why did you choose the 6-bit variant? Does it generate better input?
+
+reply
+	
+	
+SlavikCA 4 minutes ago | root | parent | next [–]
+
+There is no standard.
+
+The higher quantization - the better results, but more memory is needed. Q8 is the best.
+
+reply
+	
+	
+benob 4 hours ago | parent | prev | next [–]
+
+I get ~5 tokens/s on an M4 with 32G of RAM, using:
+
+  llama-server \
+   -hf unsloth/Qwen3.6-27B-GGUF:Q4_K_M \
+   --no-mmproj \
+   --fit on \
+   -np 1 \
+   -c 65536 \
+   --cache-ram 4096 -ctxcp 2 \
+   --jinja \
+   --temp 0.6 \
+   --top-p 0.95 \
+   --top-k 20 \
+   --min-p 0.0 \
+   --presence-penalty 0.0 \
+   --repeat-penalty 1.0 \
+   --reasoning on \
+   --chat-template-kwargs '{"preserve_thinking": true}'
+
+35B-A3B model is at ~25 t/s. For comparison, on an A100 (~RTX 3090 with more memory) they fare respectively at 41 t/s and 97 t/s.
+
+I haven't tested the 27B model yet, but 35B-A3B often gets off rails after 15k-20k tokens of context. You can have it to do basic things reliably, but certainly not at the level of "frontier" models.
+
+reply
+	
+	
+danielhanchen 3 hours ago | root | parent | next [–]
+
+We also made some dynamic MLX ones if they help - it might be faster for Macs, but llama-server definitely is improving at a fast pace.
+
+https://huggingface.co/unsloth/Qwen3.6-27B-UD-MLX-4bit
+
+reply
+	
+	
+DarmokJalad1701 1 hour ago | root | parent | next [–]
+
+What exactly does the .sh file install? How does it compare to running the same model in, say, omlx?
+
+reply
+	
+	
+dunb 4 hours ago | root | parent | prev | next [–]
+
+Why use --fit on on an M4? My understanding was that given the unified memory, you should push all layers to the GPU with --n-gpu-layers all. Setting --flash-attn on and --no-mmap may also get you better results.
+
+reply
+	
+	
+kpw94 2 hours ago | root | parent | prev | next [–]
+
+When you say tok/s here are you describing the prefill (prompt eval) token/s or the output generation tok/s?
+
+(Btw I believe the "--jinja" flag is by default true since sometime late 2025, so not needed anymore)
+
+reply
+	
+	
+benob 27 minutes ago | root | parent | next [–]
+
+Here is llama-bench on the same M4:
+
+  | model                    |       size |     params | backend    | threads |            test |                  t/s |
+  | ------------------------ | ---------: | ---------: | ---------- | ------: | --------------: | -------------------: |
+  | qwen35 27B Q4_K_M        |  15.65 GiB |    26.90 B | BLAS,MTL   |       4 |           pp512 |         61.31 ± 0.79 |
+  | qwen35 27B Q4_K_M        |  15.65 GiB |    26.90 B | BLAS,MTL   |       4 |           tg128 |          5.52 ± 0.08 |
+  | qwen35moe 35B.A3B Q3_K_M |  15.45 GiB |    34.66 B | BLAS,MTL   |       4 |           pp512 |        385.54 ± 2.70 |
+  | qwen35moe 35B.A3B Q3_K_M |  15.45 GiB |    34.66 B | BLAS,MTL   |       4 |           tg128 |         26.75 ± 0.02 |
+
+So ~60 for prefill and ~5 for output on 27B and about 5x on 35B-A3B.
+
+reply
+	
+	
+zargon 2 hours ago | root | parent | prev | next [–]
+
+If someone doesn't specifically say prefill then they always mean decode speed. I have never seen an exception. Most people just ignore prefill.
+
+reply
+	
+	
+kpw94 2 hours ago | root | parent | next [–]
+
+But isn't the prefill speed the bottleneck in some systems* ?
+
+Sure it's order of magnitude faster (10x on Apple Metal?) but there's also order of magnitude more tokens to process, especially for tasks involving summarization of some sort.
+
+But point taken that the parent numbers are probably decode
+
+* Specifically, Mac metal, which is what parent numbers are about
+
+reply
+	
+	
+zargon 1 hour ago | root | parent | next [–]
+
+Yes, definitely it's the bottleneck for most use cases besides "chatting". It's the reason I have never bought a Mac for LLM purposes.
+
+It's frustrating when trying to find benchmarks because almost everyone gives decode speed without mentioning prefill speed.
+
+reply
+	
+	
+wuschel 2 hours ago | root | parent | prev | next [–]
+
+How is the quality of model answers to your queries? Are they stable over time?
+
+I am wondering how to measure that anyway.
+
+reply
+	
+	
+cyanydeez 1 hour ago | root | parent | prev | next [–]
+
+Using opencode and Qwen-Coder-Next I get it reliably up to about 85k before it takes too long to respond.
+
+I tried the other qwen models and the reasoning stuff seems to do more harm than good.
+
+reply
+	
+	
+bityard 3 hours ago | parent | prev | next [–]
+
+There are infinite combinations of CPU/GPU capable of running LLMs locally. What most people do is buy the system they can afford and roughly meets their goals and then ball-park VRAM usage by looking at the model size and quantization.
+
+For more a detailed analysis, there are several online VRAM calculators. Here's one: https://smcleod.net/vram-estimator/
+
+If you have a huggingface account, you can set your system configuration and then you get little icons next to each quant in the sidebar. (Green: will likely fit, Yellow: Tight fit, Red: will not fit)
+
+Further, t/s depends greatly on a lot of different factors, the best you might get is a guess based on context size.
+
+One thing about running local LLMs right now, is that there are tradeoffs literally everywhere and you have to choose what to optimize for down to the individual task.
+
+reply
+	
+	
+zargon 50 minutes ago | root | parent | next [–]
+
+These calculators are almost entirely useless. They don't understand specific model architectures. Even the ones that try to support only specific models (like the apxml one) get it very wrong a lot of the time.
+
+For example, the one you linked, when I provide a Qwen3.5 27B Q_4_M GGUF [0], says that it will require 338 GB of memory with 16-bit kv cache. That is wrong by over an order of magnitude.
+
+[0] https://huggingface.co/bartowski/Qwen_Qwen3.5-27B-GGUF/resol...
+
+reply
+	
+	
+proxysna 4 hours ago | parent | prev | next [–]
+
+Qwen3.5-27B with a 4bit quant can be run on a 24G card with no problem. With 2 Nvidia L4 cards and some additional vllm flags, i am serving 10 developers at 20-25tok/sek, off-peak is around 40tok/sek. Developers are ok with that performance, but ofc they requested more GPU's for added throughput.
+
+reply
+	
+	
+tandr 3 hours ago | root | parent | next [–]
+
+What would be these additional vllm flags, if you don't mind sharing?
+
+reply
+	
+	
+PcChip 2 hours ago | root | parent | prev | next [–]
+
+question: why not use something like Claude? is it for security reasons?
+
+reply
+	
+	
+lambda 1 hour ago | root | parent | next [–]
+
+Some people would rather not hand over all of their ability to think to a single SaaS company that arbitrarily bans people, changes token limits, tweaks harnesses and prompts in ways that cause it to consume too many tokens, or too few to complete the task, etc.
+
+I don't use any non-FLOSS dev tools; why would I suddenly pay for a subscription to a single SaaS provider with a proprietary client that acts in opaque and user hostile ways?
+
+reply
+	
+	
+cyanydeez 1 hour ago | root | parent | next [–]
+
+I think, we're seeing very clearly, the problem with the Cloud (as usual) is it locks you into a service that only functions when the Cloud provides it.
+
+But further, seeing with Claude, your workflow, or backend or both, arn't going anywhere if you're building on local models. They don't suddenly become dumb; stop responding, claim censorship, etc. Things are non-determinant enough that exposing yourself to the business decisions of cloud providers is just a risk-reward nightmare.
+
+So yeah, privacy, but also, knowing you don't have to constantly upgrade to another model forced by a provider when whatever you're doing is perfectly suitable, that's untolds amount of value. Imagine the early npm ecosystem, but driven now by AI model FOMO.
+
+reply
+	
+	
+UncleOxidant 3 hours ago | parent | prev | next [–]
+
+For Qwen3.5-27b I'm getting in the 20 to 25 tok/sec range on a 128GB Strix Halo box (Framework Desktop). That's with the 8-bit quant. It's definitely usable, but sometimes you're waiting a bit, though I'm not finding it problematic for the most part. I can run the Qwen3-coder-next (80b MoE) at 36tok/sec - hoping they release a Qwen3.6-coder soon.
+
+reply
+	
+	
+bityard 3 hours ago | root | parent | next [–]
+
+I have a Framework Desktop too and 20-25 t/s is a lot better than I was expecting for such a large dense model. I'll have to try it out tonight. Are you using llama.cpp?
+
+reply
+	
+	
+UncleOxidant 2 hours ago | root | parent | next [–]
+
+LMStudio, but it uses llama.cpp to run inference, so yeah. This is with the vulkan backend, not ROCm.
+
+reply
+	
+	
+lambda 1 hour ago | root | parent | prev | next [–]
+
+That sounds high for a Strix Halo with a dense 27b model. Are you talking about decode (prompt eval, which can happend in parallel) or generation when you quote tokens per second? Usually if people quote only one number they're quoting generation speed, and I would be surprised if you got that for generation speed on a Strix Halo.
+
+reply
+	
+	
+petu 2 hours ago | root | parent | prev | next [–]
+
+> Qwen3.5-27b 8-bit quant 20 to 25 tok/sec
+
+It that with some kind of speculative decoding? Or total throughput for parallel requests?
+
+reply
+	
+	
+ekojs 4 hours ago | parent | prev | next [–]
+
+As this is a dense model and it's pretty sizable, 4-bit quantization can be nearly lossless. With that, you can run this on a 3090/4090/5090. You can probably even go FP8 with 5090 (though there will be tradeoffs). Probably ~70 tok/s on a 5090 and roughly half that on a 4090/3090. With speculative decoding, you can get even faster (2-3x I'd say). Pretty amazing what you can get locally.
+
+reply
+	
+	
+Aurornis 4 hours ago | root | parent | next [–]
+
+> As this is a dense model and it's pretty sizable, 4-bit quantization can be nearly lossless
+
+The 4-bit quants are far from lossless. The effects show up more on longer context problems.
+
+> You can probably even go FP8 with 5090 (though there will be tradeoffs)
+
+You cannot run these models at 8-bit on a 32GB card because you need space for context. Typically it would be Q5 on a 32GB card to fit context lengths needed for anything other than short answers.
+
+reply
+	
+	
+ekojs 3 hours ago | root | parent | next [–]
+
+> You cannot run these models at 8-bit on a 32GB card because you need space for context
+
+You probably can actually. Not saying that it would be ideal but it can fit entirely in VRAM (if you make sure to quantize the attention layers). KV cache quantization and not loading the vision tower would help quite a bit. Not ideal for long context, but it should be very much possible.
+
+I addressed the lossless claim in another reply but I guess it really depends on what the model is used for. For my usecases, it's nearly lossless I'd say.
+
+reply
+	
+	
+alex7o 1 hour ago | root | parent | prev | next [–]
+
+Turboquant on 4bit helps a lot as well for keeping context in vram, but int4 is definitely not lossless. But it all depends for some people this is sufficient
+
+reply
+	
+	
+zozbot234 3 hours ago | root | parent | prev | next [–]
+
+4-bit quantization is almost never lossless especially for agentic work, it's the lowest end of what's reasonable. It's advocated as preferable to a model with fewer parameters that's been quantized with more precision.
+
+reply
+	
+	
+ekojs 3 hours ago | root | parent | next [–]
+
+Yeah, figure the 'nearly lossless' claim is the most controversial thing. But in my defense, ~97% recovery in benchmarks is what I consider 'nearly lossless'. When quantized with calibration data for a specialized domain, the difference in my internal benchmark is pretty much indistinguishable. But for agentic work, 4-bit quants can indeed fall a bit short in long-context usecase, especially if you quantize the attention layers.
+
+reply
+	
+	
+binary132 4 hours ago | root | parent | prev | next [–]
+
+That seems awfully speculative without at least some anecdata to back it up.
+
+reply
+	
+	
+arcanemachiner 4 hours ago | root | parent | next [–]
+
+Sure, go get some.
+
+This isn't the first open-weight LLM to be released. People tend to get a feel for this stuff over time.
+
+Let me give you some more baseless speculation: Based on the quality of the 3.5 27B and the 3.6 35B models, this model is going to absolutely crush it.
+
+reply
+	
+	
+ekojs 4 hours ago | root | parent | prev | next [–]
+
+Not at all, I actually run ~30B dense models for production and have tested out 5090/3090 for that. There are gotchas of course, but the speed/quality claims should be roughly there.
+
+reply
+	
+	
+xngbuilds 3 hours ago | parent | prev | next [–]
+
+For Apple Mac, there is https://omlx.ai/benchmarks
+
+reply
+	
+	
+chrsw 4 hours ago | parent | prev | next [–]
+
+These might help if the provider doesn't offer the same details themselves. Of course, we have to wait for the newly released models to get added to these sites.
+
+https://llmfit.io/
+
+https://modelfit.io/
+
+reply
+	
+	
+rubiquity 4 hours ago | parent | prev | next [–]
+
+At 8-bit quantization (q8_0) I get 20 tokens per second on a Radeon R9700.
+
+reply
+	
+	
+random3 3 hours ago | parent | prev | next [–]
+
+Check out https://www.canirun.ai/ (and https://news.ycombinator.com/item?id=47363754)
+
+reply
+	
+	
+esskay 2 hours ago | root | parent | next [–]
+
+CaniRun's not a great tool - look how long its been since it's been updated. It's not got any of the qwen3.6 models on the list nor the new kimi one. In fact it's missing many of the "popular" models.
+
+reply
+	
+	
+jjcm 4 hours ago | parent | prev | next [–]
+
+Fwiw, huggingface does this on the page where you download the weights. Slightly different format though - you put all the hardware you have, and it shows which quants you can run.
+
+reply
+	
+	
+jen20 54 minutes ago | parent | prev | next [–]
+
+https://github.com/AlexsJones/llmfit gives a good approximation of that.
+
+reply
+	
+	
+arcanemachiner 4 hours ago | parent | prev | next [–]
+
+Divide the value before the B by 2, and there's your answer if you get a Q4_K_M quant. Plus a bit of room for KV cache.
+
+TLDR: If you have 14GB of VRAM, you can try out this model with a 4-bit quant.
+
+Tokens per second is an unreasonable ask since every card is different, are you using GGUF or not, CUDA or ROCm or Vulkan or MLX, what optimizations are in your version of your inference software, flags are you running, etc.
+
+Note that it's a dense model (the Qwen models have another value at the end of the MoE model names, e.g. A3B) so it will not run very well in RAM, whereas with a MoE model, you can spill over into RAM if you don't have enough VRAM, and still have reasonable performance.
+
+Using these models requires some technical know-how, and there's no getting around that.
+
+reply
+	
+	
+scosman 2 hours ago | parent | prev | next [–]
+
+this is what the unsloth post is for
+
+reply
+	
+	
+neonstatic 1 hour ago | parent | prev | next [–]
+
+I just ran Unsloth's Q4_K_M quant on Macbook Pro M1 Max (2021), 32 GB RAM. Getting about 9 tok/s. Reported RAM usage 15.9 GB. It's okay, but a bit slow for my taste.
+
+An example of a query and a response is below. It was done with 9.09 tok/s, 893 tokens, 7.56 seconds to first token, thought for 1 minute and 9 seconds.
+
+Question: I gave the model this truth table and asked to tell me what boolean function would produce the output given A, B as inputs.
+
+  | A | B | Output |
+  | :--- | --- | ---: |
+  | (T) | (F)  | (T) |
+  | (T) | (T) | (F) |
+  | (F) | (F) | (F) |
+  | (F) | (T) | (F) |
+
+Answer: (note this is part of a larger conversation, where I was getting it to help me with some boolean logic):
+
+  The boolean condition for your table is simply:
+
+  ```rust
+  A && !B
+  ```
+
+  ### Why?
+  Your table shows the output is `true` **only** when `A` is true and `B` is  false. That's exactly what `A && !B` expresses.
+
+  | A | B | `A && !B` | Output |
+  |---|---|-----------|--------|
+  |  (T) |  (F) | `T && T = T` |   |
+  |  (T) |  (T) | `T && F = F` |   |
+  |  (F) |  (F) | `F && T = F` |   |
+  |  (F) |  (T) | `F && F = F` |   |
+
+  ### In Rust:
+  ```rust
+  if A && !B {
+      // output is true
+  } else {
+      // output is false
+  }
+  ```
+
+  This is the most direct and idiomatic way to express that logic. Let me know if you need it adapted back to your `live_ticks` / `on_disconnect` context!
+
+reply
+	
+	
+underlines 4 hours ago | parent | prev | next [–]
+
+depends on format, compute type, quantization and kv cache size.
+
+reply
+	
+	
+mottosso 4 hours ago | root | parent | next [–]
+
+Specs for whatever they used to achieve the benchmarks would be a good start.
+
+reply
+	
+	
+bityard 3 hours ago | root | parent | next [–]
+
+The benchmarks in the model card are purported to be measurements of model quality (ability to perform tasks with few errors), not speed.
+
+They almost certainly run these benchmarks on their own cloud infrastructure (Alibaba afaik), which is typically not hardware that even the most enthusiastic homelab hobbyist can afford.
+
+reply
+	
+	
+Aurornis 4 hours ago | root | parent | prev | next [–]
+
+The benchmarks are from the unquantized model they release.
+
+This will only run on server hardware, some workstation GPUs, or some 128GB unified memory systems.
+
+It’s a situation where if you have to ask, you can’t run the exact model they released. You have to wait for quantizations to smaller sizes, which come in a lot of varieties and have quality tradeoffs.
+
+reply
+	
+	
+bityard 3 hours ago | root | parent | next [–]
+
+This would likely run fine in just 96 GB of VRAM, by my estimation. Well within the ability of an enthusiastic hobbyist with a few thousand dollars of disposable income.
+
+Quantizations are already out: https://huggingface.co/unsloth/Qwen3.6-27B-GGUF
+
+reply
+	
+	
+CamperBob2 2 hours ago | parent | prev | next [–]
+
+27B dense is not a screamer, even on an RTX 6000, but it will run at full precision with (more than) enough room for context at the model's own capacity. You can expect about 30 tokens/second after prompt processing. Quants will likely run similarly well on the 16/24/32 GB consumer GPUs.
+
+The 3.5 27B model was a strong and capable reasoner, so I have high hopes for this one. Thanks to the team at Qwen for keeping competition in this space alive.
+
+reply
+	
+	
+jauntywundrkind 3 hours ago | parent | prev | next [–]
+
+I would detest the time/words it takes to hand hold through such a review, of teaching folks the basics about LLM like this.
+
+It's also a section that, with hope, becomes obsolete sometime semi soon-ish.
+
+reply
+	
+	
+syntaxing 3 hours ago | prev | next [–]
+
+Been using Qwen 3.6 35B and Gemma 4 26B on my M4 MBP, and while it’s no Opus, it does 95% of what I need which is already crazy since everything runs fully local.
+
+reply
+	
+	
+Someone1234 39 minutes ago | parent | next [–]
+
+You've got me curious. Two questions if I may:
+
+- What kind of tasks/work?
+
+- How is either Qwen/Gemma wired up (e.g. which harness/how are they accessed)?
+
+Or to phase another way; what does your workflow/software stack look like?
+
+reply
+	
+	
+syntaxing 24 minutes ago | root | parent | next [–]
+
+1. Qwen is mostly coding related through Opencode. I have been thinking about using pi agent and see if that works better for general use case. The usefulness of *claw has been limited for me. Gemma is through the chat interface with lmstudio. I use it for pretty much everything general purpose. Help me correct my grammar, read documents (lmstudio has a built in RAG tool), and vision capabilities (mentioned below, journal pictures to markdown).
+
+2. Lmstudio on my MacBook mainly. You can turn on an OpenAI API compatible endpoint in the settings. Lmstudio also has a headless server called lms. Personally, I find it way better than Ollama since lmstudio uses llama cpp as the backend. With an OpenAI API compatible endpoint, you can use any tool/agent that supports openAI. Lmstudio/lms is Linux compatible too so you can run it on a strix halo desktop and the like.
+
+reply
+	
+	
+FuckButtons 1 hour ago | parent | prev | next [–]
+
+It’s good enough that I’ve been having codex automate itself out of a job by delegating more and more to it.
+
+Very excited for the 122b version as the throughput is significantly better for that vs the dense 27b on my m4.
+
+reply
+	
+	
+throwaw12 2 hours ago | parent | prev | next [–]
+
+can you expand more on what you mean by 95%?
+
+There are 2 aspects I am interested in:
+
+1. accuracy - is it 95% accuracy of Opus in terms of output quality (4.5 or 4.6)?
+
+2. capability-wise - 95% accuracy when calling your tools and perform agentic work compared to Opus - e.g. trip planning?
+
+reply
+	
+	
+syntaxing 2 hours ago | root | parent | next [–]
+
+1. What do you mean by accuracy? Like the facts and information? If so, I use a Wikipedia/kiwx MCP server. Or do you mean tool call accuracy?
+
+2. 3.6 is noticeably better than 3.5 for agentic uses (I have yet to use the dense model). The downside is that there’s so little personality, you’ll find more entertainment talking to a wall. Anything for creative use like writing or talking, I use Gemma 4. I also use Gemma 4 as a “chat” bot only, no agents. One amazing thing about the Gemma models is the vision capabilities. I was able to pipe in some handwritten notes and it converted into markdown flawlessly. But my handwriting is much better than the typical engineer’s chicken scratch.
+
+reply
+	
+	
+throwaw12 2 hours ago | root | parent | next [–]
+
+by accuracy I meant how close is the output to your expectations, for example if you ask 8B model to write C compiler in C, it outputs theory of how to write compiler and writes pseudocode in Python. Which is off by 2 measures: (1) I haven't asked for theory (2) I haven't asked to write it in Python.
+
+Or if you want to put it differently, if your prompt is super clear about the actions you want it to do, is it following it exactly as you said or going off the rails occasionally
+
+reply
+	
+	
+syntaxing 2 hours ago | root | parent | next [–]
+
+Ironically, even though I write C/++ for a living, I don’t use it for personal projects so I can’t say how well it works for low level coding. Python works great but there’s a limit on context size (I just don’t have enough RAM, and I do not like quantizing my kv cache). Realistically, I can fit 128K max but I aim for 65K before compacting. With Unsloth’s Opencode templating, I haven’t had any major issues but I haven’t done anything intense with it as of late. But overall, I have not had to stop it from an endless loop which happened often on 3.5.
+
+reply
+	
+	
+jameson 3 hours ago | prev | next [–]
+
+What competitive advantage does OpenAI/Anthropic has when companies like Qwen/Minimax/etc are open sourcing models that shows similar (yet below than OpenAI/Anthropic) benchmark results?
+
+Also, the token prices of these open source models are at a fraction of Anthropic's Opus 4.6[1]
+
+[1]: https://artificialanalysis.ai/models/#pricing
+
+reply
+	
+	
+fnordpiglet 3 hours ago | parent | next [–]
+
+For coding often quality at the margin is crucial even at a premium. It’s not the same as cranking out spam emails or HN posts at scale. This is why the marginal difference between your median engineer and your P99 engineer is comp is substantial, while the marginal comp difference between your median pick and packer vs your P99 pick and packer isn’t.
+
+I’d also say it keeps the frontier shops competitive while costing R&D in the present is beneficial to them in forcing them to make a better and better product especially in value add space.
+
+Finally, particularly for Anthropic, they are going for the more trustworthy shop. Even ali is hosting pay frontier models for service revenue, but if you’re not a Chinese shop, would you really host your production code development workload on a Chinese hosted provider? OpenAI is sketchy enough but even there I have a marginal confidence they aren’t just wholesale mining data for trade secrets - even if they are using it for model training. Anthropic I slightly trust more. Hence the premium. No one really believes at face value a Chinese hosted firm isn’t mass trolling every competitive advantage possible and handing back to the government and other cross competitive firms - even if they aren’t the historical precedent is so well established and known that everyone prices it in.
+
+reply
+	
+	
+ozgrakkurt 14 minutes ago | root | parent | next [–]
+
+I just assume any of those companies would steal my work and wouldn't care about it.
+
+Everything they have done so far indicates this.
+
+Running your own is the only option unless you really trust them or unless you have the option to sue them like some big companies can.
+
+Or if you don't really care then you can use the chineese one since it is cheaper.
+
+What makes you trust Anthropic more than Alibaba?
+
+reply
+	
+	
+bigbadfeline 2 hours ago | root | parent | prev | next [–]
+
+> For coding often quality at the margin is crucial even at a premium
+
+That's a cryptic way to say "Only for vibe-coding quality at the margin matters". Obviously, quality is determined first and foremost by the skills of the human operating the LLM.
+
+> No one really believes at face value a Chinese hosted firm isn’t mass trolling every competitive advantage possible
+
+That's much easier to believe than the same but applied to a huge global corp that operates in your own market and has both the power and the desire to eat your market share for breakfast, before the markets open, so "growth" can be reported the same day.
+
+Besides, open models are hosted by many small providers in the US too, you don't have to use foreign providers per se.
+
+reply
+	
+	
+fnordpiglet 2 hours ago | root | parent | next [–]
+
+1) model provider choices don’t obviate the need to make other good choices
+
+2) I think there is a special case for Chinese providers due to the philosophical differences in what constitutes fair markets and the regulatory and civil legal structure outside China generally makes such things existentially dangerous to do; hence while it might happen it is extraordinarily ill advised, while in China is implicitly the way things work. However my point is Ali has their own hosted version of Qwen models operating on the frontier that are at minimum hosted exclusively before released. Theres no reason to believe they won’t at some point exclusively host some frontier or fine tuned variants for purposes for commercial reasons. This is part of why they had recent turnover.
+
+reply
+	
+	
+donmcronald 2 hours ago | root | parent | prev | next [–]
+
+Given the very limited experience I have where I've been trying out a few different models, the quality of the context I can build seems to be much more of an issue than the model itself.
+
+If I build a super high quality context for something I'm really good at, I can get great results. If I'm trying to learn something new and have it help me, it's very hit and miss. I can see where the frontier models would be useful for the latter, but they don't seem to make as much difference for the former, at least in my experience.
+
+The biggest issue I have is that if I don't know a topic, my inquiries seem to poison the context. For some reason, my questions are treated like fact. I've also seen the same behavior with Claude getting information from the web. Specifically, I had it take a question about a possible workaround from a bug report and present it as a de-facto solution to my problem. I'm talking disconnect a remote site from the internet levels of wrong.
+
+From what I've seen, I think the future value is in context engineering. I think the value is going to come from systems and tools that let experts "train" a context, which is really just a search problem IMO, and a marketplace or standard for sharing that context building knowledge.
+
+The cynic in me thinks that things like cornering the RAM market are more about depriving everyone else than needing the resources. Whoever usurps the most high quality context from those P99 engineers is going to have a better product because they have better inputs. They don't want to let anyone catch up because the whole thing has properties similar to network effects. The "best" model, even if it's really just the best tooling and context engineering, is going to attract the best users which will improve the model.
+
+It makes me wonder of the self reinforced learning is really just context theft.
+
+reply
+	
+	
+rmacqueen 1 hour ago | root | parent | prev | next [–]
+
+> This is why the marginal difference between your median engineer and your P99 engineer is comp is substantial, while the marginal comp difference between your median pick and packer vs your P99 pick and packer isn’t.
+
+That's an interesting analogy.
+
+reply
+	
+	
+rohansood15 3 hours ago | root | parent | prev | next [–]
+
+Most code is not P99 though.
+
+Also, have you considered that your trust in Anthropic and distrust in China may not be shared by many outside the US? There's a reason why Huawei is the largest supplier of 5G hardware globally.
+
+reply
+	
+	
+runjake 3 hours ago | root | parent | next [–]
+
+You're right, but perspective is important, and that's because China and the US are engaged in economic warfare (even before the current US regime), vying for the dubious title of "superpower".
+
+reply
+	
+	
+fnordpiglet 2 hours ago | root | parent | prev | next [–]
+
+I find it hard to believe anyone who has ever done business inside China doesn’t know that the structure of Chinese business is built around massive IP theft and repurposing on a state wide systematic level. It’s not a nationalism point, it’s an objective and easily verified truth.
+
+Most code is not P99, but companies pay a premium to produce code that is. That’s my point.
+
+reply
+	
+	
+AJ007 3 hours ago | root | parent | prev | next [–]
+
+Not sure how your last point matters if 27b can run on consumer hardware, besides being hosted by any company which the user could certainly trust more than anthropic.
+
+OpenAI & Anthropic are just lying to everyone right now because if they can't raise enough money they are dead. Intelligence is a commodity, the semiconductor supply chain is not.
+
+reply
+	
+	
+datadrivenangel 1 hour ago | root | parent | next [–]
+
+The challenge is token speed. I did some local coding yesterday with qwen3.6 35b and getting 10-40 tokens per second means that the wall time is much longer. 20 tokens per second is a bit over a thousand tokens per minute, which is slower than the the experience you get with Claude Code or the opus models.
+
+Slower and worse is still useful, but not as good in two important dimensions.
+
+reply
+	
+	
+fnordpiglet 1 hour ago | root | parent | next [–]
+
+Also benchmark measures are not empirical experience measures and are well gamed. As other commenters have said the actual observed behavior is inferior, so it’s not just speed.
+
+It’s ludicrous to believe a small parameter count model will out perform a well made high parameter count model. That’s just magical thinking. We’ve not empirically observed any flattening of the scaling laws, and there’s no reason to believe the scrappy and smart qwen team has discovered P=NP, FTL, or the magical non linear parameter count scaling model.
+
+reply
+	
+	
+otabdeveloper4 2 hours ago | root | parent | prev | next [–]
+
+> For coding often quality at the margin is crucial even at a premium.
+
+For coding, quality is not measurable and is based entirely on feels (er, sorry, "vibes").
+
+Employers paying for SOTA models is nothing but a lifestyle status perk for employees, like ping-pong tables or fancy lunch snacks.
+
+reply
+	
+	
+j-bos 4 minutes ago | root | parent | next [–]
+
+"based entirely on feels"
+
+Now there's a word I haven't heard in a long, long time.
+
+reply
+	
+	
+fnordpiglet 1 hour ago | root | parent | prev | next [–]
+
+I’m building my own company and I consider model choice crucial to my marginal ability to produce a higher quality product I don’t regret having built. Every higher end dev shop I’ve worked at over the last few years perceives things the same. There are measurable outcomes from software built well and software not, even if the code itself isn’t easily measurable. I would rather pay a few thousand more per year for a better overall outcome with less developer struggle against bad model decisions than end up with an inferior end product and have expensive developer spin wheels containing a dumb as a brick model. But everyone’s career experiences are different and I’d feel sad to work at a place where SOTA is a lifestyle choice rather than a rational engineering and business choice.
+
+reply
+	
+	
+Aurornis 3 hours ago | parent | prev | next [–]
+
+I use Opus and the Qwen models. The gap between them is much larger than the benchmark charts show.
+
+If you want to compare to a hosted model, look toward the GLM hosted model. It’s closest to the big players right now. They were selling it at very low prices but have started raising the price recently.
+
+reply
+	
+	
+mchusma 3 hours ago | root | parent | next [–]
+
+I like both GLM and Kimmi 2.6 but honestly for me they didn’t have quite the cost advantage that I would like partly because they use more tokens so they end up being maybe sonnet level intelligence at haiku level cost. Good but not quite as extreme as some people would make them out to be and for my use cases running the much cheaper, Gemma 4 four things where I don’t need Max intelligence and running sonnet or opus for things where I need the intelligence and I can’t really make the trade-off is been generally good and it just doesn’t seem worth it to cost cut a little bit. Plus when you combine prompt, cashing and sub agents using Gemma 4, the cost to run sonnet or even opus, are not that extreme.
+
+For coding $200 month plan is such a good value from anthropic it’s not even worth considering anything else except for up time issues
+
+But competition is great. I hope to see Anthropic put out a competitor in the 1/3 to 1/5 of haiku pricing range and bump haiku’s performance should be closer to sonnet level and close the gap here.
+
+reply
+	
+	
+syntaxing 3 hours ago | root | parent | prev | next [–]
+
+Yes and no. Are you using open router or local? Are the models are good as Opus? No. But 99% of the time, local models are terrible because of user errors. Especially true for MoE, even though the perplexity only drops minimal for Q4 and q4_0 for the KV cache, the models get noticeably worse.
+
+reply
+	
+	
+acidtechno303 2 hours ago | root | parent | next [–]
+
+Sounds like you're accusing a professional of holding their tool incorrectly. Not impossible, but not likely either.
+
+reply
+	
+	
+syntaxing 2 hours ago | root | parent | next [–]
+
+Inferencing is straight up hard. I’m not accusing them of anything. There’s a crap ton of variables that can go into running a local model. No one runs them at native FP8/FP16 because we cannot afford to. Sometimes llama cpp implementation has a bug (happens all the time). Sometimes the template is wrong. Sometimes the user forgot to expand the context length to above the 4096 default. Sometimes they use quantization that nerfs the model. You get the point. The biggest downside of local LLMs is that it’s hard to get right. It’s such a big problem, Kimi just rolled out a new tool so vendors can be qualified. Even on openrouter, one vendor can be half the “performance” of the other.
+
+reply
+	
+	
+Frannky 3 hours ago | parent | prev | next [–]
+
+If these results are because of vampire attacks, the results will stop being so good when closed ones figure out how to pollute them when they are sucking answers.
+
+Also, they are not exactly as good when you use them in your daily flow; maybe for shallow reasoning but not for coding and more difficult stuff. Or at least I haven't found an open one as good as closed ones; I would love to, if you have some cool settings, please share
+
+reply
+	
+	
+mmmore 2 hours ago | parent | prev | next [–]
+
+The token prices being high for Opus undermines your argument, because it shows people are willing to pay more for the model.
+
+The thing is the new OpenAI/Anthropic models are noticeably better than open source. Open source is not unusable, but the frontier is definitely better and likely will remain so. With SWE time costing over $1/min, if a convo costs me $10 but saves me 10 minutes it's probably worth it. And with code, often the time saved by marginally better quality is significant.
+
+reply
+	
+	
+jstummbillig 2 hours ago | parent | prev | next [–]
+
+> yet below than OpenAI/Anthropic
+
+This is the competitive advantage. Being better.
+
+reply
+	
+	
+lgessler 17 minutes ago | prev | next [–]
+
+I'll be really interested to hear qualitative reports of how this model works out in practice. I just can't believe that a model this small is actually as good as Opus, which is rumored to be about two orders of magnitude larger.
+
+reply
+	
+	
+sietsietnoac 4 hours ago | prev | next [–]
+
+Generate an SVG of a pelican riding a bicycle: https://codepen.io/chdskndyq11546/pen/yyaWGJx
+
+Generate an SVG of a dragon eating a hotdog while driving a car: https://codepen.io/chdskndyq11546/pen/xbENmgK
+
+Far from perfect, but it really shows how powerful these models can get
+
+reply
+	
+	
+tln 3 hours ago | parent | next [–]
+
+The dragon image has issues like one eye, weird tail etc, but the pelican is imo perfect -- the best I've seen!
+
+reply
+	
+	
+vunderba 2 hours ago | root | parent | next [–]
+
+Yeah the dragon one is just a complete mess. The car is sideways but the WHEEL is oriented in a first-person perspective.
+
+Seems like a case of overfitting with regard to the thousands of pelican bike SVG samples on the internet already.
+
+reply
+	
+	
+yrds96 3 hours ago | parent | prev | next [–]
+
+I wonder if this became a so well known "benchmark" that models already got trained for it.
+
+reply
+	
+	
+HotHotLava 3 hours ago | root | parent | next [–]
+
+Given that the pelican looks way better than the dragon, it almost seems like a certainty.
+
+reply
+	
+	
+sietsietnoac 2 hours ago | root | parent | prev | next [–]
+
+Given the likeness of the sky between the 2 examples, the overall similarities and the fact that the pelican is so well done, there is 0-doubt that the benchmark is in the training data of these models by now
+
+That doesn't make it any less of an achievement given the model size or the time it took to get the results
+
+If anything, it shows there's still much to discover in this field and things to improve upon, which is really interesting to watch unfold
+
+reply
+	
+	
+Marciplan 3 hours ago | root | parent | prev | next [–]
+
+every model release Simon comes with his Pelican and then this comment follows.
+
+Can we stop both? its so boring
+
+reply
+	
+	
+refulgentis 2 hours ago | root | parent | next [–]
+
+I really appreciate you speaking up. Happened yesterday on GPT Image 2, bit my tongue b/c people would see it as fun policing, and same thing today. And it happens on every. single. LLM. release. thread.
+
+It's disruptive to the commons, doesn't add anything to knowledge of a model at this point, and it's way out of hand when people are not only engaging with the original and creating screenfuls to wade through before on-topic content, but now people are creating the thread before it exists to pattern-match on the engagement they see for the real thing. So now we have 2x.
+
+reply
+	
+	
+jszymborski 2 hours ago | root | parent | next [–]
+
+No more disruptive than this comment. If you don't like it, downvote and move on. It's on topic and doesn't contradict the rules. The reason you see Simon's comment on the top is because people like it and upvote it.
+
+reply
+	
+	
+refulgentis 2 hours ago | root | parent | next [–]
+
+Our comments are no more disruptive, so we shouldn't write them. The other comments are at most as disruptive & fine.
+
+Something seems off when I combine those premises.
+
+You also make a key observation here: the root comment is fine and on-topic. The the replies spin off into nothing to do with the headline, but the example in the comment. Makes it really hard to critique with coming across as fun police.
+
+Also, worth noting there's a distinction here, we're not in simonw's thread: we're in a brand new account's imitation of it.
+
+reply
+	
+	
+2001zhaozhao 1 hour ago | prev | next [–]
+
+I'm kind of interested in a setup where one buys local hardware specifically to run a crap ton of small-to-medium LLM locally 24/7 at high throughput. These models might now be smart enough to make all kinds of autonomous agent workflows viable at a cheap price, with a good queue prioritization system for queries to fully utilize the hardware.
+
+reply
+	
+	
+docheinestages 32 minutes ago | prev | next [–]
+
+Has anyone tried using this with a Claude Code or Qwen Code? They both require very large context windows (32k and 16k respectively), which on a Mac M4 48GB serving the model via LM Studio is painfully slow.
+
+reply
+	
+	
+domh 21 minutes ago | parent | next [–]
+
+I had the best success yet earlier today running https://pi.dev with a local gemma4 model on ollama on my m4 Mac with 48GB ram. I think pi is a lot lighter than Claude code.
+
+reply
+	
+	
+htrp 12 minutes ago | prev | next [–]
+
+Any comparisons against Qwen3.6-35B-A3B?
+
+reply
+	
+	
+vibe42 3 hours ago | prev | next [–]
+
+Q4-Q5 quants of this model runs well on gaming laptops with 24GB VRAM and 64GB RAM. Can get one of those for around $3,500.
+
+Interesting pros/cons vs the new Macbook Pros depending on your prefs.
+
+And Linux runs better than ever on such machines.
+
+reply
+	
+	
+doix 3 hours ago | parent | next [–]
+
+What laptop has that much VRAM and RAM for $3500 with good/okay-ish Linux support? I was looking to upgrade my asus zephyrus g14 from 2021 and things were looking very expensive. Decided to just keep it chugging along for another year.
+
+Then again, I was looking in the UK, maybe prices are extra inflated there.
+
+reply
+	
+	
+green7ea 52 minutes ago | root | parent | next [–]
+
+I got a HP g1a for about 3k€ with 64gb of ram when it came out
+
+reply
+	
+	
+kroaton 3 hours ago | parent | prev | next [–]
+
+A3B-35B is better suited for laptops with enough VRAM/RAM. This dense model however will be bandwidth limited on most cards.
+
+The 5090RTX mobile sits at 896GB/s, as opposed to the 1.8TB/s of the 5090 desktop and most mobile chips have way smaller bandwith than that, so speeds won't be incredible across the board like with Desktop computers.
+
+reply
+	
+	
+jadbox 3 hours ago | root | parent | next [–]
+
+I find A3B-35B as an ideal model for small local projects- definitely the best for me so far
+
+reply
+	
+	
+vladgur 4 hours ago | prev | next [–]
+
+This is getting very close to fit a single 3090 with 24gb VRAM :)
+
+reply
+	
+	
+originalvichy 4 hours ago | parent | next [–]
+
+Yup! Smaller quants will fit within 24GB but they might sacrifice context length.
+
+I’m excited to try out the MLX version to see if 32GB of memory from a Pro M-series Mac can get some acceptable tok/s with longer context. HuggingFace has uploaded some MLX versions already.
+
+reply
+	
+	
+donmcronald 3 hours ago | root | parent | next [–]
+
+I have an Mini M4 Pro with 64GB of 273GB/s memory bandwidth and it's borderline with 3.5-27B. I assume this one is the same. I don't know a ton, but I think it's the memory bandwidth that limits it. It's similar on a DGX Spark I have access to (almost the same memory bandwidth).
+
+It's been a while since I tried it, but I think I was getting around 12-15 tokens per second an that feels slow when you're used to the big commercial models. Whenever I actually want to do stuff with the open source models, I always find myself falling back to OpenRouter.
+
+I tried Intel/Qwen3.6-35B-A3B-int4-AutoRound on a DGX Spark a couple days ago and that felt usable speed wise. I don't know about quality, but that's like running a 3B parameter model. 27B is a lot slower.
+
+I'm not sure if I "get" the local AI stuff everyone is selling. I love the idea of it, but what's the point of 128GB of shared memory on a DGX Spark if I can only run a 20-30GB model before the slow speed makes it unusable?
+
+reply
+	
+	
+ycui1986 4 hours ago | root | parent | prev | next [–]
+
+32GB RAM on mac also need to host OS, software, and other stuff. There may not even be 24GB VRAM left for the model.
+
+reply
+	
+	
+skiing_crawling 1 hour ago | parent | prev | next [–]
+
+I used to run qwen3.5 27b Q4_k_M on a single 3090 with these llama-server flags successfully: `-ngl 99 -c 262144 -fa on --cache-type-k q4_0 --cache-type-v q4_0`
+
+reply
+	
+	
+GaggiX 4 hours ago | parent | prev | next [–]
+
+At 4-bit quantization it should already fit quite nicely.
+
+reply
+	
+	
+Aurornis 4 hours ago | root | parent | next [–]
+
+Unfortunately not with a reasonable context length.
+
+reply
+	
+	
+kkzz99 3 hours ago | root | parent | next [–]
+
+It really depends on what you think a reasonable context length is, but I can get 50k-60k on a 4090.
+
+reply
+	
+	
+GaggiX 2 hours ago | root | parent | prev | next [–]
+
+The model uses Gated DeltaNet and Gated Attention so the memory usage of the KV cache is very low, even at BF16 precision.
+
+reply
+	
+	
+xrd 1 hour ago | prev | next [–]
+
+I'm experimenting with this on my RTX 3090 and opencode. It is pretty impressive so far.
+
+reply
+	
+	
+mark_l_watson 2 hours ago | prev | next [–]
+
+I have been running the slightly larger 31B model for local coding:
+
+ollama launch claude --model qwen3.6:35b-a3b-nvfp4
+
+This has been optimized for Apple Silicon and runs well on a 32G ram system. Local models are getting better!
+
+reply
+	
+	
+yougotwill 1 hour ago | parent | next [–]
+
+Can I ask how much RAM of the 32GB does it use? For example can I run a browser and VS Code at the same time?
+
+reply
+	
+	
+blurbleblurble 32 minutes ago | prev | next [–]
+
+It's a rap on claude
+
+reply
+	
+	
+UncleOxidant 4 hours ago | prev | next [–]
+
+I've been waiting for this one. I've been using 3.5-27b with pretty good success for coding in C,C++ and Verilog. It's definitely helped in the light of less Claude availability on the Pro plan now. If their benchmarks are right then the improvement over 3.5 should mean I'm going to be using Claude even less.
+
+reply
+	
+	
+butz 2 hours ago | prev | next [–]
+
+Are there any "optimized" models, that have lesser hardware requirements and are specialised in single programming language, e.g. C# ?
+
+reply
+	
+	
+zargon 2 hours ago | parent | next [–]
+
+LLMs need diverse and extensive training data to be good at a specific thing. We don't (yet?) know how to train a small model that is really good at one programming language. Just big models that are good at a variety of languages (plus lots of other things).
+
+reply
+	
+	
+Abby_101 1 hour ago | parent | prev | next [–]
+
+Sort of - there's Qwen3-Coder and the Codestral family, but those are still multi-language, just code-focused. For truly single-language specialization, the practical path is fine-tuning an existing base model on a narrow distribution rather than training from scratch.
+
+The issue with C# specifically is dataset availability. Open source C# code on GitHub is a fraction of Python/JS, and Microsoft hasn't released a public corpus the way Meta has for their code models. You'd probably get further fine-tuning Qwen3-Coder (or a similar base) on your specific codebase with LoRA than waiting for a dedicated C#-only model to appear.
+
+reply
+	
+	
+amunozo 5 hours ago | prev | next [–]
+
+A bit skeptical about a 27B model comparable to opus...
+
+reply
+	
+	
+originalvichy 4 hours ago | parent | next [–]
+
+For at least a year now, it has been clear that data quality and fine-tuning are the main sources of improvement for mediym-level models. Size != quality for specialized, narrow use cases such as coding.
+
+It’s not a surprise that models are leapfrogging each other when the engineers are able to incorporate better code examples and reasoning traces, which in turn bring higher quality outputs.
+
+reply
+	
+	
+cbg0 3 hours ago | root | parent | next [–]
+
+If all you're looking at is benchmarks that might be true, but those are way too easy to game. Try using this model alongside Opus for some work in Rust/C++ and it'll be night and day. You really can't compare a model that's got trillions of parameters to a 27B one.
+
+reply
+	
+	
+otabdeveloper4 2 hours ago | root | parent | next [–]
+
+> ...and it'll be night and day.
+
+That's just, like, your opinion, man.
+
+> You really can't compare a model that's got trillions of parameters to a 27B one.
+
+Parameter count doesn't matter much when coding. You don't need in-depth general knowledge or multilingual support in a coding model.
+
+reply
+	
+	
+cbg0 2 hours ago | root | parent | next [–]
+
+I often do need in-depth general knowledge in my coding model so that I don't have to explain domain specific logic to it every time and so that it can have some sense of good UX.
+
+reply
+	
+	
+rubiquity 3 hours ago | parent | prev | next [–]
+
+You should try it out. I'm incredibly impressed with Qwen 3.5 27B for systems programming work. I use Opus and Sonnet at work and Qwen 3.x at home for fun and barely notice a difference given that systems programming work needs careful guidance for any model currently. I don't try to one shot landing pages or whatever.
+
+reply
+	
+	
+bityard 3 hours ago | root | parent | next [–]
+
+Are you using the same agent/harness/whatever for both Claude and Qwen, or something different for each one?
+
+reply
+	
+	
+rubiquity 2 hours ago | root | parent | next [–]
+
+I use Pi at home and Claude Code at work (no choice). I use bone stock Pi. No extensions.
+
+reply
+	
+	
+Aurornis 4 hours ago | parent | prev | next [–]
+
+You should be skeptical. Benchmark racing is the current meta game in open weight LLMs.
+
+Every release is accompanied by claims of being as good as Sonnet or Opus, but when I try them (even hosted full weights) they’re far from it.
+
+Impressive for the size, though!
+
+reply
+	
+	
+jjcm 4 hours ago | parent | prev | next [–]
+
+Opus 4.5 mind you, but I’m not too surprised given how good 3.5 was and how good the qwopus fine tune was. The model was shown to benefit heavily from further RL.
+
+reply
+	
+	
+esafak 4 hours ago | parent | prev | next [–]
+
+Some of these benchmarks are supposedly easy to game. Which ones should we pay attention to?
+
+reply
+	
+	
+NitpickLawyer 2 hours ago | root | parent | next [–]
+
+SWE-REbench should not be gameable. They collect new issues from live repos, and if you check 1-2 months after a model was released, you can get an idea. But even that would be "benchmaxxxable", which is an overloaded term that can mean many things, but the most vanilla interpretation is that with RL you can get a model to follow a certain task pretty well, but it'll get "stuck" on that task type, or "stubborn" when asked similar but sufficiently different tasks. So for swe-rebench that would be "it fixes bugs in these types of repos, under this harness, but ask it to do soemthing else in a repo and you might not get the same results". In a nutshell.
+
+reply
+	
+	
+underlines 4 hours ago | root | parent | prev | next [–]
+
+well, your own, unleaked ones, representing your real workloads.
+
+if you can't afford to do that, look at a lot of them, eg. on artificialanalysis.com they merge multiple benchmarks across weighted categories and build an Intelligence Score, Coding Score and Agentic score.
+
+reply
+	
+	
+cbg0 2 hours ago | root | parent | prev | next [–]
+
+None. Try them out with your own typical tasks to see the performance.
+
+reply
+	
+	
+WarmWash 4 hours ago | root | parent | prev | next [–]
+
+ARC-AGI 2
+
+GLM 5 scores 5% on the semi-private set, compared to SOTA models which hover around 80%.
+
+reply
+	
+	
+wesammikhail 4 hours ago | parent | prev | next [–]
+
+you'd be surprised how good small models have gotten. Size of the model isnt all that matters.
+
+reply
+	
+	
+freedomben 4 hours ago | root | parent | next [–]
+
+Plus you can control thinking time a lot more, so when Anthropic lobotomizes Opus on you...
+
+reply
+	
+	
+verdverm 4 hours ago | root | parent | prev | next [–]
+
+My experience with qwen-3.6:35B-A3B reinforces this, gonna give this a spin when unsloth has quants available
+
+Gemini flash was just as good as pro for most tasks with good prompts, tools, and context. Gemma 4 was nearly as good as flash and Qwen 3.6 appears to be even better.
+
+reply
+	
+	
+cassianoleal 4 hours ago | root | parent | next [–]
+
+> when unsloth has quants available
+
+https://huggingface.co/unsloth/Qwen3.6-27B-GGUF
+
+reply
+	
+	
+verdverm 4 hours ago | root | parent | next [–]
+
+That was quick (compared to the 1T Kimi-2.6, not surprising)
+
+reply
+	
+	
+danielhanchen 3 hours ago | root | parent | next [–]
+
+Haha :) We had some issues with Kimi-2.6 since it was int4 and we were investigating how to handle it :)
+
+reply
+	
+	
+verdverm 56 minutes ago | root | parent | next [–]
+
+Appreciate what y'all do! We were slacking about how many HGX-B300 it would take to run Kimi and it looks like we could actually fit 2-3 Kimis on a single HGX.
+
+reply
+	
+	
+dudefeliciano 4 hours ago | root | parent | prev | next [–]
+
+> Size of the model isnt all that matters.
+
+What matters is the motion in the tokens
+
+reply
+	
+	
+cmrdporcupine 3 hours ago | parent | prev | next [–]
+
+A small model can be made to be "comparable to Opus" in some narrow domains, and that's what they've done here.
+
+But when actually employed to write code they will fall over when they leave that specific domain.
+
+Basically they might have skill but lack wisdom. Certainly at this size they will lack anywhere close to the same contextual knowledge.
+
+Still these things could be useful in the context of more specialized tooling, or in a harness that heavily prompts in the right direction, or as a subagent for a "wiser" larger model that directs all the planning and reviews results.
+
+reply
+	
+	
+objektif 26 minutes ago | prev | next [–]
+
+Does anyone know good provider for low latency llm api provider? We tried to look at Cerebras and Groq but they have 0 capacity right now. GPT models are too slow for us at the moment. Gemini are better but not really at same level as GPT.
+
+reply
+	
+	
+originalvichy 4 hours ago | prev | next [–]
+
+Good news!
+
+Friendly reminder: wait a couple weeks to judge the ”final” quality of these free models. Many of them suffer from hidden bugs when connected to an inference backend or bad configs that slow them down. The dev community usually takes a week or two to find the most glaring issues. Some of them may require patches to tools like llama.cpp, and some require users to avoid specific default options.
+
+Gemma 4 had some issues that were ironed out within a week or two. This model is likely no different. Take initial impressions with a grain of salt.
+
+reply
+	
+	
+jjcm 4 hours ago | parent | next [–]
+
+This is probably less likely with this model, as it’s almost certainly a further RL training continuation of 3.5 27b. The bugs with this architecture were worked out when that dropped.
+
+reply
+	
+	
+originalvichy 3 hours ago | root | parent | next [–]
+
+Valuable note!
+
+reply
+	
+	
+Aurornis 4 hours ago | parent | prev | next [–]
+
+Good advice for all new LLM experimenters.
+
+The bugs come from the downstream implementations and quantizations (which inherit bugs in the tools).
+
+Expect to update your tools and redownload the quants multiple times over 2-4 weeks. There is a mad rush to be first to release quants and first to submit PRs to the popular tools, but the output is often not tested much before uploading.
+
+If you experiment with these on launch week, you are the tester. :)
+
+reply
+	
+	
+pama 4 hours ago | prev | next [–]
+
+Has anyone tested it at home yet and wants to share early impressions?
+
+reply
+	
+	
+lreeves 4 hours ago | parent | next [–]
+
+I have been kicking the tires for about 40 minutes since it downloaded and it seems excellent at general tasks, image comprehension and coding/tool-calling (using VLLM to serve it). I think it squeaks past Gemma4 but it's hard to tell yet.
+
+reply
+	
+	
+alfonsodev 4 hours ago | root | parent | next [–]
+
+good to hear! Do you mind sharing your setup and tokens / seconds performance ?
+
+reply
+	
+	
+lreeves 3 hours ago | root | parent | next [–]
+
+I'm running the unquantized base model on 2xA6000s (Ampere gen, 48GB each). Runs at about 25 tokens/second.
+
+reply
+	
+	
+NitpickLawyer 2 hours ago | root | parent | next [–]
+
+FYI they also released FP8 quants, and those should be faster on your setup (we have the same). As long as you keep kv at 16bit, FP8 should be close-to-lossless compared to 16bit, but with more context available and faster inference speed.
+
+reply
+	
+	
+jedisct1 1 hour ago | prev | next [–]
+
+I really like local models for code reviews / security audits.
+
+Even if they don't run super fast, I can let them work overnight and get comprehensive reports in the morning.
+
+I used Qwen3.6-27B on an M5 (oq8, using omlx) and Swival (https://swival.dev) /audit command on small code bases I use for benchmarking models for security audits.
+
+It found 8 out of 10, which is excellent for a local model, produced valid patches, and didn't report any false positives. which is even better.
+
+reply
+	
+	
+Mr_Eri_Atlov 3 hours ago | prev | next [–]
+
+Excited to try this, the Qwen 3.6 MoE they just released a week or so back had a noticeable performance bump from 3.5 in a rather short period of time.
+
+For anyone invested in running LLMs at home or on a much more modest budget rig for corporate purposes, Gemma 4 and Qwen 3.6 are some of the most promising models available.
+
+reply
+	
+	
+LowLevelKernel 1 hour ago | prev | next [–]
+
+How much VRAM is needed?
+
+reply
+	
+	
+awestroke 1 hour ago | parent | next [–]
+
+27 multiplied by quant, add context
+
+reply
+	
+	
+spwa4 4 hours ago | prev | next [–]
+
+Unsloth quants available:
+
+https://unsloth.ai/docs/models/qwen3.6
+
+reply
+	
+	
+genpfault 3 hours ago | parent | next [–]
+
+Getting ~36-33 tok/s (see the "S_TG t/s" column) on a 24GB Radeon RX 7900 XTX using llama.cpp's Vulkan backend:
+
+    $ llama-server --version
+    version: 8851 (e365e658f)
+
+    $ llama-batched-bench -hf unsloth/Qwen3.6-27B-GGUF:IQ4_XS -npp 1000,2000,4000,8000,16000,32000 -ntg 128 -npl 1 -c 34000
+    |    PP |     TG |    B |   N_KV |   T_PP s | S_PP t/s |   T_TG s | S_TG t/s |      T s |    S t/s |
+    |-------|--------|------|--------|----------|----------|----------|----------|----------|----------|
+    |  1000 |    128 |    1 |   1128 |    1.529 |   654.11 |    3.470 |    36.89 |    4.999 |   225.67 |
+    |  2000 |    128 |    1 |   2128 |    3.064 |   652.75 |    3.498 |    36.59 |    6.562 |   324.30 |
+    |  4000 |    128 |    1 |   4128 |    6.180 |   647.29 |    3.535 |    36.21 |    9.715 |   424.92 |
+    |  8000 |    128 |    1 |   8128 |   12.477 |   641.16 |    3.582 |    35.73 |   16.059 |   506.12 |
+    | 16000 |    128 |    1 |  16128 |   25.849 |   618.98 |    3.667 |    34.91 |   29.516 |   546.42 |
+    | 32000 |    128 |    1 |  32128 |   57.201 |   559.43 |    3.825 |    33.47 |   61.026 |   526.47 |
+
+reply
+	
+	
+johndough 2 hours ago | root | parent | next [–]
+
+Getting ~44-40 tok/s on 24GB RTX 3090 (llama.cpp version 8884, same llama-batched-bench call):
+
+    |    PP |     TG |    B |   N_KV |   T_PP s | S_PP t/s |   T_TG s | S_TG t/s |      T s |    S t/s |
+    |-------|--------|------|--------|----------|----------|----------|----------|----------|----------|
+    |  1000 |    128 |    1 |   1128 |    0.684 |  1462.61 |    2.869 |    44.61 |    3.553 |   317.47 |
+    |  2000 |    128 |    1 |   2128 |    1.390 |  1438.84 |    2.868 |    44.64 |    4.258 |   499.80 |
+    |  4000 |    128 |    1 |   4128 |    2.791 |  1433.18 |    2.886 |    44.35 |    5.677 |   727.11 |
+    |  8000 |    128 |    1 |   8128 |    5.646 |  1416.98 |    2.922 |    43.80 |    8.568 |   948.65 |
+    | 16000 |    128 |    1 |  16128 |   11.851 |  1350.10 |    3.007 |    42.57 |   14.857 |  1085.51 |
+    | 32000 |    128 |    1 |  32128 |   25.855 |  1237.66 |    3.168 |    40.40 |   29.024 |  1106.96 |
+
+Edit: Model gets stuck in infinite loops at this quantization level. I've also tried Q5_K_M quantization (fits up to 51968 context length), which seems more robust.
+
+reply
+	
+	
+cpburns2009 1 hour ago | root | parent | prev | next [–]
+
+~25-26 tok/s with ROCm using the same card, llama.cpp b8884:
+
+    $ llama-batched-bench -dev ROCm1 -hf unsloth/Qwen3.6-27B-GGUF:IQ4_XS -npp 1000,2000,4000,8000,16000,32000 -ntg 128 -npl 1 -c 34000
+    |    PP |     TG |    B |   N_KV |   T_PP s | S_PP t/s |   T_TG s | S_TG t/s |      T s |    S t/s |
+    |-------|--------|------|--------|----------|----------|----------|----------|----------|----------|
+    |  1000 |    128 |    1 |   1128 |    1.034 |   966.90 |    4.851 |    26.39 |    5.885 |   191.67 |
+    |  2000 |    128 |    1 |   2128 |    2.104 |   950.38 |    4.853 |    26.38 |    6.957 |   305.86 |
+    |  4000 |    128 |    1 |   4128 |    4.269 |   937.00 |    4.876 |    26.25 |    9.145 |   451.40 |
+    |  8000 |    128 |    1 |   8128 |    8.962 |   892.69 |    4.912 |    26.06 |   13.873 |   585.88 |
+    | 16000 |    128 |    1 |  16128 |   19.673 |   813.31 |    4.996 |    25.62 |   24.669 |   653.78 |
+    | 32000 |    128 |    1 |  32128 |   46.304 |   691.09 |    5.122 |    24.99 |   51.426 |   624.75 |
+
+reply
+	
+	
+GrinningFool 3 hours ago | parent | prev | next [–]
+
+128GB (112 GB avail) Strix AI 395+ Radeon 8060x (gfx1151)
+
+llama-* version 8889 w/ rocm support ; nightly rocm
+
+llama.cpp/build/bin/llama-batched-bench --version unsloth/Qwen3.6-27B-GGUF:UD-Q8_K_XL -npp 1000,2000,4000,8000,16000,32000 -ntg 128 -npl 1 -c 34000
+
+    |    PP |     TG |    B |   N_KV |   T_PP s | S_PP t/s |   T_TG s | S_TG t/s |      T s |    S t/s |
+    |-------|--------|------|--------|----------|----------|----------|----------|----------|----------|
+    |  1000 |    128 |    1 |   1128 |    2.776 |   360.22 |   20.192 |     6.34 |   22.968 |    49.11 |
+    |  2000 |    128 |    1 |   2128 |    5.778 |   346.12 |   20.211 |     6.33 |   25.990 |    81.88 |
+    |  4000 |    128 |    1 |   4128 |   11.723 |   341.22 |   20.291 |     6.31 |   32.013 |   128.95 |
+    |  8000 |    128 |    1 |   8128 |   24.223 |   330.26 |   20.399 |     6.27 |   44.622 |   182.15 |
+    | 16000 |    128 |    1 |  16128 |   52.521 |   304.64 |   20.669 |     6.19 |   73.190 |   220.36 |
+    | 32000 |    128 |    1 |  32128 |  120.333 |   265.93 |   21.244 |     6.03 |  141.577 |   226.93 |
+
+More directly comparable to the results posted by genpfault (IQ4_XS):
+
+llama.cpp/build/bin/llama-batched-bench -hf unsloth/Qwen3.6-27B-GGUF:IQ4_XS -npp 1000,2000,4000,8000,16000,32000 -ntg 128 -npl 1 -c 34000
+
+    |    PP |     TG |    B |   N_KV |   T_PP s | S_PP t/s |   T_TG s | S_TG t/s |      T s |    S t/s |
+    |-------|--------|------|--------|----------|----------|----------|----------|----------|----------|
+    |  1000 |    128 |    1 |   1128 |    2.543 |   393.23 |    9.829 |    13.02 |   12.372 |    91.17 |
+    |  2000 |    128 |    1 |   2128 |    5.400 |   370.36 |    9.891 |    12.94 |   15.291 |   139.17 |
+    |  4000 |    128 |    1 |   4128 |   10.950 |   365.30 |    9.972 |    12.84 |   20.922 |   197.31 |
+    |  8000 |    128 |    1 |   8128 |   22.762 |   351.46 |   10.118 |    12.65 |   32.880 |   247.20 |
+    | 16000 |    128 |    1 |  16128 |   49.386 |   323.98 |   10.387 |    12.32 |   59.773 |   269.82 |
+    | 32000 |    128 |    1 |  32128 |  114.218 |   280.16 |   10.950 |    11.69 |  125.169 |   256.68 |
+
+reply
+	
+	
+cpburns2009 1 hour ago | root | parent | next [–]
+
+Results are nearly identical running on a Strix Halo using Vulkan, llama.cpp b8884:
+
+    $ llama-batched-bench -dev Vulkan2 -hf unsloth/Qwen3.6-27B-GGUF:IQ4_XS -npp 1000,2000,4000,8000,16000,32000 -ntg 128 -npl 1 -c 34000
+    |    PP |     TG |    B |   N_KV |   T_PP s | S_PP t/s |   T_TG s | S_TG t/s |      T s |    S t/s |
+    |-------|--------|------|--------|----------|----------|----------|----------|----------|----------|
+    |  1000 |    128 |    1 |   1128 |    3.288 |   304.15 |    9.873 |    12.96 |   13.161 |    85.71 |
+    |  2000 |    128 |    1 |   2128 |    6.415 |   311.79 |    9.883 |    12.95 |   16.297 |   130.57 |
+    |  4000 |    128 |    1 |   4128 |   13.113 |   305.04 |    9.979 |    12.83 |   23.092 |   178.76 |
+    |  8000 |    128 |    1 |   8128 |   27.491 |   291.01 |   10.155 |    12.61 |   37.645 |   215.91 |
+    | 16000 |    128 |    1 |  16128 |   59.079 |   270.83 |   10.476 |    12.22 |   69.555 |   231.87 |
+    | 32000 |    128 |    1 |  32128 |  148.625 |   215.31 |   11.084 |    11.55 |  159.709 |   201.17 |
+
+reply
+	
+	
+amstan 3 hours ago | root | parent | prev | next [–]
+
+you should try vulkan instead of rocm. it goes like 20% faster.
+
+reply
+	
+	
+MrDrMcCoy 1 hour ago | root | parent | next [–]
+
+Is that based on recent experience? With "stable" ROCm, or the (IMHO better) releases from TheRock? With older or more recent hardware? The AMD landscape is rather uneven.
+
+reply
+	
+	
+cpburns2009 1 hour ago | root | parent | prev | next [–]
+
+For this model results are identical. In my experience it can go either way by up to 10%.
+
+reply
+	
+	
+endymi0n 4 hours ago | parent | prev | next [–]
+
+at this trajectory, unsloth are going to release the models BEFORE the model drop within the next weeks...
+
+reply
+	
+	
+danielhanchen 3 hours ago | root | parent | next [–]
+
+Haha :)
+
+reply
+	
+	
+cpburns2009 1 hour ago | root | parent | next [–]
+
+Do you get early access so you can prep the quants for release?
+
+reply
+	
+	
+ErneX 23 minutes ago | root | parent | next [–]
+
+IIRC they mentioned they do.
+
+reply
+
+
+
+Consider applying for YC's Summer 2026 batch! Applications are open till May 4
+
+Guidelines | FAQ | Lists | API | Security | Legal | Apply to YC | Contact
+
+Search: 

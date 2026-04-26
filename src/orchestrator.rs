@@ -136,25 +136,17 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
 
 /// Find the bundled model in ~/.cinderella/models/ or extract from release archive.
 fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
-    // Check RAM
-    if hw.available_ram_gb < BUNDLED_MODEL.total_ram_required_gb {
-        if hw.total_ram_gb < 16.0 {
-            anyhow::bail!(
-                "Cannot fit bundled model ({} needs ~{:.0} GiB free).\n\
-                 Your Mac has {:.0} GB total. Cinderella needs at least 16 GB.\n\
-                 Try: cinderella --model /path/to/smaller-model.gguf <project>",
-                BUNDLED_MODEL.name,
-                BUNDLED_MODEL.total_ram_required_gb,
-                hw.total_ram_gb
-            );
-        } else {
-            anyhow::bail!(
-                "Not enough memory. Need ~{:.0} GiB free, you have {:.1} GiB.\n\
-                 Close other applications and try again.",
-                BUNDLED_MODEL.total_ram_required_gb,
-                hw.available_ram_gb
-            );
-        }
+    // Check RAM — use total RAM, not available. macOS unified memory will reclaim
+    // inactive/purgeable pages under pressure, so "available" is misleadingly low.
+    if hw.total_ram_gb < BUNDLED_MODEL.total_ram_required_gb {
+        anyhow::bail!(
+            "Cannot fit bundled model ({} needs ~{:.0} GiB).\n\
+             Your Mac has {:.0} GB total.\n\
+             Try: cinderella --model /path/to/smaller-model.gguf <project>",
+            BUNDLED_MODEL.name,
+            BUNDLED_MODEL.total_ram_required_gb,
+            hw.total_ram_gb
+        );
     }
 
     let models_dir = config::models_dir();

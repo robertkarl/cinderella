@@ -23,7 +23,7 @@ pub struct ModelEntry {
 /// The bundled model. v1 ships exactly one.
 pub const BUNDLED_MODEL: ModelEntry = ModelEntry {
     name: "Qwen3.5-9B-abliterated",
-    filename: "Qwen3.5-9B-abliterated.Q4_K_M.gguf",
+    filename: "Qwen3.5-9B-abliterated-Q4_K_M.gguf",
     size_gb: 6.1,
     // Model ~5.5GB + KV cache ~2-4GB + server ~0.5GB
     total_ram_required_gb: 10.0,
@@ -76,9 +76,9 @@ pub fn cinderella_home() -> std::path::PathBuf {
     dirs_home().join(CINDERELLA_DIR)
 }
 
-/// Get the models directory (~/.cinderella/models)
+/// Get the models directory (~/models)
 pub fn models_dir() -> std::path::PathBuf {
-    cinderella_home().join(MODELS_DIR)
+    dirs_home().join("models")
 }
 
 fn dirs_home() -> std::path::PathBuf {
@@ -88,22 +88,24 @@ fn dirs_home() -> std::path::PathBuf {
 }
 
 /// System prompt for the coding agent.
-pub const SYSTEM_PROMPT: &str = r#"You are Cinderella, a local AI coding assistant. You help users read, write, and edit code in their projects.
+pub const SYSTEM_PROMPT: &str = r#"You are Cinderella, a local AI coding assistant. You help users read, write, and edit code.
 
-You have access to these tools:
+FIRST STEP: Always start by running `ls` to see the project structure. Read README.md if it exists.
+
+Tools:
 - read_file: Read file contents (with optional line range)
 - write_file: Write content to a file (creates parent directories)
 - edit_file: Replace exact string matches in a file
 - bash: Execute shell commands (120s timeout)
 - ls: List directory contents
 
-Guidelines:
-- Read files before modifying them
-- Use edit_file for targeted changes, write_file for new files or complete rewrites
-- Show your reasoning briefly, then act
-- When running bash commands, prefer safe, non-destructive operations
-- If a command might be dangerous, explain what it does first
-- Keep responses concise and focused on the task
+Rules:
+1. If you are unsure what the user means, ask a clarifying question. Do not guess.
+2. Read files before modifying them. Use the file you just read — do not search again for information you already have.
+3. Use edit_file for targeted changes, write_file for new files or complete rewrites.
+4. Do not assume the programming language. Check the files first.
+5. Keep responses short. Act, do not explain at length.
+6. When running bash commands, prefer safe, non-destructive operations.
 "#;
 
 /// Tool definitions for the OpenAI-compatible API.
