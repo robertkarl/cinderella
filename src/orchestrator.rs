@@ -18,6 +18,8 @@ pub struct OrchestratorConfig {
     pub llama_server_path: PathBuf,
     /// Remote API URL — skip local server if set.
     pub api_url: Option<String>,
+    /// Model name for API requests (llama-swap routing).
+    pub model_name: String,
 }
 
 /// Run the full orchestration flow.
@@ -97,10 +99,11 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
     let api_url = server.api_url();
     let project_dir = cfg.project_dir.clone();
     let ctx_size = BUNDLED_MODEL.ctx_size;
+    let model_name = cfg.model_name.clone();
 
     // Agent task
     let agent_handle = tokio::spawn(async move {
-        let mut agent = Agent::new(&api_url, project_dir, ctx_size);
+        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name);
 
         while let Some(cmd) = cmd_rx.recv().await {
             match cmd {
@@ -168,9 +171,10 @@ async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
     let api_url = api_url.to_string();
     let project_dir = cfg.project_dir.clone();
     let ctx_size = BUNDLED_MODEL.ctx_size;
+    let model_name = cfg.model_name.clone();
 
     let agent_handle = tokio::spawn(async move {
-        let mut agent = Agent::new(&api_url, project_dir, ctx_size);
+        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name);
 
         while let Some(cmd) = cmd_rx.recv().await {
             match cmd {

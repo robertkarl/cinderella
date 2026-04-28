@@ -13,12 +13,14 @@ use crate::config::ServerConfig;
 
 const HEALTH_CHECK_TIMEOUT_SECS: u64 = 60;
 const HEALTH_CHECK_INTERVAL_MS: u64 = 500;
+#[allow(dead_code)]
 const MAX_RESTARTS: u32 = 3;
 
 pub struct ServerManager {
     config: ServerConfig,
     llama_server_path: PathBuf,
     child: Option<Child>,
+    #[allow(dead_code)]
     restart_count: u32,
     pub gpu_layers_loaded: Option<u32>,
     pub gpu_layers_total: Option<u32>,
@@ -109,6 +111,7 @@ impl ServerManager {
     }
 
     /// Check if the server process is still running.
+    #[allow(dead_code)]
     pub fn is_running(&mut self) -> bool {
         if let Some(ref mut child) = self.child {
             match child.try_wait() {
@@ -122,6 +125,7 @@ impl ServerManager {
     }
 
     /// Auto-restart if crashed. Returns true if restarted, false if max restarts exceeded.
+    #[allow(dead_code)]
     pub async fn ensure_running(&mut self) -> Result<bool> {
         if self.is_running() {
             return Ok(true);
@@ -140,6 +144,7 @@ impl ServerManager {
     }
 
     /// Get the restart count for display.
+    #[allow(dead_code)]
     pub fn restart_count(&self) -> u32 {
         self.restart_count
     }

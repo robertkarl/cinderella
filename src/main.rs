@@ -34,6 +34,11 @@ struct Cli {
     /// Example: --api-url http://192.168.50.4:11434
     #[arg(long)]
     api_url: Option<String>,
+
+    /// Model name to send in API requests (for llama-swap routing).
+    /// Default: "local" for local llama-server.
+    #[arg(long, default_value = "local")]
+    model_name: String,
 }
 
 #[tokio::main]
@@ -62,6 +67,7 @@ async fn main() -> Result<()> {
             port: cli.port,
             llama_server_path: PathBuf::new(),
             api_url: Some(api_url),
+            model_name: cli.model_name,
         };
         return orchestrator::run(cfg).await;
     }
@@ -79,6 +85,7 @@ async fn main() -> Result<()> {
         port: cli.port,
         llama_server_path,
         api_url: None,
+        model_name: cli.model_name,
     };
 
     orchestrator::run(cfg).await

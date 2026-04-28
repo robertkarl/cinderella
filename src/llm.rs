@@ -50,6 +50,7 @@ pub enum StreamEvent {
 /// SSE streaming chat completion against an OpenAI-compatible endpoint.
 pub struct LlmClient {
     base_url: String,
+    model_name: String,
     client: reqwest::Client,
 }
 
@@ -85,9 +86,10 @@ struct SseFunctionDelta {
 }
 
 impl LlmClient {
-    pub fn new(base_url: &str) -> Self {
+    pub fn new(base_url: &str, model_name: &str) -> Self {
         Self {
             base_url: base_url.to_string(),
+            model_name: model_name.to_string(),
             client: reqwest::Client::new(),
         }
     }
@@ -101,11 +103,12 @@ impl LlmClient {
         mut on_event: impl FnMut(StreamEvent),
     ) -> Result<Message> {
         let body = serde_json::json!({
-            "model": "local",
+            "model": self.model_name,
             "messages": messages,
             "tools": tools,
             "stream": true,
             "temperature": 0.1,
+            "tool_choice": "auto",
         });
 
         let response = self

@@ -12,6 +12,7 @@ const MAX_TOOL_RESULT_CHARS: usize = 8000;
 const SUMMARIZE_AFTER_TURNS: usize = 10;
 const CONTEXT_WARN_PERCENT: f64 = 0.8;
 const MAX_RETRY_ON_PARSE_FAILURE: u32 = 2;
+const MAX_CONSECUTIVE_TOOL_FAILURES: u32 = 3;
 
 /// Events the agent sends to the TUI.
 pub enum AgentEvent {
@@ -23,7 +24,6 @@ pub enum AgentEvent {
     ToolStart { name: String, args_display: String },
     /// Tool execution completed.
     ToolResult {
-        name: String,
         output: String,
         success: bool,
     },
@@ -36,6 +36,7 @@ pub enum AgentEvent {
     /// Agent turn complete (text response fully received).
     TurnComplete,
     /// Server was restarted.
+    #[allow(dead_code)]
     ServerRestarted { attempt: u32 },
 }
 
@@ -48,8 +49,8 @@ pub struct Agent {
 }
 
 impl Agent {
-    pub fn new(api_url: &str, project_dir: PathBuf, ctx_size: u32) -> Self {
-        let client = LlmClient::new(api_url);
+    pub fn new(api_url: &str, project_dir: PathBuf, ctx_size: u32, model_name: &str) -> Self {
+        let client = LlmClient::new(api_url, model_name);
 
         let messages = vec![Message {
             role: "system".to_string(),
@@ -107,6 +108,7 @@ impl Agent {
 
         // Agent loop: keep going while LLM produces tool calls
         let mut retry_count: u32 = 0;
+        let mut consecutive_failures: u32 = 0;
         loop {
             let tools = config::tool_definitions();
             let mut response_text = String::new();
@@ -192,10 +194,16 @@ impl Agent {
                             // Truncate for display (5 lines)
                             let display_output = truncate_for_display(&result.output, 5);
                             on_event(AgentEvent::ToolResult {
-                                name: tc.function.name.clone(),
                                 output: display_output,
                                 success: result.success,
                             });
+
+                            // Track consecutive failures
+                            if result.success {
+                                consecutive_failures = 0;
+                            } else {
+                                consecutive_failures += 1;
+                            }
 
                             // Truncate for context (100 lines / 8K chars)
                             let context_output =
@@ -208,6 +216,25 @@ impl Agent {
                                 tool_calls: None,
                                 tool_call_id: Some(tc.id.clone()),
                             });
+                        }
+
+                        // Bail if too many consecutive failures
+                        if consecutive_failures >= MAX_CONSECUTIVE_TOOL_FAILURES {
+                            let bail_msg = format!(
+                                "{} consecutive tool failures. Stopping to avoid an infinite loop. \
+                                 Re-read the error messages above and try a different approach, \
+                                 or ask the user for help.",
+                                consecutive_failures
+                            );
+                            on_event(AgentEvent::Warning(bail_msg.clone()));
+                            self.messages.push(Message {
+                                role: "user".to_string(),
+                                content: Some(bail_msg),
+                                tool_calls: None,
+                                tool_call_id: None,
+                            });
+                            on_event(AgentEvent::TurnComplete);
+                            return Ok(());
                         }
 
                         // Update context usage after tool results
@@ -325,7 +352,7 @@ fn truncate_for_display(output: &str, max_lines: usize) -> String {
     let mut result: Vec<&str> = lines[..max_lines].to_vec();
     result.push(&"");
     let remaining = lines.len() - max_lines;
-    format!("{}\n...({} more lines)", result.join("\n"), remaining)
+    format!("{}\n...({} more lines, but truncated to 100 lines.)", result.join("\n"), remaining)
 }
 
 fn truncate_for_context(output: &str) -> String {

@@ -15,18 +15,8 @@ use tokio::sync::mpsc;
 
 use crate::agent::AgentEvent;
 
-/// Display entries in the conversation view.
-#[derive(Clone)]
-pub enum ChatEntry {
-    UserMessage(String),
-    AssistantText(String),
-    ToolStart { name: String, args: String },
-    ToolResult { name: String, output: String, success: bool },
-    Warning(String),
-    Info(String),
-}
-
 /// Status bar state.
+#[allow(dead_code)]
 #[derive(Default, Clone)]
 pub struct StatusBar {
     pub model_name: String,
@@ -44,10 +34,12 @@ pub enum TuiCommand {
     SendMessage(String),
     Clear,
     Quit,
+    #[allow(dead_code)]
     Cancel,
 }
 
 /// Print a styled line (dimmed).
+#[allow(dead_code)]
 fn print_dim(text: &str) {
     if std::env::var("NO_COLOR").is_ok() {
         println!("{}", text);
@@ -260,7 +252,6 @@ pub async fn run(
                     println!("\n  ● {} {}", name, args_display);
                 }
                 AgentEvent::ToolResult {
-                    name: _,
                     output,
                     success,
                 } => {

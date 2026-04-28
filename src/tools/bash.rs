@@ -55,6 +55,7 @@ const AUTO_DENY: &[Capability] = &[
 
 /// Classification result for a bash command.
 pub struct CommandClassification {
+    #[allow(dead_code)]
     pub capabilities: HashSet<Capability>,
     pub policy: CommandPolicy,
 }

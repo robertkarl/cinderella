@@ -4,7 +4,9 @@
 pub const DEFAULT_PORT: u16 = 8787;
 pub const DEFAULT_CTX_SIZE: u32 = 32768;
 pub const CINDERELLA_DIR: &str = ".cinderella";
+#[allow(dead_code)]
 pub const MODELS_DIR: &str = "models";
+#[allow(dead_code)]
 pub const TEMPLATES_DIR: &str = "templates";
 
 /// RAM tiers for model selection.
@@ -15,6 +17,7 @@ pub struct ModelEntry {
     pub size_gb: f64,
     pub total_ram_required_gb: f64,
     pub quant: &'static str,
+    #[allow(dead_code)]
     pub sha256: &'static str,
     pub ctx_size: u32,
     pub n_gpu_layers: i32,
@@ -22,15 +25,15 @@ pub struct ModelEntry {
 
 /// The bundled model. v1 ships exactly one.
 pub const BUNDLED_MODEL: ModelEntry = ModelEntry {
-    name: "Qwen3.5-9B-abliterated",
-    filename: "Qwen3.5-9B-abliterated-Q4_K_M.gguf",
-    size_gb: 6.1,
-    // Model ~5.5GB + KV cache ~2-4GB + server ~0.5GB
-    total_ram_required_gb: 10.0,
+    name: "Qwen3.5-35B-MoE",
+    filename: "Qwen3.5-35B-MoE-Q4_K_M.gguf",
+    size_gb: 22.0,
+    // Model ~20GB + KV cache ~8-10GB + server ~1GB
+    total_ram_required_gb: 32.0,
     quant: "Q4_K_M",
     sha256: "TODO_FILL_AFTER_DOWNLOAD",
     ctx_size: DEFAULT_CTX_SIZE,
-    n_gpu_layers: 999, // full offload
+    n_gpu_layers: 48, // partial offload for MoE
 };
 
 /// Server startup arguments derived from a model entry.
