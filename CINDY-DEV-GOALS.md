@@ -4,7 +4,7 @@ An app that bundles
 
 a) llmfit
 b) a polished MacOS coding UI like Cursor or Codex (or maybe even Claude Code)
-c) One-click install as God intended -- bundle the model.
+c) One-click install as Steve Jobs intended -- bundle the model.
 d) Decent model llama-server defaults
 
 would be popular.
