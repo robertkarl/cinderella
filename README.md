@@ -1,9 +1,13 @@
+# What is this
+
 Cinderella is a very simple agent harness written in rust.
 
 the code is in src.
 
 See also DEV GOALS in [CINDY-DEV-GOALS.md](CINDY-DEV-GOALS.md)
 
+
+# notes from 4-26
 
 the following graph shows the 'cliff' as tokens/second drops when using a MoE model with some layers offloaded to CPU RAM.
 
