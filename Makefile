@@ -24,6 +24,9 @@ cindy-no-start-llama:
 
 # Run cinderella against the homelab 35B MoE (llama-swap on VM 220)
 cindy-remote:
-	cargo run -- --api-url http://192.168.50.4:11434 --model-name "qwen3.5:35b-a3b" .
+	cargo run -- --api-url http://192.168.50.4:11434 --model-name "qwen3.5:35b-a3b-coding" .
 
-.PHONY: stop_all_llama_server startllama pidev cindy-no-start-llama cindy-remote
+remote-query-models:
+	curl http://192.168.50.4:11434/v1/models
+
+.PHONY: stop_all_llama_server startllama pidev cindy-no-start-llama cindy-remote remote-query-models
