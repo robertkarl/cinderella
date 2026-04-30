@@ -16,6 +16,7 @@ On more capable machines with more unified memory, Cindy picks the "LLM that fit
 - Combine open source tools like llama_server and open weights models (currently focused on the Qwen family to constrain tool call work) into one already configured package
 - Provide a library of runbooks, templates, or skills. Call them what you will; these act as guides or guardrails to keep 9B on track.
 - Do the prompt engineering work with diligence. This is actually more important on small models (citation needed) due to hallucinations with conflicting instructions and the small context sizes in use.
+- Define through iteration and tinkering the proper U/X for getting excellent results out of small language models (hint: it's not a Claude-code style repl).
 
 
 # What exists already / doesn't exist
