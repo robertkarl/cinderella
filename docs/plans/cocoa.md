@@ -1,5 +1,5 @@
 ---
-status: IMPLEMENTING
+status: SHIPPED
 planning_mode: BUILDER
 design_doc: /Users/robertkarl/.gauntlette/designs/cinderella/cocoa-design-20260430-122556.md
 ---
@@ -400,6 +400,6 @@ Implementation: write a GBNF grammar that allows either `{"name": "bash", "args"
 | Code Review | `/gauntlette-code-review` | 1 | PASS | 15 findings (2 adversarial subagents). 3 critical, 5 important, 7 minor. Fixed: nmap missing from yah-core NET_EGRESS_COMMANDS (security bypass), prompt falsely claimed "ONE tool: bash" (text fix), agent loop infinite in -p mode (added MAX_AGENT_ITERATIONS=25), traceroute timeout advice wrong (use timeout(1)). Docker port changed to 14094. User skipped 6 lower-severity findings (blanket NetEgress, try_send drops, exit code, pub fields, remote ctx_size, NO_COLOR perf) as acceptable for demo sprint. Unicode→ASCII indicator change confirmed intentional by user. |
 | QA | `/gauntlette-quality-check` | 0 | — | — |
 | Human Review | `/gauntlette-human-review` | 0 | — | — |
-| Ship It | `/gauntlette-ship-it` | 0 | — | — |
+| Ship It | `/gauntlette-ship-it` | 1 | DONE | Squash merged cocoa→master. v0.1.1.0. 34 tests pass. 2026-04-30. |
 
-**VERDICT:** IMPLEMENTING — Phase 1 agent core complete. Phase 2 (AppKit app) and prompt iteration against live Qwen 9B remain.
+**VERDICT:** SHIPPED v0.1.1.0 — Phase 1 agent core shipped. Phase 2 (AppKit app) and prompt iteration against live Qwen 9B remain as future work.
