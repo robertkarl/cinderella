@@ -18,6 +18,14 @@ struct Cli {
     /// Project directory to work in.
     project: PathBuf,
 
+    /// Non-interactive prompt mode: send one prompt, stream output, exit.
+    #[arg(short = 'p', long = "prompt")]
+    prompt: Option<String>,
+
+    /// Use the network-debug playbook (allows diagnostic commands like curl, dig, nmap).
+    #[arg(long = "playbook", value_name = "NAME")]
+    playbook: Option<String>,
+
     /// Path to a custom GGUF model file (BYOM).
     #[arg(long)]
     model: Option<PathBuf>,
@@ -59,6 +67,16 @@ async fn main() -> Result<()> {
         std::process::exit(1);
     }
 
+    // Resolve playbook to safety profile
+    let safety_profile = match cli.playbook.as_deref() {
+        Some("network-debug") => config::SafetyProfile::NetworkDebug,
+        Some(name) => {
+            eprintln!("Unknown playbook: {}. Available: network-debug", name);
+            std::process::exit(1);
+        }
+        None => config::SafetyProfile::default(),
+    };
+
     if let Some(api_url) = cli.api_url {
         // Remote mode: skip local server, connect directly
         let cfg = orchestrator::OrchestratorConfig {
@@ -68,6 +86,8 @@ async fn main() -> Result<()> {
             llama_server_path: PathBuf::new(),
             api_url: Some(api_url),
             model_name: cli.model_name,
+            safety_profile,
+            prompt: cli.prompt,
         };
         return orchestrator::run(cfg).await;
     }
@@ -86,6 +106,8 @@ async fn main() -> Result<()> {
         llama_server_path,
         api_url: None,
         model_name: cli.model_name,
+        safety_profile,
+        prompt: cli.prompt,
     };
 
     orchestrator::run(cfg).await

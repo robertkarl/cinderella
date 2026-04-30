@@ -208,85 +208,94 @@ pub async fn run(
         let _ = command_tx.send(TuiCommand::SendMessage(msg)).await;
 
         // Process agent events until turn completes
-        let mut in_thinking = false;
-        let mut in_text = false;
+        let mut state = OutputState::default();
 
         while let Some(event) = agent_events.recv().await {
-            match event {
-                AgentEvent::ThinkingDelta(text) => {
-                    if !in_thinking {
-                        in_thinking = true;
-                        in_text = false;
-                        print!("\n");
-                    }
-                    // Print thinking tokens inline, dimmed
-                    if std::env::var("NO_COLOR").is_ok() {
-                        print!("{}", text);
-                    } else {
-                        print!("\x1b[2m{}\x1b[0m", text);
-                    }
-                    let _ = io::stdout().flush();
-                }
-                AgentEvent::TextDelta(text) => {
-                    if in_thinking {
-                        // End thinking block
-                        in_thinking = false;
-                        print!("\n");
-                    }
-                    if !in_text {
-                        in_text = true;
-                        print!("\n  ");
-                    }
-                    print!("{}", text);
-                    let _ = io::stdout().flush();
-                }
-                AgentEvent::ToolStart { name, args_display } => {
-                    if in_thinking {
-                        in_thinking = false;
-                        print!("\n");
-                    }
-                    if in_text {
-                        in_text = false;
-                        println!();
-                    }
-                    println!("\n  ● {} {}", name, args_display);
-                }
-                AgentEvent::ToolResult {
-                    output,
-                    success,
-                } => {
-                    let indicator = if success { "│" } else { "│ ✗" };
-                    for line in output.lines() {
-                        println!("  {} {}", indicator, line);
-                    }
-                }
-                AgentEvent::TokenRate { tok_per_sec } => {
-                    // Could show in prompt, skip for now
-                    let _ = tok_per_sec;
-                }
-                AgentEvent::ContextUsage { used, max } => {
-                    let _ = (used, max);
-                }
-                AgentEvent::Warning(msg) => {
-                    print_warn(&msg);
-                }
-                AgentEvent::TurnComplete => {
-                    if in_text || in_thinking {
-                        println!();
-                    }
-                    break;
-                }
-                AgentEvent::ServerRestarted { attempt } => {
-                    print_warn(&format!(
-                        "llama-server restarted ({}/3). Retrying...",
-                        attempt
-                    ));
-                }
+            if print_event(event, &mut state) {
+                break;
             }
         }
     }
 
     Ok(())
+}
+
+/// State for event printing (shared between TUI and -p mode).
+pub struct OutputState {
+    pub in_thinking: bool,
+    pub in_text: bool,
+}
+
+impl Default for OutputState {
+    fn default() -> Self {
+        Self {
+            in_thinking: false,
+            in_text: false,
+        }
+    }
+}
+
+/// Print a single agent event to stdout. Returns true if the turn is complete.
+pub fn print_event(event: AgentEvent, state: &mut OutputState) -> bool {
+    match event {
+        AgentEvent::ThinkingDelta(text) => {
+            if !state.in_thinking {
+                state.in_thinking = true;
+                state.in_text = false;
+                print!("\n");
+            }
+            if std::env::var("NO_COLOR").is_ok() {
+                print!("{}", text);
+            } else {
+                print!("\x1b[2m{}\x1b[0m", text);
+            }
+            let _ = io::stdout().flush();
+        }
+        AgentEvent::TextDelta(text) => {
+            if state.in_thinking {
+                state.in_thinking = false;
+                print!("\n");
+            }
+            if !state.in_text {
+                state.in_text = true;
+                print!("\n  ");
+            }
+            print!("{}", text);
+            let _ = io::stdout().flush();
+        }
+        AgentEvent::ToolStart { name, args_display } => {
+            if state.in_thinking {
+                state.in_thinking = false;
+                print!("\n");
+            }
+            if state.in_text {
+                state.in_text = false;
+                println!();
+            }
+            println!("\n  {} {}", name, args_display);
+        }
+        AgentEvent::ToolResult { output, success } => {
+            let indicator = if success { "|" } else { "| x" };
+            for line in output.lines() {
+                println!("  {} {}", indicator, line);
+            }
+        }
+        AgentEvent::TokenRate { .. } => {}
+        AgentEvent::ContextUsage { .. } => {}
+        AgentEvent::Warning(msg) => {
+            print_warn(&msg);
+        }
+        AgentEvent::TurnComplete => {
+            if state.in_text || state.in_thinking {
+                println!();
+            }
+            return true;
+        }
+        AgentEvent::ServerRestarted { attempt } => {
+            print_warn(&format!("llama-server restarted ({}/3). Retrying...", attempt));
+        }
+    }
+    false
 }
 
 const HELP_TEXT: &str = "\

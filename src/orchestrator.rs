@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 
 use crate::agent::Agent;
-use crate::config::{self, BUNDLED_MODEL};
+use crate::config::{self, SafetyProfile, BUNDLED_MODEL};
 use crate::hw::{self, HardwareInfo};
 use crate::server::ServerManager;
 use crate::tui::{self, StatusBar, TuiCommand};
@@ -20,6 +20,10 @@ pub struct OrchestratorConfig {
     pub api_url: Option<String>,
     /// Model name for API requests (llama-swap routing).
     pub model_name: String,
+    /// Safety profile for the agent.
+    pub safety_profile: SafetyProfile,
+    /// Non-interactive prompt mode: send one prompt, stream output, exit.
+    pub prompt: Option<String>,
 }
 
 /// Run the full orchestration flow.
@@ -65,9 +69,23 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
         println!("\u{2713} GPU layers: {}/{}", loaded, total);
     }
 
-    // Step 4: Launch agent + TUI
+    // Step 4: Prompt mode or interactive TUI
+    if let Some(ref prompt) = cfg.prompt {
+        let result = run_prompt(
+            &server.api_url(),
+            cfg.project_dir.clone(),
+            &cfg.model_name,
+            cfg.safety_profile,
+            prompt,
+        )
+        .await;
+        server.stop().await;
+        return result;
+    }
+
+    // Interactive mode
     let (agent_tx, agent_rx) = mpsc::channel::<crate::agent::AgentEvent>(256);
-    let (cmd_tx, mut cmd_rx) = mpsc::channel::<TuiCommand>(32);
+    let (cmd_tx, cmd_rx) = mpsc::channel::<TuiCommand>(32);
 
     let project_name = cfg
         .project_dir
@@ -96,49 +114,18 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
             .unwrap_or_else(|| "\u{2014}".to_string()),
     };
 
-    let api_url = server.api_url();
-    let project_dir = cfg.project_dir.clone();
-    let ctx_size = BUNDLED_MODEL.ctx_size;
-    let model_name = cfg.model_name.clone();
+    let agent_handle = spawn_agent_loop(
+        &server.api_url(),
+        cfg.project_dir.clone(),
+        BUNDLED_MODEL.ctx_size,
+        cfg.model_name.clone(),
+        cfg.safety_profile,
+        agent_tx,
+        cmd_rx,
+    );
 
-    // Agent task
-    let agent_handle = tokio::spawn(async move {
-        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name);
-
-        while let Some(cmd) = cmd_rx.recv().await {
-            match cmd {
-                TuiCommand::SendMessage(msg) => {
-                    let tx = agent_tx.clone();
-                    if let Err(e) = agent
-                        .process_message(&msg, |event| {
-                            let _ = tx.try_send(event);
-                        })
-                        .await
-                    {
-                        let _ = agent_tx.send(crate::agent::AgentEvent::Warning(
-                            format!("Error: {}", e),
-                        )).await;
-                    }
-                }
-                TuiCommand::Clear => {
-                    agent.clear();
-                }
-                TuiCommand::Cancel => {
-                    // TODO: implement proper cancellation of in-flight tool execution.
-                    // For now, log that cancel was requested but can't be acted on.
-                    let _ = agent_tx.try_send(crate::agent::AgentEvent::Warning(
-                        "Cancel requested but not yet implemented for in-flight operations.".to_string(),
-                    ));
-                }
-                TuiCommand::Quit => break,
-            }
-        }
-    });
-
-    // TUI task (runs on main thread — crossterm needs it)
     tui::run(agent_rx, cmd_tx, &project_name, initial_status).await?;
 
-    // Cleanup
     agent_handle.abort();
     server.stop().await;
 
@@ -147,8 +134,21 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
 
 /// Run with a remote API — no local server.
 async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
+    // Prompt mode
+    if let Some(ref prompt) = cfg.prompt {
+        return run_prompt(
+            api_url,
+            cfg.project_dir.clone(),
+            &cfg.model_name,
+            cfg.safety_profile,
+            prompt,
+        )
+        .await;
+    }
+
+    // Interactive mode
     let (agent_tx, agent_rx) = mpsc::channel::<crate::agent::AgentEvent>(256);
-    let (cmd_tx, mut cmd_rx) = mpsc::channel::<TuiCommand>(32);
+    let (cmd_tx, cmd_rx) = mpsc::channel::<TuiCommand>(32);
 
     let project_name = cfg
         .project_dir
@@ -168,13 +168,58 @@ async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
         gpu_layers: "remote".to_string(),
     };
 
-    let api_url = api_url.to_string();
-    let project_dir = cfg.project_dir.clone();
-    let ctx_size = BUNDLED_MODEL.ctx_size;
-    let model_name = cfg.model_name.clone();
+    let agent_handle = spawn_agent_loop(
+        api_url,
+        cfg.project_dir.clone(),
+        BUNDLED_MODEL.ctx_size,
+        cfg.model_name.clone(),
+        cfg.safety_profile,
+        agent_tx,
+        cmd_rx,
+    );
 
-    let agent_handle = tokio::spawn(async move {
-        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name);
+    tui::run(agent_rx, cmd_tx, &project_name, initial_status).await?;
+
+    agent_handle.abort();
+    Ok(())
+}
+
+/// Non-interactive prompt mode: send one prompt, stream output, exit.
+/// The agent loop handles tool calls internally — process_message keeps
+/// iterating until the LLM produces a final text response.
+async fn run_prompt(
+    api_url: &str,
+    project_dir: PathBuf,
+    model_name: &str,
+    safety_profile: SafetyProfile,
+    prompt: &str,
+) -> Result<()> {
+    let mut agent = Agent::new(api_url, project_dir, BUNDLED_MODEL.ctx_size, model_name, safety_profile);
+    let mut state = tui::OutputState::default();
+
+    agent
+        .process_message(prompt, |event| {
+            tui::print_event(event, &mut state);
+        })
+        .await?;
+
+    Ok(())
+}
+
+/// Spawn the agent command loop as a tokio task.
+/// Shared between local-server and remote-API modes.
+fn spawn_agent_loop(
+    api_url: &str,
+    project_dir: PathBuf,
+    ctx_size: u32,
+    model_name: String,
+    safety_profile: SafetyProfile,
+    agent_tx: mpsc::Sender<crate::agent::AgentEvent>,
+    mut cmd_rx: mpsc::Receiver<TuiCommand>,
+) -> tokio::task::JoinHandle<()> {
+    let api_url = api_url.to_string();
+    tokio::spawn(async move {
+        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name, safety_profile);
 
         while let Some(cmd) = cmd_rx.recv().await {
             match cmd {
@@ -186,9 +231,9 @@ async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
                         })
                         .await
                     {
-                        let _ = agent_tx.send(crate::agent::AgentEvent::Warning(
-                            format!("Error: {}", e),
-                        )).await;
+                        let _ = agent_tx
+                            .send(crate::agent::AgentEvent::Warning(format!("Error: {}", e)))
+                            .await;
                     }
                 }
                 TuiCommand::Clear => {
@@ -196,18 +241,14 @@ async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
                 }
                 TuiCommand::Cancel => {
                     let _ = agent_tx.try_send(crate::agent::AgentEvent::Warning(
-                        "Cancel requested but not yet implemented for in-flight operations.".to_string(),
+                        "Cancel requested but not yet implemented for in-flight operations."
+                            .to_string(),
                     ));
                 }
                 TuiCommand::Quit => break,
             }
         }
-    });
-
-    tui::run(agent_rx, cmd_tx, &project_name, initial_status).await?;
-
-    agent_handle.abort();
-    Ok(())
+    })
 }
 
 /// Find the bundled model in ~/.cinderella/models/ or extract from release archive.

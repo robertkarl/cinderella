@@ -6,6 +6,7 @@ pub mod ls;
 pub mod read;
 pub mod write;
 
+use crate::config::SafetyProfile;
 use anyhow::Result;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
@@ -21,12 +22,13 @@ pub async fn execute(
     name: &str,
     args: &Value,
     project_dir: &Path,
+    profile: SafetyProfile,
 ) -> ToolResult {
     match name {
         "read_file" => read::execute(args, project_dir),
         "write_file" => write::execute(args, project_dir),
         "edit_file" => edit::execute(args, project_dir),
-        "bash" => bash::execute(args, project_dir).await,
+        "bash" => bash::execute(args, project_dir, profile).await,
         "ls" => ls::execute(args, project_dir),
         _ => ToolResult {
             output: format!("Unknown tool: {}", name),
@@ -147,11 +149,13 @@ mod tests {
         assert!(result.is_err());
     }
 
+    use crate::config::SafetyProfile;
+
     #[tokio::test]
     async fn test_read_tool() {
         let dir = setup_test_dir();
         let args = serde_json::json!({"path": "test.txt"});
-        let result = execute("read_file", &args, dir.path()).await;
+        let result = execute("read_file", &args, dir.path(), SafetyProfile::Coding).await;
         assert!(result.success);
         assert!(result.output.contains("line 1"));
         assert!(result.output.contains("line 2"));
@@ -161,7 +165,7 @@ mod tests {
     async fn test_write_tool() {
         let dir = setup_test_dir();
         let args = serde_json::json!({"path": "new.txt", "content": "hello world"});
-        let result = execute("write_file", &args, dir.path()).await;
+        let result = execute("write_file", &args, dir.path(), SafetyProfile::Coding).await;
         assert!(result.success);
         assert!(dir.path().join("new.txt").exists());
         assert_eq!(fs::read_to_string(dir.path().join("new.txt")).unwrap(), "hello world");
@@ -171,7 +175,7 @@ mod tests {
     async fn test_write_tool_creates_dirs() {
         let dir = setup_test_dir();
         let args = serde_json::json!({"path": "a/b/c.txt", "content": "deep"});
-        let result = execute("write_file", &args, dir.path()).await;
+        let result = execute("write_file", &args, dir.path(), SafetyProfile::Coding).await;
         assert!(result.success);
         assert_eq!(fs::read_to_string(dir.path().join("a/b/c.txt")).unwrap(), "deep");
     }
@@ -184,7 +188,7 @@ mod tests {
             "old_string": "line 2",
             "new_string": "modified line 2"
         });
-        let result = execute("edit_file", &args, dir.path()).await;
+        let result = execute("edit_file", &args, dir.path(), SafetyProfile::Coding).await;
         assert!(result.success);
         let content = fs::read_to_string(dir.path().join("test.txt")).unwrap();
         assert!(content.contains("modified line 2"));
@@ -199,7 +203,7 @@ mod tests {
             "old_string": "nonexistent string",
             "new_string": "replacement"
         });
-        let result = execute("edit_file", &args, dir.path()).await;
+        let result = execute("edit_file", &args, dir.path(), SafetyProfile::Coding).await;
         assert!(!result.success);
         assert!(result.output.contains("not found"));
     }
@@ -208,7 +212,7 @@ mod tests {
     async fn test_ls_tool() {
         let dir = setup_test_dir();
         let args = serde_json::json!({"path": "."});
-        let result = execute("ls", &args, dir.path()).await;
+        let result = execute("ls", &args, dir.path(), SafetyProfile::Coding).await;
         assert!(result.success);
         assert!(result.output.contains("test.txt"));
         assert!(result.output.contains("subdir/"));
@@ -218,7 +222,7 @@ mod tests {
     async fn test_bash_tool() {
         let dir = setup_test_dir();
         let args = serde_json::json!({"command": "echo hello"});
-        let result = execute("bash", &args, dir.path()).await;
+        let result = execute("bash", &args, dir.path(), SafetyProfile::Coding).await;
         assert!(result.success);
         assert!(result.output.contains("hello"));
     }
@@ -227,7 +231,7 @@ mod tests {
     async fn test_unknown_tool() {
         let dir = setup_test_dir();
         let args = serde_json::json!({});
-        let result = execute("nonexistent", &args, dir.path()).await;
+        let result = execute("nonexistent", &args, dir.path(), SafetyProfile::Coding).await;
         assert!(!result.success);
         assert!(result.output.contains("Unknown tool"));
     }

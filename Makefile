@@ -29,4 +29,13 @@ cindy-remote:
 remote-query-models:
 	curl http://192.168.50.4:11434/v1/models
 
-.PHONY: stop_all_llama_server startllama pidev cindy-no-start-llama cindy-remote remote-query-models
+test:
+	cargo test
+
+deploy:
+	@echo "No deploy target configured. Cinderella is a local CLI tool."
+
+smoke-test:
+	@echo "No smoke test configured. Cinderella is a local CLI tool."
+
+.PHONY: stop_all_llama_server startllama pidev cindy-no-start-llama cindy-remote remote-query-models test deploy smoke-test

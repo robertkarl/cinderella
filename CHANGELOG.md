@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1.0] - 2026-04-30
+
+### Added
+
+- Network-debug diagnostic runbook system prompt with 7-step structured workflow
+- SafetyProfile enum (Coding, NetworkDebug) controlling yah-core auto-allow lists
+- `--playbook network-debug` flag to activate network-debug profile
+- `-p` / `--prompt` flag for non-interactive prompt mode (send one prompt, stream output, exit)
+- Docker demo target: flaky Flask service returning 503 every 3rd request
+- MAX_AGENT_ITERATIONS=25 guard to prevent infinite loops in -p mode
+- 2 new tests for network-debug safety profile (curl allowed, pipe-to-shell denied)
+
+### Changed
+
+- Orchestrator refactored: extracted shared `spawn_agent_loop()` function (was duplicated in run/run_remote)
+- Event printing extracted to `print_event()` function shared between TUI and -p mode
+- Bundled model updated to Qwen3.5-35B-MoE Q4_K_M
+- Tool result indicators changed to ASCII (from Unicode)
+
+### Fixed
+
+- traceroute timeout advice in diagnostic prompt now uses `timeout 15` wrapper
+- Network-debug prompt no longer falsely claims "ONE tool: bash"
+
 ## [0.1.0.0] - 2026-04-24
 
 ### Added

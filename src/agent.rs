@@ -4,7 +4,7 @@
 use anyhow::Result;
 use std::path::PathBuf;
 
-use crate::config;
+use crate::config::{self, SafetyProfile};
 use crate::llm::{self, LlmClient, Message, StreamEvent};
 
 const MAX_TOOL_RESULT_LINES: usize = 100;
@@ -13,6 +13,7 @@ const SUMMARIZE_AFTER_TURNS: usize = 10;
 const CONTEXT_WARN_PERCENT: f64 = 0.8;
 const MAX_RETRY_ON_PARSE_FAILURE: u32 = 2;
 const MAX_CONSECUTIVE_TOOL_FAILURES: u32 = 3;
+const MAX_AGENT_ITERATIONS: u32 = 25;
 
 /// Events the agent sends to the TUI.
 pub enum AgentEvent {
@@ -46,15 +47,22 @@ pub struct Agent {
     project_dir: PathBuf,
     ctx_size: u32,
     turn_count: usize,
+    safety_profile: SafetyProfile,
 }
 
 impl Agent {
-    pub fn new(api_url: &str, project_dir: PathBuf, ctx_size: u32, model_name: &str) -> Self {
+    pub fn new(
+        api_url: &str,
+        project_dir: PathBuf,
+        ctx_size: u32,
+        model_name: &str,
+        safety_profile: SafetyProfile,
+    ) -> Self {
         let client = LlmClient::new(api_url, model_name);
 
         let messages = vec![Message {
             role: "system".to_string(),
-            content: Some(config::SYSTEM_PROMPT.to_string()),
+            content: Some(config::system_prompt_for(safety_profile).to_string()),
             tool_calls: None,
             tool_call_id: None,
         }];
@@ -65,6 +73,7 @@ impl Agent {
             project_dir,
             ctx_size,
             turn_count: 0,
+            safety_profile,
         }
     }
 
@@ -109,7 +118,17 @@ impl Agent {
         // Agent loop: keep going while LLM produces tool calls
         let mut retry_count: u32 = 0;
         let mut consecutive_failures: u32 = 0;
+        let mut iterations: u32 = 0;
         loop {
+            iterations += 1;
+            if iterations > MAX_AGENT_ITERATIONS {
+                on_event(AgentEvent::Warning(format!(
+                    "Agent reached {} iterations without completing. Stopping.",
+                    MAX_AGENT_ITERATIONS
+                )));
+                on_event(AgentEvent::TurnComplete);
+                return Ok(());
+            }
             let tools = config::tool_definitions();
             let mut response_text = String::new();
             let mut response_tool_calls: Vec<llm::ToolCall> = Vec::new();
@@ -188,6 +207,7 @@ impl Agent {
                                 &tc.function.name,
                                 &args,
                                 &self.project_dir,
+                                self.safety_profile,
                             )
                             .await;
 

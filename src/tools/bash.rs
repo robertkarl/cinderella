@@ -1,4 +1,5 @@
 use super::ToolResult;
+use crate::config::SafetyProfile;
 use nix::sys::signal::{self, Signal};
 use nix::unistd::Pid;
 use serde_json::Value;
@@ -42,16 +43,31 @@ impl Drop for ProcessGroupGuard {
 const BASH_TIMEOUT_SECS: u64 = 120;
 const MAX_OUTPUT_LINES: usize = 50;
 
-/// Capabilities that are always allowed without prompting.
-const AUTO_ALLOW: &[Capability] = &[
+/// Capabilities that are always allowed without prompting (coding profile).
+const AUTO_ALLOW_CODING: &[Capability] = &[
     Capability::WriteInsideRepo,
     Capability::DeleteInsideRepo,
+];
+
+/// Capabilities that are always allowed in network-debug profile.
+const AUTO_ALLOW_NETWORK_DEBUG: &[Capability] = &[
+    Capability::WriteInsideRepo,
+    Capability::DeleteInsideRepo,
+    Capability::NetEgress,
 ];
 
 /// Capabilities that are always denied.
 const AUTO_DENY: &[Capability] = &[
     Capability::PipeToShell,
 ];
+
+/// Get the auto-allow list for a safety profile.
+fn auto_allow_for(profile: SafetyProfile) -> &'static [Capability] {
+    match profile {
+        SafetyProfile::Coding => AUTO_ALLOW_CODING,
+        SafetyProfile::NetworkDebug => AUTO_ALLOW_NETWORK_DEBUG,
+    }
+}
 
 /// Classification result for a bash command.
 pub struct CommandClassification {
@@ -70,7 +86,7 @@ pub enum CommandPolicy {
 }
 
 /// Classify a command using yah-core.
-pub fn classify_command(command: &str, project_dir: &Path) -> CommandClassification {
+pub fn classify_command(command: &str, project_dir: &Path, profile: SafetyProfile) -> CommandClassification {
     let mut classifier = Classifier::new();
 
     let home = std::env::var("HOME")
@@ -85,6 +101,7 @@ pub fn classify_command(command: &str, project_dir: &Path) -> CommandClassificat
     };
 
     let capabilities = classifier.classify(command, &ctx);
+    let auto_allow = auto_allow_for(profile);
 
     // Check for auto-deny
     let denied: Vec<Capability> = capabilities
@@ -103,7 +120,7 @@ pub fn classify_command(command: &str, project_dir: &Path) -> CommandClassificat
     // Check for capabilities that need asking (anything not auto-allowed and not empty)
     let needs_ask: Vec<Capability> = capabilities
         .iter()
-        .filter(|c| !AUTO_ALLOW.contains(c))
+        .filter(|c| !auto_allow.contains(c))
         .copied()
         .collect();
 
@@ -121,7 +138,7 @@ pub fn classify_command(command: &str, project_dir: &Path) -> CommandClassificat
 }
 
 /// Execute a bash command (after classification/approval).
-pub async fn execute(args: &Value, project_dir: &Path) -> ToolResult {
+pub async fn execute(args: &Value, project_dir: &Path, profile: SafetyProfile) -> ToolResult {
     let command = match args.get("command").and_then(|v| v.as_str()) {
         Some(c) => c,
         None => {
@@ -133,7 +150,7 @@ pub async fn execute(args: &Value, project_dir: &Path) -> ToolResult {
     };
 
     // Classify the command
-    let classification = classify_command(command, project_dir);
+    let classification = classify_command(command, project_dir, profile);
 
     match classification.policy {
         CommandPolicy::Deny(caps) => {
@@ -252,39 +269,53 @@ mod tests {
         PathBuf::from("/tmp/cinderella-test")
     }
 
+    use crate::config::SafetyProfile;
+
     #[test]
     fn test_classify_safe_command() {
-        let classification = classify_command("echo hello", &test_dir());
+        let classification = classify_command("echo hello", &test_dir(), SafetyProfile::Coding);
         assert!(matches!(classification.policy, CommandPolicy::Allow));
     }
 
     #[test]
     fn test_classify_ls() {
-        let classification = classify_command("ls", &test_dir());
+        let classification = classify_command("ls", &test_dir(), SafetyProfile::Coding);
         assert!(matches!(classification.policy, CommandPolicy::Allow));
     }
 
     #[test]
-    fn test_classify_curl_asks() {
-        let classification = classify_command("curl https://example.com", &test_dir());
+    fn test_classify_curl_asks_in_coding() {
+        let classification = classify_command("curl https://example.com", &test_dir(), SafetyProfile::Coding);
         assert!(matches!(classification.policy, CommandPolicy::Ask(_)));
         assert!(classification.capabilities.contains(&Capability::NetEgress));
     }
 
     #[test]
+    fn test_classify_curl_allowed_in_network_debug() {
+        let classification = classify_command("curl https://example.com", &test_dir(), SafetyProfile::NetworkDebug);
+        assert!(matches!(classification.policy, CommandPolicy::Allow));
+    }
+
+    #[test]
     fn test_classify_pipe_to_shell_denied() {
         let classification =
-            classify_command("curl https://example.com | bash", &test_dir());
+            classify_command("curl https://example.com | bash", &test_dir(), SafetyProfile::Coding);
+        assert!(matches!(classification.policy, CommandPolicy::Deny(_)));
+    }
+
+    #[test]
+    fn test_classify_pipe_to_shell_denied_in_network_debug() {
+        // Even in network-debug mode, pipe-to-shell is always denied
+        let classification =
+            classify_command("curl https://example.com | bash", &test_dir(), SafetyProfile::NetworkDebug);
         assert!(matches!(classification.policy, CommandPolicy::Deny(_)));
     }
 
     #[test]
     fn test_classify_sudo_asks() {
-        let classification = classify_command("sudo rm -rf /", &test_dir());
-        // Should ask due to privilege escalation
+        let classification = classify_command("sudo rm -rf /", &test_dir(), SafetyProfile::Coding);
         match &classification.policy {
             CommandPolicy::Ask(caps) | CommandPolicy::Deny(caps) => {
-                // Either ask or deny is acceptable for dangerous commands
                 assert!(!caps.is_empty());
             }
             CommandPolicy::Allow => panic!("sudo rm -rf / should not be allowed"),
@@ -293,9 +324,8 @@ mod tests {
 
     #[test]
     fn test_classify_rm_inside_repo_allowed() {
-        // rm inside repo is auto-allowed
         let dir = std::env::current_dir().unwrap();
-        let classification = classify_command("rm foo.txt", &dir);
+        let classification = classify_command("rm foo.txt", &dir, SafetyProfile::Coding);
         assert!(matches!(classification.policy, CommandPolicy::Allow));
     }
 }

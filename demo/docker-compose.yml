@@ -1,0 +1,5 @@
+services:
+  flaky-service:
+    build: .
+    ports:
+      - "14094:5000"
