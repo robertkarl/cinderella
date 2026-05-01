@@ -294,7 +294,82 @@ pub fn print_event(event: AgentEvent, state: &mut OutputState) -> bool {
         AgentEvent::ServerRestarted { attempt } => {
             print_warn(&format!("llama-server restarted ({}/3). Retrying...", attempt));
         }
+        AgentEvent::StepStart { .. } => {}
+        AgentEvent::StepComplete { .. } => {}
     }
+    false
+}
+
+/// Serialize an AgentEvent to a JSON-line on stdout, flushing after each line.
+/// Used by --format json mode. Returns true if the turn is complete.
+/// TODO: Protocol deviations — text/tool_start/tool_done events lack the "step"
+/// field the plan spec promises. ToolResult hardcodes "tool":"bash" instead of
+/// carrying the actual tool name. ObjC app doesn't use these fields, so it works.
+pub fn json_event(event: AgentEvent) -> bool {
+    use crate::agent::StepStatus;
+
+    let json = match event {
+        AgentEvent::StepStart { step, title } => {
+            serde_json::json!({"event": "step_start", "step": step, "title": title})
+        }
+        AgentEvent::StepComplete {
+            step,
+            status,
+            summary,
+            detail,
+        } => {
+            let status_str = match status {
+                StepStatus::Pass => "pass",
+                StepStatus::Fail => "fail",
+                StepStatus::Warn => "warn",
+            };
+            serde_json::json!({
+                "event": "step_complete",
+                "step": step,
+                "status": status_str,
+                "summary": summary,
+                "detail": detail,
+            })
+        }
+        AgentEvent::TextDelta(content) => {
+            // Include step context if step tracker is active — but we don't have step here.
+            // The step context is already emitted via StepStart/StepComplete.
+            serde_json::json!({"event": "text", "content": content})
+        }
+        AgentEvent::ThinkingDelta(content) => {
+            serde_json::json!({"event": "thinking", "content": content})
+        }
+        AgentEvent::ToolStart { name, args_display } => {
+            serde_json::json!({
+                "event": "tool_start",
+                "tool": name,
+                "command": args_display,
+            })
+        }
+        AgentEvent::ToolResult { output, success } => {
+            serde_json::json!({
+                "event": "tool_done",
+                "tool": "bash",
+                "exit_code": if success { 0 } else { 1 },
+                "output": output,
+            })
+        }
+        AgentEvent::TokenRate { .. } => return false,
+        AgentEvent::ContextUsage { .. } => return false,
+        AgentEvent::Warning(msg) => {
+            serde_json::json!({"event": "warning", "message": msg})
+        }
+        AgentEvent::TurnComplete => {
+            let line = serde_json::json!({"event": "done", "status": "complete"});
+            println!("{}", line);
+            let _ = io::stdout().flush();
+            return true;
+        }
+        AgentEvent::ServerRestarted { .. } => return false,
+    };
+
+    println!("{}", json);
+    let _ = io::stdout().flush();
     false
 }
 

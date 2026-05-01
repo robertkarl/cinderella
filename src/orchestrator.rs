@@ -24,6 +24,8 @@ pub struct OrchestratorConfig {
     pub safety_profile: SafetyProfile,
     /// Non-interactive prompt mode: send one prompt, stream output, exit.
     pub prompt: Option<String>,
+    /// Output format: true for JSON-lines, false for plain text.
+    pub format_json: bool,
 }
 
 /// Run the full orchestration flow.
@@ -77,6 +79,7 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
             &cfg.model_name,
             cfg.safety_profile,
             prompt,
+            cfg.format_json,
         )
         .await;
         server.stop().await;
@@ -142,6 +145,7 @@ async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
             &cfg.model_name,
             cfg.safety_profile,
             prompt,
+            cfg.format_json,
         )
         .await;
     }
@@ -193,15 +197,24 @@ async fn run_prompt(
     model_name: &str,
     safety_profile: SafetyProfile,
     prompt: &str,
+    format_json: bool,
 ) -> Result<()> {
-    let mut agent = Agent::new(api_url, project_dir, BUNDLED_MODEL.ctx_size, model_name, safety_profile);
-    let mut state = tui::OutputState::default();
+    let mut agent = Agent::new(api_url, project_dir, BUNDLED_MODEL.ctx_size, model_name, safety_profile, format_json);
 
-    agent
-        .process_message(prompt, |event| {
-            tui::print_event(event, &mut state);
-        })
-        .await?;
+    if format_json {
+        agent
+            .process_message(prompt, |event| {
+                tui::json_event(event);
+            })
+            .await?;
+    } else {
+        let mut state = tui::OutputState::default();
+        agent
+            .process_message(prompt, |event| {
+                tui::print_event(event, &mut state);
+            })
+            .await?;
+    }
 
     Ok(())
 }
@@ -219,7 +232,7 @@ fn spawn_agent_loop(
 ) -> tokio::task::JoinHandle<()> {
     let api_url = api_url.to_string();
     tokio::spawn(async move {
-        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name, safety_profile);
+        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name, safety_profile, false);
 
         while let Some(cmd) = cmd_rx.recv().await {
             match cmd {

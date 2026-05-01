@@ -40,6 +40,12 @@ The implication here is that MoE models may be more capable than dense models if
 ![ngl-sweep-plot.png](ngl-sweep-plot.png)
 
 
+# Glass Slipper
+
+Glass Slipper is a native macOS diagnostic app built with AppKit. It drives Cinderella's agent core through a structured JSON protocol and renders each runbook step as a chunky Transmission-style table row — title, summary, detail, and a big green checkmark or red exclamation mark.
+
+![Glass Slipper running a network diagnostic](cindy-network-debug-flow-v0.png)
+
 # Cindy in action
 
 The following is a transcript of Cindy debugging a Flask app that has deliberately been configured to emit a 503 1/3 of the time.

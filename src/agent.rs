@@ -39,6 +39,221 @@ pub enum AgentEvent {
     /// Server was restarted.
     #[allow(dead_code)]
     ServerRestarted { attempt: u32 },
+    /// A diagnostic step has started.
+    StepStart { step: String, title: String },
+    /// A diagnostic step has completed.
+    StepComplete {
+        step: String,
+        status: StepStatus,
+        summary: String,
+        detail: String,
+    },
+}
+
+/// Status of a completed diagnostic step.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StepStatus {
+    Pass,
+    Fail,
+    Warn,
+}
+
+/// Tracks diagnostic step transitions by scanning TextDelta for STEP: markers.
+/// Uses line buffering because SSE TextDelta events are token-sized fragments.
+pub struct StepTracker {
+    /// Line buffer — accumulates text until newline.
+    line_buf: String,
+    /// Currently active step ID (e.g. "dns").
+    current_step: Option<String>,
+    /// Accumulated text for the current step.
+    step_text: String,
+    /// Tool exit codes seen during the current step.
+    tool_exit_codes: Vec<bool>,
+    /// Whether step tracking is enabled (only for --format json).
+    enabled: bool,
+    /// Re-prompt retry counter (avoid infinite loops).
+    retries: u32,
+}
+
+impl StepTracker {
+    pub fn new(enabled: bool) -> Self {
+        Self {
+            line_buf: String::new(),
+            current_step: None,
+            step_text: String::new(),
+            tool_exit_codes: Vec::new(),
+            enabled,
+            retries: 0,
+        }
+    }
+
+    /// Feed text from a TextDelta event. Returns any step events to emit.
+    pub fn feed_text(&mut self, text: &str) -> Vec<AgentEvent> {
+        if !self.enabled {
+            return Vec::new();
+        }
+        let mut events = Vec::new();
+        self.line_buf.push_str(text);
+        self.process_lines(&mut events);
+        events
+    }
+
+    /// Check the line buffer for a pending STEP: marker without a trailing newline.
+    /// Called before tool events, because the model often emits "STEP: dns" then
+    /// immediately calls a tool without a newline in between.
+    pub fn flush_pending_marker(&mut self) -> Vec<AgentEvent> {
+        if !self.enabled {
+            return Vec::new();
+        }
+        let mut events = Vec::new();
+        let trimmed = self.line_buf.trim().to_string();
+        if let Some(step_name) = trimmed.strip_prefix("STEP: ").map(|s| s.trim().to_string()) {
+            if !step_name.is_empty() {
+                self.line_buf.clear();
+                if let Some(prev) = self.current_step.take() {
+                    events.push(self.make_step_complete(&prev));
+                }
+                let title = step_display_title(&step_name);
+                events.push(AgentEvent::StepStart {
+                    step: step_name.clone(),
+                    title,
+                });
+                self.current_step = Some(step_name);
+                self.step_text.clear();
+                self.tool_exit_codes.clear();
+                self.retries = 0;
+            }
+        }
+        events
+    }
+
+    fn process_lines(&mut self, events: &mut Vec<AgentEvent>) {
+        while let Some(nl_pos) = self.line_buf.find('\n') {
+            let line = self.line_buf[..nl_pos].to_string();
+            self.line_buf = self.line_buf[nl_pos + 1..].to_string();
+
+            if let Some(step_name) = line.strip_prefix("STEP: ").map(|s| s.trim().to_string()) {
+                if !step_name.is_empty() {
+                    // Close previous step if any
+                    if let Some(prev) = self.current_step.take() {
+                        events.push(self.make_step_complete(&prev));
+                    }
+                    // Start new step
+                    let title = step_display_title(&step_name);
+                    events.push(AgentEvent::StepStart {
+                        step: step_name.clone(),
+                        title,
+                    });
+                    self.current_step = Some(step_name);
+                    self.step_text.clear();
+                    self.tool_exit_codes.clear();
+                    self.retries = 0;
+                }
+            } else if !line.trim().is_empty() {
+                // Accumulate text for current step
+                if !self.step_text.is_empty() {
+                    self.step_text.push('\n');
+                }
+                self.step_text.push_str(&line);
+            }
+        }
+    }
+
+    /// Record a tool result for status derivation.
+    pub fn record_tool_result(&mut self, success: bool) {
+        if self.enabled {
+            self.tool_exit_codes.push(success);
+        }
+    }
+
+    /// Check if the model should be re-prompted to use tools.
+    /// Returns (should_reprompt, pending_events). Caller MUST emit the events
+    /// regardless of the bool — they include StepComplete/StepStart from any
+    /// pending marker that was flushed.
+    pub fn should_force_tool_use(&mut self) -> (bool, Vec<AgentEvent>) {
+        if !self.enabled {
+            return (false, Vec::new());
+        }
+        // Check for pending marker first — this may close the previous step
+        // and start a new one. The events must be emitted by the caller.
+        let marker_events = self.flush_pending_marker();
+
+        let should_reprompt = if let Some(ref step) = self.current_step {
+            let needs_tools = !matches!(step.as_str(), "parse_target" | "synthesis");
+            let no_tools_called = self.tool_exit_codes.is_empty();
+            if needs_tools && no_tools_called {
+                // Bump a retry counter to avoid infinite re-prompts
+                self.retries += 1;
+                self.retries <= 2
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+        (should_reprompt, marker_events)
+    }
+
+    /// Flush on TurnComplete — close the final step.
+    pub fn flush(&mut self) -> Vec<AgentEvent> {
+        if !self.enabled {
+            return Vec::new();
+        }
+        let mut events = Vec::new();
+        // Accumulate any remaining partial line as step text
+        if !self.line_buf.is_empty() {
+            let remaining = std::mem::take(&mut self.line_buf);
+            if !self.step_text.is_empty() {
+                self.step_text.push('\n');
+            }
+            self.step_text.push_str(&remaining);
+        }
+        if let Some(prev) = self.current_step.take() {
+            events.push(self.make_step_complete(&prev));
+        }
+        events
+    }
+
+    fn make_step_complete(&self, step: &str) -> AgentEvent {
+        let status = if self.tool_exit_codes.is_empty() {
+            // No tool calls — default to pass
+            StepStatus::Pass
+        } else if self.tool_exit_codes.iter().all(|&s| s) {
+            StepStatus::Pass
+        } else if self.tool_exit_codes.iter().all(|&s| !s) {
+            StepStatus::Fail
+        } else {
+            StepStatus::Warn
+        };
+
+        let summary = self
+            .step_text
+            .lines()
+            .find(|l| !l.trim().is_empty())
+            .unwrap_or("")
+            .to_string();
+
+        AgentEvent::StepComplete {
+            step: step.to_string(),
+            status,
+            summary,
+            detail: self.step_text.clone(),
+        }
+    }
+}
+
+/// Map step IDs to display titles.
+fn step_display_title(step: &str) -> String {
+    match step {
+        "parse_target" => "Parse Target".to_string(),
+        "dns" => "DNS Resolution".to_string(),
+        "connectivity" => "Connectivity Check".to_string(),
+        "route_analysis" => "Route Analysis".to_string(),
+        "port_check" => "Port Check".to_string(),
+        "service_check" => "Service Check".to_string(),
+        "synthesis" => "Diagnosis".to_string(),
+        other => other.to_string(),
+    }
 }
 
 pub struct Agent {
@@ -48,6 +263,7 @@ pub struct Agent {
     ctx_size: u32,
     turn_count: usize,
     safety_profile: SafetyProfile,
+    step_tracker: StepTracker,
 }
 
 impl Agent {
@@ -57,6 +273,7 @@ impl Agent {
         ctx_size: u32,
         model_name: &str,
         safety_profile: SafetyProfile,
+        step_tracking: bool,
     ) -> Self {
         let client = LlmClient::new(api_url, model_name);
 
@@ -74,6 +291,7 @@ impl Agent {
             ctx_size,
             turn_count: 0,
             safety_profile,
+            step_tracker: StepTracker::new(step_tracking),
         }
     }
 
@@ -126,6 +344,9 @@ impl Agent {
                     "Agent reached {} iterations without completing. Stopping.",
                     MAX_AGENT_ITERATIONS
                 )));
+                for se in self.step_tracker.flush() {
+                    on_event(se);
+                }
                 on_event(AgentEvent::TurnComplete);
                 return Ok(());
             }
@@ -138,6 +359,11 @@ impl Agent {
                 .chat_completion(&self.messages, &tools, |event| match event {
                     StreamEvent::TextDelta(text) => {
                         response_text.push_str(&text);
+                        // Feed to step tracker before emitting TextDelta
+                        let step_events = self.step_tracker.feed_text(&text);
+                        for se in step_events {
+                            on_event(se);
+                        }
                         on_event(AgentEvent::TextDelta(text));
                     }
                     StreamEvent::ThinkingDelta(text) => {
@@ -191,12 +417,21 @@ impl Agent {
                                          Try rephrasing your request. Error: {}",
                                         MAX_RETRY_ON_PARSE_FAILURE, e
                                     )));
+                                    for se in self.step_tracker.flush() {
+                                        on_event(se);
+                                    }
                                     on_event(AgentEvent::TurnComplete);
                                     return Ok(());
                                 }
                             };
 
                             let args_display = format_args_display(&tc.function.name, &args);
+
+                            // Flush any pending STEP: marker before tool event
+                            for se in self.step_tracker.flush_pending_marker() {
+                                on_event(se);
+                            }
+
                             on_event(AgentEvent::ToolStart {
                                 name: tc.function.name.clone(),
                                 args_display: args_display.clone(),
@@ -217,6 +452,9 @@ impl Agent {
                                 output: display_output,
                                 success: result.success,
                             });
+
+                            // Record for step status derivation
+                            self.step_tracker.record_tool_result(result.success);
 
                             // Track consecutive failures
                             if result.success {
@@ -253,6 +491,9 @@ impl Agent {
                                 tool_calls: None,
                                 tool_call_id: None,
                             });
+                            for se in self.step_tracker.flush() {
+                                on_event(se);
+                            }
                             on_event(AgentEvent::TurnComplete);
                             return Ok(());
                         }
@@ -268,12 +509,43 @@ impl Agent {
                         continue;
                     }
 
-                    // No tool calls — text response, turn complete
+                    // No tool calls — text response.
+                    // If step tracker is mid-runbook (not synthesis), the model
+                    // narrated instead of calling tools. Re-prompt it.
+                    let (should_reprompt, pending_events) = self.step_tracker.should_force_tool_use();
+                    for se in pending_events {
+                        on_event(se);
+                    }
+                    if should_reprompt {
+                        self.messages.push(Message {
+                            role: "user".to_string(),
+                            content: Some(
+                                "You wrote a command as text instead of calling the bash tool. \
+                                 You MUST use the bash tool to execute commands. \
+                                 Call the bash tool now with the command you just described."
+                                    .to_string(),
+                            ),
+                            tool_calls: None,
+                            tool_call_id: None,
+                        });
+                        on_event(AgentEvent::Warning(
+                            "Model narrated instead of calling tool — re-prompting.".to_string(),
+                        ));
+                        continue;
+                    }
+
+                    // Turn complete
+                    for se in self.step_tracker.flush() {
+                        on_event(se);
+                    }
                     on_event(AgentEvent::TurnComplete);
                     return Ok(());
                 }
                 Err(e) => {
                     on_event(AgentEvent::Warning(format!("LLM error: {}", e)));
+                    for se in self.step_tracker.flush() {
+                        on_event(se);
+                    }
                     on_event(AgentEvent::TurnComplete);
                     return Err(e);
                 }
@@ -403,5 +675,162 @@ fn truncate_for_context(output: &str) -> String {
         s
     } else {
         truncated
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_step_tracker_detects_marker() {
+        let mut tracker = StepTracker::new(true);
+        let events = tracker.feed_text("STEP: dns\n");
+        assert_eq!(events.len(), 1);
+        match &events[0] {
+            AgentEvent::StepStart { step, title } => {
+                assert_eq!(step, "dns");
+                assert_eq!(title, "DNS Resolution");
+            }
+            _ => panic!("Expected StepStart"),
+        }
+    }
+
+    #[test]
+    fn test_step_tracker_partial_line_buffering() {
+        let mut tracker = StepTracker::new(true);
+        // Simulate token-sized fragments
+        let events1 = tracker.feed_text("STE");
+        assert!(events1.is_empty());
+        let events2 = tracker.feed_text("P: dns");
+        assert!(events2.is_empty());
+        let events3 = tracker.feed_text("\n");
+        assert_eq!(events3.len(), 1);
+        match &events3[0] {
+            AgentEvent::StepStart { step, .. } => assert_eq!(step, "dns"),
+            _ => panic!("Expected StepStart"),
+        }
+    }
+
+    #[test]
+    fn test_step_tracker_step_transition() {
+        let mut tracker = StepTracker::new(true);
+        tracker.feed_text("STEP: parse_target\n");
+        tracker.feed_text("Investigating http://localhost\n");
+        let events = tracker.feed_text("STEP: dns\n");
+        // Should get StepComplete for parse_target, then StepStart for dns
+        assert_eq!(events.len(), 2);
+        match &events[0] {
+            AgentEvent::StepComplete { step, status, summary, .. } => {
+                assert_eq!(step, "parse_target");
+                assert_eq!(*status, StepStatus::Pass); // no tool calls
+                assert_eq!(summary, "Investigating http://localhost");
+            }
+            _ => panic!("Expected StepComplete"),
+        }
+        match &events[1] {
+            AgentEvent::StepStart { step, .. } => assert_eq!(step, "dns"),
+            _ => panic!("Expected StepStart"),
+        }
+    }
+
+    #[test]
+    fn test_step_tracker_flush_closes_final_step() {
+        let mut tracker = StepTracker::new(true);
+        tracker.feed_text("STEP: synthesis\n");
+        tracker.feed_text("Everything looks good.\n");
+        let events = tracker.flush();
+        assert_eq!(events.len(), 1);
+        match &events[0] {
+            AgentEvent::StepComplete { step, status, summary, .. } => {
+                assert_eq!(step, "synthesis");
+                assert_eq!(*status, StepStatus::Pass);
+                assert_eq!(summary, "Everything looks good.");
+            }
+            _ => panic!("Expected StepComplete"),
+        }
+    }
+
+    #[test]
+    fn test_step_tracker_status_from_tool_results() {
+        let mut tracker = StepTracker::new(true);
+        tracker.feed_text("STEP: dns\n");
+        tracker.feed_text("Running dig\n");
+        tracker.record_tool_result(true);
+        tracker.record_tool_result(false);
+        let events = tracker.flush();
+        match &events[0] {
+            AgentEvent::StepComplete { status, .. } => {
+                assert_eq!(*status, StepStatus::Warn); // mixed results
+            }
+            _ => panic!("Expected StepComplete"),
+        }
+    }
+
+    #[test]
+    fn test_step_tracker_all_fail() {
+        let mut tracker = StepTracker::new(true);
+        tracker.feed_text("STEP: port_check\n");
+        tracker.feed_text("Checking port\n");
+        tracker.record_tool_result(false);
+        tracker.record_tool_result(false);
+        let events = tracker.flush();
+        match &events[0] {
+            AgentEvent::StepComplete { status, .. } => {
+                assert_eq!(*status, StepStatus::Fail);
+            }
+            _ => panic!("Expected StepComplete"),
+        }
+    }
+
+    #[test]
+    fn test_step_tracker_disabled() {
+        let mut tracker = StepTracker::new(false);
+        let events = tracker.feed_text("STEP: dns\n");
+        assert!(events.is_empty());
+        let events = tracker.flush();
+        assert!(events.is_empty());
+    }
+
+    #[test]
+    fn test_step_tracker_summary_first_line() {
+        let mut tracker = StepTracker::new(true);
+        tracker.feed_text("STEP: dns\n");
+        tracker.feed_text("DNS resolution succeeds.\ndig returned 127.0.0.1\nMore details here.\n");
+        let events = tracker.flush();
+        match &events[0] {
+            AgentEvent::StepComplete { summary, detail, .. } => {
+                assert_eq!(summary, "DNS resolution succeeds.");
+                assert!(detail.contains("127.0.0.1"));
+            }
+            _ => panic!("Expected StepComplete"),
+        }
+    }
+
+    #[test]
+    fn test_step_display_titles() {
+        assert_eq!(step_display_title("parse_target"), "Parse Target");
+        assert_eq!(step_display_title("dns"), "DNS Resolution");
+        assert_eq!(step_display_title("connectivity"), "Connectivity Check");
+        assert_eq!(step_display_title("route_analysis"), "Route Analysis");
+        assert_eq!(step_display_title("port_check"), "Port Check");
+        assert_eq!(step_display_title("service_check"), "Service Check");
+        assert_eq!(step_display_title("synthesis"), "Diagnosis");
+        assert_eq!(step_display_title("unknown_step"), "unknown_step");
+    }
+
+    #[test]
+    fn test_step_tracker_flush_with_partial_line() {
+        let mut tracker = StepTracker::new(true);
+        tracker.feed_text("STEP: synthesis\n");
+        tracker.feed_text("Partial text without newline");
+        let events = tracker.flush();
+        assert_eq!(events.len(), 1);
+        match &events[0] {
+            AgentEvent::StepComplete { summary, .. } => {
+                assert_eq!(summary, "Partial text without newline");
+            }
+            _ => panic!("Expected StepComplete"),
+        }
     }
 }

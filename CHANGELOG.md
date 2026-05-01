@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] - 2026-04-30
+
+### Added
+
+- Glass Slipper: native macOS diagnostic app (AppKit, no Xcode, Makefile + clang)
+- Chunky Transmission-style table rows showing each runbook step with title, summary, detail, and pass/fail indicator
+- `--format json` flag for `-p` mode emitting JSON-lines with runbook-aware step events
+- StepTracker: line-buffered STEP: marker detection for structured step transitions from model output
+- Force-tool-use re-prompting when model narrates instead of calling tools mid-runbook
+- SIGKILL fallback (3s timeout) when stopping a running diagnosis
+- 12 new unit tests for StepTracker (markers, partial buffering, transitions, flush, status derivation)
+
+### Fixed
+
+- `should_force_tool_use` now returns pending step events instead of silently discarding them
+- UTF-8 decode failure in Glass Slipper line buffer is logged and recovered instead of silently dropped
+
 ## [0.1.1.0] - 2026-04-30
 
 ### Added

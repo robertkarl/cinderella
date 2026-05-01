@@ -47,6 +47,10 @@ struct Cli {
     /// Default: "local" for local llama-server.
     #[arg(long, default_value = "local")]
     model_name: String,
+
+    /// Output format. Use "json" for JSON-lines output (for machine consumption).
+    #[arg(long, default_value = "text")]
+    format: String,
 }
 
 #[tokio::main]
@@ -66,6 +70,16 @@ async fn main() -> Result<()> {
         eprintln!("{} is not a directory.", project_dir.display());
         std::process::exit(1);
     }
+
+    // Validate format flag
+    let format_json = match cli.format.as_str() {
+        "json" => true,
+        "text" => false,
+        other => {
+            eprintln!("Unknown format: {}. Available: text, json", other);
+            std::process::exit(1);
+        }
+    };
 
     // Resolve playbook to safety profile
     let safety_profile = match cli.playbook.as_deref() {
@@ -88,6 +102,7 @@ async fn main() -> Result<()> {
             model_name: cli.model_name,
             safety_profile,
             prompt: cli.prompt,
+            format_json,
         };
         return orchestrator::run(cfg).await;
     }
@@ -108,6 +123,7 @@ async fn main() -> Result<()> {
         model_name: cli.model_name,
         safety_profile,
         prompt: cli.prompt,
+        format_json,
     };
 
     orchestrator::run(cfg).await
