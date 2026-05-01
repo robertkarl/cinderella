@@ -1,5 +1,5 @@
 ---
-status: IMPLEMENTING
+status: SHIPPED v0.1.2
 planning_mode: BUILDER
 design_doc: /Users/robertkarl/.gauntlette/designs/cinderella/glass-slipper-design-20260430-165522.md
 ---
