@@ -159,10 +159,19 @@ impl StepTracker {
         }
     }
 
-    /// Record a tool result for status derivation.
-    pub fn record_tool_result(&mut self, success: bool) {
+    /// Record a tool result for status derivation and capture output for detail.
+    pub fn record_tool_result(&mut self, success: bool, command: &str, output: &str) {
         if self.enabled {
             self.tool_exit_codes.push(success);
+            // Capture tool command + output as step detail
+            if !self.step_text.is_empty() {
+                self.step_text.push('\n');
+            }
+            self.step_text.push_str(&format!("$ {}", command));
+            if !output.is_empty() {
+                self.step_text.push('\n');
+                self.step_text.push_str(output);
+            }
         }
     }
 
@@ -229,7 +238,11 @@ impl StepTracker {
         let summary = self
             .step_text
             .lines()
-            .find(|l| !l.trim().is_empty())
+            .find(|l| {
+                let t = l.trim();
+                !t.is_empty() && !t.starts_with('$')
+            })
+            .or_else(|| self.step_text.lines().find(|l| !l.trim().is_empty()))
             .unwrap_or("")
             .to_string();
 
@@ -449,12 +462,16 @@ impl Agent {
                             // Truncate for display (5 lines)
                             let display_output = truncate_for_display(&result.output, 5);
                             on_event(AgentEvent::ToolResult {
-                                output: display_output,
+                                output: display_output.clone(),
                                 success: result.success,
                             });
 
-                            // Record for step status derivation
-                            self.step_tracker.record_tool_result(result.success);
+                            // Record for step status derivation + detail
+                            self.step_tracker.record_tool_result(
+                                result.success,
+                                &args_display,
+                                &display_output,
+                            );
 
                             // Track consecutive failures
                             if result.success {
@@ -756,8 +773,8 @@ mod tests {
         let mut tracker = StepTracker::new(true);
         tracker.feed_text("STEP: dns\n");
         tracker.feed_text("Running dig\n");
-        tracker.record_tool_result(true);
-        tracker.record_tool_result(false);
+        tracker.record_tool_result(true, "dig localhost", "127.0.0.1");
+        tracker.record_tool_result(false, "dig fail.test", "NXDOMAIN");
         let events = tracker.flush();
         match &events[0] {
             AgentEvent::StepComplete { status, .. } => {
@@ -772,8 +789,8 @@ mod tests {
         let mut tracker = StepTracker::new(true);
         tracker.feed_text("STEP: port_check\n");
         tracker.feed_text("Checking port\n");
-        tracker.record_tool_result(false);
-        tracker.record_tool_result(false);
+        tracker.record_tool_result(false, "curl localhost:9999", "Connection refused");
+        tracker.record_tool_result(false, "nc -z localhost 9999", "failed");
         let events = tracker.flush();
         match &events[0] {
             AgentEvent::StepComplete { status, .. } => {

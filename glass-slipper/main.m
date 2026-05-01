@@ -132,8 +132,14 @@ static const CGFloat kRowHeight = 88.0;
     // Expand ~ to home directory for model path
     NSString *home = NSHomeDirectory();
     NSString *modelPath = [home stringByAppendingPathComponent:@"models/Qwen3.5-9B-Q5_K_M.gguf"];
-    _task.arguments = @[@".", @"-p", prompt, @"--playbook", @"network-debug", @"--format", @"json",
-                        @"--model", modelPath];
+    // Find llama-server in common locations
+    NSString *llamaServerPath = [self findLlamaServer];
+    NSMutableArray *args = [NSMutableArray arrayWithArray:@[@".", @"-p", prompt,
+        @"--playbook", @"network-debug", @"--format", @"json", @"--model", modelPath]];
+    if (llamaServerPath) {
+        [args addObjectsFromArray:@[@"--llama-server", llamaServerPath]];
+    }
+    _task.arguments = args;
 
     // stdout pipe
     _stdoutPipe = [NSPipe pipe];
@@ -240,6 +246,19 @@ static const CGFloat kRowHeight = 88.0;
         }
     }
 
+    return nil;
+}
+
+- (NSString *)findLlamaServer {
+    NSArray *candidates = @[
+        @"/opt/homebrew/bin/llama-server",
+        @"/usr/local/bin/llama-server",
+    ];
+    for (NSString *path in candidates) {
+        if ([[NSFileManager defaultManager] isExecutableFileAtPath:path]) {
+            return path;
+        }
+    }
     return nil;
 }
 

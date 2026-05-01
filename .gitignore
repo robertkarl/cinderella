@@ -1,3 +1,6 @@
 target/
 glass-slipper/GlassSlipper
 glass-slipper/GlassSlipper.app/
+xcuserdata/
+*.xcuserstate
+.DS_Store
