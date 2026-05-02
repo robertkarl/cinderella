@@ -296,8 +296,24 @@ pub fn print_event(event: AgentEvent, state: &mut OutputState) -> bool {
         }
         AgentEvent::StepStart { .. } => {}
         AgentEvent::StepComplete { .. } => {}
+        AgentEvent::UserPrompt(_) => {}
+        AgentEvent::Plan(_) => {}
+        AgentEvent::Diagnosis(_) => {}
     }
     false
+}
+
+/// Emit a hw_info JSON line before the agent starts.
+pub fn json_hw_info(chip: &str, ram_used_gb: f64, ram_total_gb: f64, gpu_layers: &str) {
+    let json = serde_json::json!({
+        "event": "hw_info",
+        "chip": chip,
+        "ram_used_gb": (ram_used_gb * 10.0).round() / 10.0,
+        "ram_total_gb": (ram_total_gb * 10.0).round() / 10.0,
+        "gpu_layers": gpu_layers,
+    });
+    println!("{}", json);
+    let _ = std::io::stdout().flush();
 }
 
 /// Serialize an AgentEvent to a JSON-line on stdout, flushing after each line.
@@ -358,6 +374,15 @@ pub fn json_event(event: AgentEvent) -> bool {
         AgentEvent::ContextUsage { .. } => return false,
         AgentEvent::Warning(msg) => {
             serde_json::json!({"event": "warning", "message": msg})
+        }
+        AgentEvent::UserPrompt(text) => {
+            serde_json::json!({"event": "user_prompt", "text": text})
+        }
+        AgentEvent::Plan(items) => {
+            serde_json::json!({"event": "plan", "items": items})
+        }
+        AgentEvent::Diagnosis(text) => {
+            serde_json::json!({"event": "diagnosis", "text": text})
         }
         AgentEvent::TurnComplete => {
             let line = serde_json::json!({"event": "done", "status": "complete"});

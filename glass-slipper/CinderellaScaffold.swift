@@ -375,36 +375,175 @@ final class UserPromptRowView: NSView {
 }
 
 final class PlanRowView: NSView {
+    private let headerLabel = NSTextField(labelWithString: "")
+    private let itemsStack = NSStackView()
+
     init(items: [String]) {
         super.init(frame: .zero)
-        // TODO: small uppercase "PLAN" header (sectionHeader font,
-        //       textSecondary, kerning ~1.0), then bulleted list — each
-        //       item is a 1.5pt circle (textQuiet) + detailText label.
-        //       Use NSStackView for the items list.
+
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.surfacePrimary.cgColor
+
+        translatesAutoresizingMaskIntoConstraints = false
+        headerLabel.translatesAutoresizingMaskIntoConstraints = false
+        itemsStack.translatesAutoresizingMaskIntoConstraints = false
+
+        // "PLAN" header — small uppercase, kerned
+        let headerAttr = NSAttributedString(string: "PLAN", attributes: [
+            .font: NSFont.sectionHeader,
+            .foregroundColor: NSColor.textSecondary,
+            .kern: 1.0,
+        ])
+        headerLabel.attributedStringValue = headerAttr
+
+        // Items stack — vertical list of bulleted items
+        itemsStack.orientation = .vertical
+        itemsStack.alignment = .leading
+        itemsStack.spacing = Spacing.sm
+
+        for item in items {
+            let row = NSStackView()
+            row.orientation = .horizontal
+            row.alignment = .firstBaseline
+            row.spacing = Spacing.md
+            row.translatesAutoresizingMaskIntoConstraints = false
+
+            // Bullet: 1.5pt circle via attributed string
+            let bullet = NSTextField(labelWithString: "")
+            bullet.translatesAutoresizingMaskIntoConstraints = false
+            let bulletAttr = NSAttributedString(string: "\u{2022}", attributes: [
+                .font: NSFont.detailText,
+                .foregroundColor: NSColor.textQuiet,
+            ])
+            bullet.attributedStringValue = bulletAttr
+            bullet.setContentHuggingPriority(.required, for: .horizontal)
+
+            let label = NSTextField(labelWithString: item)
+            label.translatesAutoresizingMaskIntoConstraints = false
+            label.font = .detailText
+            label.textColor = .textPrimary
+            label.maximumNumberOfLines = 1
+            label.lineBreakMode = .byTruncatingTail
+
+            row.addArrangedSubview(bullet)
+            row.addArrangedSubview(label)
+            itemsStack.addArrangedSubview(row)
+        }
+
+        addSubview(headerLabel)
+        addSubview(itemsStack)
+
+        NSLayoutConstraint.activate([
+            headerLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Spacing.rowHorizontal),
+            headerLabel.topAnchor.constraint(equalTo: topAnchor, constant: Spacing.rowVertical),
+
+            itemsStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Spacing.rowHorizontal),
+            itemsStack.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -Spacing.rowHorizontal),
+            itemsStack.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: Spacing.md),
+            itemsStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Spacing.rowVertical),
+        ])
     }
     required init?(coder: NSCoder) { fatalError("not in IB") }
 }
 
 final class ThoughtRowView: NSView {
+    private let prefixLabel = NSTextField(labelWithString: "")
+    private let bodyLabel = NSTextField(wrappingLabelWithString: "")
+
     init(text: String) {
         super.init(frame: .zero)
-        // TODO: surfaceMuted bg, "···" prefix (textQuiet) + italic
-        //       detailItalic body in textSecondary. Tighter vertical
-        //       padding than CheckRow (use Spacing.lg, not rowVertical) —
-        //       thoughts should feel like asides, not equals to checks.
+
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.surfaceMuted.cgColor
+
+        translatesAutoresizingMaskIntoConstraints = false
+        prefixLabel.translatesAutoresizingMaskIntoConstraints = false
+        bodyLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        // "..." prefix in quiet color
+        prefixLabel.font = .detailText
+        prefixLabel.textColor = .textQuiet
+        prefixLabel.stringValue = "\u{2026}"
+        prefixLabel.setContentHuggingPriority(.required, for: .horizontal)
+        prefixLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        // Italic body in secondary color
+        bodyLabel.font = .detailItalic
+        bodyLabel.textColor = .textSecondary
+        bodyLabel.stringValue = text
+        bodyLabel.maximumNumberOfLines = 0
+
+        addSubview(prefixLabel)
+        addSubview(bodyLabel)
+
+        NSLayoutConstraint.activate([
+            prefixLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Spacing.rowHorizontal),
+            prefixLabel.topAnchor.constraint(equalTo: topAnchor, constant: Spacing.lg),
+
+            bodyLabel.leadingAnchor.constraint(equalTo: prefixLabel.trailingAnchor, constant: Spacing.sm),
+            bodyLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Spacing.rowHorizontal),
+            bodyLabel.topAnchor.constraint(equalTo: topAnchor, constant: Spacing.lg),
+            bodyLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Spacing.lg),
+        ])
     }
     required init?(coder: NSCoder) { fatalError("not in IB") }
 }
 
 final class DiagnosisRowView: NSView {
+    private let borderView = NSView()
+    private let headerLabel = NSTextField(labelWithString: "")
+    private let bodyLabel = NSTextField(wrappingLabelWithString: "")
+
     init(text: String) {
         super.init(frame: .zero)
-        // TODO: surfaceDiagnosis bg. 4pt left edge in accentDiagnosis
-        //       (use a sub-NSView pinned leading, width = diagBorderW).
-        //       Inside: "DIAGNOSIS" header (diagnosisLabel font,
-        //       accentDiagLabel color, uppercase, kerning), then body
-        //       in diagnosisText / textPrimary. Generous vertical
-        //       padding — this is the "answer" row, it should breathe.
+
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.surfaceDiagnosis.cgColor
+
+        translatesAutoresizingMaskIntoConstraints = false
+        borderView.translatesAutoresizingMaskIntoConstraints = false
+        headerLabel.translatesAutoresizingMaskIntoConstraints = false
+        bodyLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        // 4pt emerald left border
+        borderView.wantsLayer = true
+        borderView.layer?.backgroundColor = NSColor.accentDiagnosis.cgColor
+
+        // "DIAGNOSIS" header — bold uppercase, kerned, emerald-700
+        let headerAttr = NSAttributedString(string: "DIAGNOSIS", attributes: [
+            .font: NSFont.diagnosisLabel,
+            .foregroundColor: NSColor.accentDiagLabel,
+            .kern: 1.0,
+        ])
+        headerLabel.attributedStringValue = headerAttr
+
+        // Body text
+        bodyLabel.font = .diagnosisText
+        bodyLabel.textColor = .textPrimary
+        bodyLabel.stringValue = text
+        bodyLabel.maximumNumberOfLines = 0
+
+        addSubview(borderView)
+        addSubview(headerLabel)
+        addSubview(bodyLabel)
+
+        NSLayoutConstraint.activate([
+            // Left border — full height, 4pt wide
+            borderView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            borderView.topAnchor.constraint(equalTo: topAnchor),
+            borderView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            borderView.widthAnchor.constraint(equalToConstant: Spacing.diagBorderW),
+
+            // Header — after border with generous padding
+            headerLabel.leadingAnchor.constraint(equalTo: borderView.trailingAnchor, constant: Spacing.rowHorizontal),
+            headerLabel.topAnchor.constraint(equalTo: topAnchor, constant: Spacing.xxl),
+
+            // Body — below header
+            bodyLabel.leadingAnchor.constraint(equalTo: headerLabel.leadingAnchor),
+            bodyLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Spacing.rowHorizontal),
+            bodyLabel.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: Spacing.md),
+            bodyLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Spacing.xxl),
+        ])
     }
     required init?(coder: NSCoder) { fatalError("not in IB") }
 }
@@ -416,6 +555,8 @@ final class SpineViewController: NSViewController {
     private let scrollView = NSScrollView()
     private let stackView  = NSStackView()
     private(set) var events: [Event] = []
+    /// Copy text associated with each row view (used by click-to-copy).
+    var copyTextByView: [ObjectIdentifier: String] = [:]
 
     override func loadView() {
         let root = NSView(frame: NSRect(x: 0, y: 0, width: 720, height: 720))
@@ -462,6 +603,7 @@ final class SpineViewController: NSViewController {
     /// Append a new event from the cinderella JSON stream. Main thread only.
     func append(_ event: Event) {
         let needsDivider = !events.isEmpty && shouldShowDividerAbove(event)
+        let copyText = Self.copyableText(for: event)
         events.append(event)
 
         if needsDivider {
@@ -472,7 +614,23 @@ final class SpineViewController: NSViewController {
         stackView.addArrangedSubview(row)
         row.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
+        // Click-to-copy
+        if !copyText.isEmpty {
+            addClickToCopy(to: row, text: copyText)
+        }
+
         scrollToBottom()
+    }
+
+    /// Extract copyable text from an event.
+    private static func copyableText(for event: Event) -> String {
+        switch event {
+        case .userPrompt(let text): return text
+        case .plan(let items): return items.joined(separator: "\n")
+        case .check(_, _, let detail): return detail
+        case .thought(let text): return text
+        case .diagnosis(let text): return text
+        }
     }
 
     private func scrollToBottom() {

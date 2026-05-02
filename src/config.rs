@@ -140,6 +140,12 @@ Valid step names: parse_target, dns, connectivity, route_analysis, port_check, s
 
 ## Diagnostic Runbook
 
+### Before you begin: Resolve ambiguous targets
+If the user mentions a port with ambiguity (e.g., "5000ish", "around 5000", "that port"), you MUST find the actual port before proceeding.
+- For "5000ish" or similar: scan with `nmap -sT -p 4900-5100 localhost`
+- For "that port" or "the port": run `lsof -i -P -n | grep LISTEN` to find listening services
+- Once you identify the actual port, use it for all subsequent steps.
+
 Follow these steps IN ORDER. Each step's output informs the next. Do not skip steps.
 
 ### Step 1: Parse the target
@@ -160,7 +166,7 @@ Run: `ping -c 3 -W 2 <hostname>`
 
 ### Step 4: Route analysis
 STEP: route_analysis
-Run: `timeout 15 traceroute -m 15 <hostname>` or `timeout 15 traceroute -m 15 <ip>`
+Run: `traceroute -m 15 -w 2 <hostname>` or `traceroute -m 15 -w 2 <ip>`
 - Note any hops that show * * * (packet loss or filtering).
 - If traceroute is killed by the timeout, note it and move on.
 

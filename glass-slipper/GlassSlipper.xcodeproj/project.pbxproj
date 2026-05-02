@@ -7,22 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A1000001 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* main.m */; };
-		A1000002 /* DiagnosticStepCell.m in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* DiagnosticStepCell.m */; };
 		A1000003 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2000005 /* Cocoa.framework */; };
 		A1000004 /* CinderellaScaffold.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000008 /* CinderellaScaffold.swift */; };
+		A1000005 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000A /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A2000001 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		A2000002 /* DiagnosticStepCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DiagnosticStepCell.m; sourceTree = "<group>"; };
-		A2000003 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		A2000004 /* DiagnosticStepCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DiagnosticStepCell.h; sourceTree = "<group>"; };
 		A2000005 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		A2000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A2000007 /* GlassSlipper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassSlipper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2000008 /* CinderellaScaffold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CinderellaScaffold.swift; sourceTree = "<group>"; };
-		A2000009 /* GlassSlipper-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GlassSlipper-Bridging-Header.h"; sourceTree = "<group>"; };
+		A200000A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,6 +32,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		A3000004 /* Build Cinderella */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Build Cinderella";
+			outputPaths = (
+				"${SRCROOT}/../target/release/cinderella",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export PATH=\"$HOME/.cargo/bin:$PATH\"\ncd \"${SRCROOT}/..\"\ncargo build --release 2>&1\n";
+		};
 		A3000003 /* Copy Cinderella */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -66,12 +76,8 @@
 		A4000002 /* GlassSlipper */ = {
 			isa = PBXGroup;
 			children = (
-				A2000003 /* AppDelegate.h */,
+				A200000A /* AppDelegate.swift */,
 				A2000008 /* CinderellaScaffold.swift */,
-				A2000004 /* DiagnosticStepCell.h */,
-				A2000002 /* DiagnosticStepCell.m */,
-				A2000009 /* GlassSlipper-Bridging-Header.h */,
-				A2000001 /* main.m */,
 				A2000006 /* Info.plist */,
 			);
 			path = .;
@@ -100,6 +106,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A7000003 /* Build configuration list for PBXNativeTarget "GlassSlipper" */;
 			buildPhases = (
+				A3000004 /* Build Cinderella */,
 				A3000002 /* Sources */,
 				A3000001 /* Frameworks */,
 				A3000003 /* Copy Cinderella */,
@@ -145,9 +152,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A1000001 /* main.m in Sources */,
-				A1000002 /* DiagnosticStepCell.m in Sources */,
 				A1000004 /* CinderellaScaffold.swift in Sources */,
+				A1000005 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -266,7 +272,6 @@
 				INFOPLIST_FILE = Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.cinderella.glass-slipper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "GlassSlipper-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -278,7 +283,6 @@
 				INFOPLIST_FILE = Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.cinderella.glass-slipper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "GlassSlipper-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;

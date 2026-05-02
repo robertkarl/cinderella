@@ -39,6 +39,12 @@ pub enum AgentEvent {
     /// Server was restarted.
     #[allow(dead_code)]
     ServerRestarted { attempt: u32 },
+    /// Echo of the user's input prompt (for Glass Slipper display).
+    UserPrompt(String),
+    /// The fixed runbook plan steps (emitted once at start).
+    Plan(Vec<String>),
+    /// Final diagnosis text (from synthesis step).
+    Diagnosis(String),
     /// A diagnostic step has started.
     StepStart { step: String, title: String },
     /// A diagnostic step has completed.
@@ -87,6 +93,10 @@ impl StepTracker {
         }
     }
 
+    pub fn is_enabled(&self) -> bool {
+        self.enabled
+    }
+
     /// Feed text from a TextDelta event. Returns any step events to emit.
     pub fn feed_text(&mut self, text: &str) -> Vec<AgentEvent> {
         if !self.enabled {
@@ -111,7 +121,7 @@ impl StepTracker {
             if !step_name.is_empty() {
                 self.line_buf.clear();
                 if let Some(prev) = self.current_step.take() {
-                    events.push(self.make_step_complete(&prev));
+                    events.extend(self.close_step(&prev));
                 }
                 let title = step_display_title(&step_name);
                 events.push(AgentEvent::StepStart {
@@ -136,7 +146,7 @@ impl StepTracker {
                 if !step_name.is_empty() {
                     // Close previous step if any
                     if let Some(prev) = self.current_step.take() {
-                        events.push(self.make_step_complete(&prev));
+                        events.extend(self.close_step(&prev));
                     }
                     // Start new step
                     let title = step_display_title(&step_name);
@@ -218,12 +228,13 @@ impl StepTracker {
             self.step_text.push_str(&remaining);
         }
         if let Some(prev) = self.current_step.take() {
-            events.push(self.make_step_complete(&prev));
+            events.extend(self.close_step(&prev));
         }
         events
     }
 
-    fn make_step_complete(&self, step: &str) -> AgentEvent {
+    /// Close a step, returning StepComplete and (if synthesis) a Diagnosis event.
+    fn close_step(&self, step: &str) -> Vec<AgentEvent> {
         let status = if self.tool_exit_codes.is_empty() {
             // No tool calls — default to pass
             StepStatus::Pass
@@ -246,12 +257,19 @@ impl StepTracker {
             .unwrap_or("")
             .to_string();
 
-        AgentEvent::StepComplete {
+        let mut events = vec![AgentEvent::StepComplete {
             step: step.to_string(),
             status,
             summary,
             detail: self.step_text.clone(),
+        }];
+
+        // Synthesis step also emits a Diagnosis event for Glass Slipper
+        if step == "synthesis" && !self.step_text.is_empty() {
+            events.push(AgentEvent::Diagnosis(self.step_text.clone()));
         }
+
+        events
     }
 }
 
@@ -323,6 +341,20 @@ impl Agent {
             tool_call_id: None,
         });
         self.turn_count += 1;
+
+        // Emit UserPrompt and Plan events for Glass Slipper display
+        if self.step_tracker.is_enabled() {
+            on_event(AgentEvent::UserPrompt(user_input.to_string()));
+            on_event(AgentEvent::Plan(vec![
+                "Parse Target".to_string(),
+                "DNS Resolution".to_string(),
+                "Connectivity Check".to_string(),
+                "Route Analysis".to_string(),
+                "Port Check".to_string(),
+                "Service Check".to_string(),
+                "Diagnosis".to_string(),
+            ]));
+        }
 
         // Context management: summarize old turns
         if self.turn_count > SUMMARIZE_AFTER_TURNS {
@@ -757,7 +789,7 @@ mod tests {
         tracker.feed_text("STEP: synthesis\n");
         tracker.feed_text("Everything looks good.\n");
         let events = tracker.flush();
-        assert_eq!(events.len(), 1);
+        assert_eq!(events.len(), 2); // StepComplete + Diagnosis
         match &events[0] {
             AgentEvent::StepComplete { step, status, summary, .. } => {
                 assert_eq!(step, "synthesis");
@@ -765,6 +797,12 @@ mod tests {
                 assert_eq!(summary, "Everything looks good.");
             }
             _ => panic!("Expected StepComplete"),
+        }
+        match &events[1] {
+            AgentEvent::Diagnosis(text) => {
+                assert_eq!(text, "Everything looks good.");
+            }
+            _ => panic!("Expected Diagnosis"),
         }
     }
 
@@ -842,12 +880,42 @@ mod tests {
         tracker.feed_text("STEP: synthesis\n");
         tracker.feed_text("Partial text without newline");
         let events = tracker.flush();
-        assert_eq!(events.len(), 1);
+        assert_eq!(events.len(), 2); // StepComplete + Diagnosis
         match &events[0] {
             AgentEvent::StepComplete { summary, .. } => {
                 assert_eq!(summary, "Partial text without newline");
             }
             _ => panic!("Expected StepComplete"),
+        }
+        match &events[1] {
+            AgentEvent::Diagnosis(text) => {
+                assert_eq!(text, "Partial text without newline");
+            }
+            _ => panic!("Expected Diagnosis"),
+        }
+    }
+
+    #[test]
+    fn test_diagnosis_emitted_when_synthesis_closed_by_step_marker() {
+        // Regression: Diagnosis must be emitted even when synthesis is closed
+        // by a subsequent STEP: marker (not just by flush).
+        let mut tracker = StepTracker::new(true);
+        tracker.feed_text("STEP: synthesis\n");
+        tracker.feed_text("The server is down.\n");
+        let events = tracker.feed_text("STEP: extra_step\n");
+        // Should produce: StepComplete(synthesis), Diagnosis, StepStart(extra_step)
+        assert!(events.len() >= 3, "Expected at least 3 events, got {}", events.len());
+        match &events[0] {
+            AgentEvent::StepComplete { step, .. } => assert_eq!(step, "synthesis"),
+            _ => panic!("Expected StepComplete for synthesis"),
+        }
+        match &events[1] {
+            AgentEvent::Diagnosis(text) => assert_eq!(text, "The server is down."),
+            _ => panic!("Expected Diagnosis"),
+        }
+        match &events[2] {
+            AgentEvent::StepStart { step, .. } => assert_eq!(step, "extra_step"),
+            _ => panic!("Expected StepStart for extra_step"),
         }
     }
 }
