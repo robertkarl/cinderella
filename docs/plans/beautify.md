@@ -1,5 +1,5 @@
 ---
-status: IMPLEMENTING
+status: SHIPPED
 planning_mode: BUILDER
 design_doc: /Users/robertkarl/.gauntlette/designs/cinderella/beautify-design-20260430-224634.md
 ---
@@ -367,6 +367,6 @@ process.standardError = Pipe()
 | Code Review | `/gauntlette-code-review` | 1 | PASS | 2 critical (fixed: Diagnosis emission + identifier abuse), 3 important (fixed: log leak, async hop, build inputs), 7 important/minor flagged as investigate (deferred). Regression test added. All 5 user-accepted fixes applied. |
 | QA | `/gauntlette-quality-check` | 0 | -- | -- |
 | Human Review | `/gauntlette-human-review` | 0 | -- | -- |
-| Ship It | `/gauntlette-ship-it` | 0 | -- | -- |
+| Ship It | `/gauntlette-ship-it` | 1 | DONE | Shipped v0.1.4. 45/45 tests pass. Squash merged to master. |
 
-**VERDICT:** REVIEWED — Code review complete. 5 fixes applied (2 critical, 3 important), regression test added (45/45 pass). Ready for /gauntlette-quality-check.
+**VERDICT:** SHIPPED v0.1.4
