@@ -60,8 +60,22 @@ pub enum AgentEvent {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StepStatus {
     Pass,
-    Fail,
     Warn,
+    Fail,
+}
+
+impl StepStatus {
+    fn severity(self) -> u8 {
+        match self {
+            Self::Pass => 0,
+            Self::Warn => 1,
+            Self::Fail => 2,
+        }
+    }
+
+    fn worse(self, other: Self) -> Self {
+        if other.severity() > self.severity() { other } else { self }
+    }
 }
 
 /// Tracks diagnostic step transitions by scanning TextDelta for STEP: markers.
@@ -79,6 +93,8 @@ pub struct StepTracker {
     enabled: bool,
     /// Re-prompt retry counter (avoid infinite loops).
     retries: u32,
+    /// Worst status seen across all completed steps (for diagnosis coloring).
+    worst_status: StepStatus,
 }
 
 impl StepTracker {
@@ -89,6 +105,7 @@ impl StepTracker {
             step_text: String::new(),
             tool_exit_codes: Vec::new(),
             enabled,
+            worst_status: StepStatus::Pass,
             retries: 0,
         }
     }
@@ -234,7 +251,7 @@ impl StepTracker {
     }
 
     /// Close a step, returning StepComplete and (if synthesis) a Diagnosis event.
-    fn close_step(&self, step: &str) -> Vec<AgentEvent> {
+    fn close_step(&mut self, step: &str) -> Vec<AgentEvent> {
         let status = if self.tool_exit_codes.is_empty() {
             // No tool calls — default to pass
             StepStatus::Pass
@@ -245,6 +262,11 @@ impl StepTracker {
         } else {
             StepStatus::Warn
         };
+
+        // Track worst status across all non-synthesis steps
+        if step != "synthesis" {
+            self.worst_status = self.worst_status.worse(status);
+        }
 
         let summary = self
             .step_text
@@ -257,9 +279,16 @@ impl StepTracker {
             .unwrap_or("")
             .to_string();
 
+        // For synthesis, use the aggregate worst status from all prior steps
+        let effective_status = if step == "synthesis" {
+            self.worst_status
+        } else {
+            status
+        };
+
         let mut events = vec![AgentEvent::StepComplete {
             step: step.to_string(),
-            status,
+            status: effective_status,
             summary,
             detail: self.step_text.clone(),
         }];

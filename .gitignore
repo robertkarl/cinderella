@@ -4,3 +4,21 @@ glass-slipper/GlassSlipper.app/
 xcuserdata/
 *.xcuserstate
 .DS_Store
+
+# Swap / editor temp files
+*.swp
+*.swo
+*~
+\#*\#
+.#*
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Xcode
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+DerivedData/
+build/

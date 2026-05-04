@@ -23,6 +23,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var stderrBuffer = Data()
     private var isRunning = false
     private var logFileHandle: FileHandle?
+    /// Tracks worst step status across the run for diagnosis coloring.
+    private var worstStatus: EventStatus = .ok
 
     // MARK: - Application lifecycle
 
@@ -167,6 +169,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         lineBuffer = Data()
         stderrBuffer = Data()
+        worstStatus = .ok
+
+        // Immediate feedback
+        spineVC.append(.connecting)
 
         // Find cinderella binary
         guard let cinderellaPath = findCinderella() else {
@@ -392,6 +398,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func handleEvent(_ event: [String: Any], type eventType: String) {
         switch eventType {
+        case "hw_info":
+            let chip = event["chip"] as? String ?? "Unknown"
+            let ramUsed = event["ram_used_gb"] as? Double ?? 0
+            let ramTotal = event["ram_total_gb"] as? Double ?? 0
+            let gpu = event["gpu_layers"] as? String ?? "—"
+            spineVC.append(.hwInfo(chip: chip, ramUsed: ramUsed, ramTotal: ramTotal, gpu: gpu))
+
         case "user_prompt":
             let text = event["text"] as? String ?? ""
             spineVC.append(.userPrompt(text: text))
@@ -412,6 +425,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             case "warn": status = .warn
             default: status = .info
             }
+            // Track worst status (skip synthesis — it carries the aggregate from Rust)
+            if name != "synthesis" {
+                if status == .err { worstStatus = .err }
+                else if status == .warn && worstStatus != .err { worstStatus = .warn }
+            }
             let title = stepDisplayTitle(name)
             spineVC.append(.check(name: title, status: status, detail: detail))
 
@@ -423,7 +441,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         case "diagnosis":
             let text = event["text"] as? String ?? ""
-            spineVC.append(.diagnosis(text: text))
+            spineVC.append(.diagnosis(text: text, status: worstStatus))
 
         case "done":
             isRunning = false

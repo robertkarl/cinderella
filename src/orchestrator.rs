@@ -202,6 +202,15 @@ async fn run_prompt(
     let mut agent = Agent::new(api_url, project_dir, BUNDLED_MODEL.ctx_size, model_name, safety_profile, format_json);
 
     if format_json {
+        // Emit hardware info before agent starts
+        if let Ok(hw) = hw::detect() {
+            tui::json_hw_info(
+                &hw.chip_name,
+                hw.total_ram_gb - hw.available_ram_gb,
+                hw.total_ram_gb,
+                "remote",
+            );
+        }
         agent
             .process_message(prompt, |event| {
                 tui::json_event(event);

@@ -58,6 +58,8 @@ extension NSColor {
     static let surfaceMuted      = NSColor(hex: 0xFAFAFA)               // zinc-50  (thought row, hover)
     static let surfaceHeader     = NSColor(hex: 0xF4F4F5)               // zinc-100 (input header bar)
     static let surfaceDiagnosis  = NSColor(hex: 0xECFDF5)               // emerald-50
+    static let surfaceDiagWarn   = NSColor(hex: 0xFFFBEB)               // amber-50
+    static let surfaceDiagFail   = NSColor(hex: 0xFEF2F2)               // red-50
 
     // Text
     static let textPrimary       = NSColor(hex: 0x18181B)               // zinc-900
@@ -68,6 +70,10 @@ extension NSColor {
     static let separatorHairline = NSColor(hex: 0xF4F4F5)               // zinc-100
     static let accentDiagnosis   = NSColor(hex: 0x10B981)               // emerald-500 (left border)
     static let accentDiagLabel   = NSColor(hex: 0x047857)               // emerald-700 (DIAGNOSIS text)
+    static let accentDiagWarn    = NSColor(hex: 0xF59E0B)               // amber-500
+    static let accentDiagWarnLbl = NSColor(hex: 0x92400E)               // amber-800
+    static let accentDiagFail    = NSColor(hex: 0xEF4444)               // red-500
+    static let accentDiagFailLbl = NSColor(hex: 0xB91C1C)               // red-700
 
     // Status pill — backgrounds
     static let statusOKBg        = NSColor(hex: 0xD1FAE5)               // emerald-100
@@ -157,7 +163,9 @@ enum Event {
     case plan(items: [String])
     case check(name: String, status: EventStatus, detail: String)
     case thought(text: String)
-    case diagnosis(text: String)
+    case diagnosis(text: String, status: EventStatus)
+    case hwInfo(chip: String, ramUsed: Double, ramTotal: Double, gpu: String)
+    case connecting
     // Future card kinds — add here, then add a case in EventRowFactory and
     // a corresponding NSView subclass:
     // case waterfall(rows: [WaterfallSegment])
@@ -216,6 +224,12 @@ final class HairlineDivider: NSView {
     required init?(coder: NSCoder) { fatalError("not in IB") }
 }
 
+// MARK: - Flipped document view (top-aligned scroll content)
+
+final class FlippedView: NSView {
+    override var isFlipped: Bool { true }
+}
+
 // MARK: - Row factory
 
 enum EventRowFactory {
@@ -229,8 +243,12 @@ enum EventRowFactory {
             return CheckRowView(name: name, status: status, detail: detail)
         case .thought(let text):
             return ThoughtRowView(text: text)
-        case .diagnosis(let text):
-            return DiagnosisRowView(text: text)
+        case .diagnosis(let text, let status):
+            return DiagnosisRowView(text: text, status: status)
+        case .hwInfo(let chip, let ramUsed, let ramTotal, let gpu):
+            return HwInfoRowView(chip: chip, ramUsed: ramUsed, ramTotal: ramTotal, gpu: gpu)
+        case .connecting:
+            return ConnectingRowView()
         }
     }
 }
@@ -494,25 +512,48 @@ final class DiagnosisRowView: NSView {
     private let headerLabel = NSTextField(labelWithString: "")
     private let bodyLabel = NSTextField(wrappingLabelWithString: "")
 
-    init(text: String) {
+    init(text: String, status: EventStatus = .ok) {
         super.init(frame: .zero)
 
+        // Pick colors based on status
+        let surfaceColor: NSColor
+        let borderColor: NSColor
+        let labelColor: NSColor
+        switch status {
+        case .ok:
+            surfaceColor = .surfaceDiagnosis
+            borderColor = .accentDiagnosis
+            labelColor = .accentDiagLabel
+        case .warn:
+            surfaceColor = .surfaceDiagWarn
+            borderColor = .accentDiagWarn
+            labelColor = .accentDiagWarnLbl
+        case .err:
+            surfaceColor = .surfaceDiagFail
+            borderColor = .accentDiagFail
+            labelColor = .accentDiagFailLbl
+        case .info:
+            surfaceColor = .surfaceDiagnosis
+            borderColor = .accentDiagnosis
+            labelColor = .accentDiagLabel
+        }
+
         wantsLayer = true
-        layer?.backgroundColor = NSColor.surfaceDiagnosis.cgColor
+        layer?.backgroundColor = surfaceColor.cgColor
 
         translatesAutoresizingMaskIntoConstraints = false
         borderView.translatesAutoresizingMaskIntoConstraints = false
         headerLabel.translatesAutoresizingMaskIntoConstraints = false
         bodyLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        // 4pt emerald left border
+        // 4pt left border
         borderView.wantsLayer = true
-        borderView.layer?.backgroundColor = NSColor.accentDiagnosis.cgColor
+        borderView.layer?.backgroundColor = borderColor.cgColor
 
-        // "DIAGNOSIS" header — bold uppercase, kerned, emerald-700
+        // "DIAGNOSIS" header — bold uppercase, kerned
         let headerAttr = NSAttributedString(string: "DIAGNOSIS", attributes: [
             .font: NSFont.diagnosisLabel,
-            .foregroundColor: NSColor.accentDiagLabel,
+            .foregroundColor: labelColor,
             .kern: 1.0,
         ])
         headerLabel.attributedStringValue = headerAttr
@@ -548,6 +589,94 @@ final class DiagnosisRowView: NSView {
     required init?(coder: NSCoder) { fatalError("not in IB") }
 }
 
+// MARK: - HwInfoRowView
+
+final class HwInfoRowView: NSView {
+    init(chip: String, ramUsed: Double, ramTotal: Double, gpu: String) {
+        super.init(frame: .zero)
+
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.surfaceHeader.cgColor
+
+        translatesAutoresizingMaskIntoConstraints = false
+
+        let pill = StatusPillView(status: .info)
+        pill.translatesAutoresizingMaskIntoConstraints = false
+
+        let chipLabel = NSTextField(labelWithString: chip)
+        chipLabel.translatesAutoresizingMaskIntoConstraints = false
+        chipLabel.font = .cardTitle
+        chipLabel.textColor = .textPrimary
+        chipLabel.maximumNumberOfLines = 1
+
+        let detail = String(format: "RAM: %.1f / %.0f GB · GPU: %@", ramUsed, ramTotal, gpu)
+        let detailLabel = NSTextField(labelWithString: detail)
+        detailLabel.translatesAutoresizingMaskIntoConstraints = false
+        detailLabel.font = .detailText
+        detailLabel.textColor = .textSecondary
+
+        addSubview(pill)
+        addSubview(chipLabel)
+        addSubview(detailLabel)
+
+        NSLayoutConstraint.activate([
+            pill.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Spacing.rowHorizontal),
+            pill.topAnchor.constraint(equalTo: topAnchor, constant: Spacing.rowVertical + 2),
+
+            chipLabel.leadingAnchor.constraint(equalTo: pill.trailingAnchor, constant: Spacing.lg),
+            chipLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -Spacing.rowHorizontal),
+            chipLabel.topAnchor.constraint(equalTo: topAnchor, constant: Spacing.rowVertical),
+
+            detailLabel.leadingAnchor.constraint(equalTo: chipLabel.leadingAnchor),
+            detailLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Spacing.rowHorizontal),
+            detailLabel.topAnchor.constraint(equalTo: chipLabel.bottomAnchor, constant: Spacing.xs),
+            detailLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Spacing.rowVertical),
+        ])
+    }
+    required init?(coder: NSCoder) { fatalError("not in IB") }
+}
+
+// MARK: - ConnectingRowView
+
+final class ConnectingRowView: NSView {
+    init() {
+        super.init(frame: .zero)
+
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.surfacePrimary.cgColor
+
+        translatesAutoresizingMaskIntoConstraints = false
+
+        let spinner = NSProgressIndicator()
+        spinner.style = .spinning
+        spinner.controlSize = .small
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        spinner.startAnimation(nil)
+
+        let label = NSTextField(labelWithString: "Connecting…")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .cardTitle
+        label.textColor = .textSecondary
+
+        addSubview(spinner)
+        addSubview(label)
+
+        NSLayoutConstraint.activate([
+            spinner.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Spacing.rowHorizontal),
+            spinner.centerYAnchor.constraint(equalTo: centerYAnchor),
+            spinner.widthAnchor.constraint(equalToConstant: 18),
+            spinner.heightAnchor.constraint(equalToConstant: 18),
+
+            label.leadingAnchor.constraint(equalTo: spinner.trailingAnchor, constant: Spacing.lg),
+            label.centerYAnchor.constraint(equalTo: centerYAnchor),
+
+            // Fixed height
+            heightAnchor.constraint(equalToConstant: 48),
+        ])
+    }
+    required init?(coder: NSCoder) { fatalError("not in IB") }
+}
+
 // MARK: - Spine view controller
 
 final class SpineViewController: NSViewController {
@@ -575,7 +704,7 @@ final class SpineViewController: NSViewController {
         stackView.spacing      = 0
         stackView.translatesAutoresizingMaskIntoConstraints = false
 
-        let documentView = NSView()
+        let documentView = FlippedView()
         documentView.translatesAutoresizingMaskIntoConstraints = false
         documentView.addSubview(stackView)
         scrollView.documentView = documentView
@@ -588,7 +717,6 @@ final class SpineViewController: NSViewController {
             scrollView.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: root.bottomAnchor),
 
-            documentView.topAnchor.constraint(equalTo: scrollView.contentView.topAnchor),
             documentView.leadingAnchor.constraint(equalTo: scrollView.contentView.leadingAnchor),
             documentView.trailingAnchor.constraint(equalTo: scrollView.contentView.trailingAnchor),
             documentView.widthAnchor.constraint(equalTo: scrollView.contentView.widthAnchor),
@@ -629,7 +757,10 @@ final class SpineViewController: NSViewController {
         case .plan(let items): return items.joined(separator: "\n")
         case .check(_, _, let detail): return detail
         case .thought(let text): return text
-        case .diagnosis(let text): return text
+        case .diagnosis(let text, _): return text
+        case .hwInfo(let chip, let ramUsed, let ramTotal, let gpu):
+            return String(format: "%@ · RAM: %.1f/%.0f GB · GPU: %@", chip, ramUsed, ramTotal, gpu)
+        case .connecting: return ""
         }
     }
 
@@ -647,7 +778,7 @@ final class SpineViewController: NSViewController {
     /// separation; don't add a hairline above them.
     private func shouldShowDividerAbove(_ event: Event) -> Bool {
         switch event {
-        case .diagnosis, .userPrompt: return false
+        case .diagnosis, .userPrompt, .hwInfo, .connecting: return false
         default: return true
         }
     }
