@@ -9,7 +9,6 @@
 
 import AppKit
 
-@main
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var window: NSWindow!

@@ -10,6 +10,7 @@
 		A1000003 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2000005 /* Cocoa.framework */; };
 		A1000004 /* CinderellaScaffold.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000008 /* CinderellaScaffold.swift */; };
 		A1000005 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000A /* AppDelegate.swift */; };
+		A1000006 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000B /* main.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,6 +19,7 @@
 		A2000007 /* GlassSlipper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassSlipper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2000008 /* CinderellaScaffold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CinderellaScaffold.swift; sourceTree = "<group>"; };
 		A200000A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A200000B /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -31,53 +33,22 @@
 		};
 /* End PBXFrameworksBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		A3000004 /* Build Cinderella */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Build Cinderella";
-			outputPaths = (
-				"${SRCROOT}/../target/release/cinderella",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "export PATH=\"$HOME/.cargo/bin:$PATH\"\ncd \"${SRCROOT}/..\"\ncargo build --release 2>&1\n";
-		};
-		A3000003 /* Copy Cinderella */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy Cinderella";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Symlink the cargo-built cinderella binary next to the .app\n# so findCinderella can resolve it via the adjacent-to-bundle check.\nCINDY=\"${SRCROOT}/../target/release/cinderella\"\nDEST=\"${BUILT_PRODUCTS_DIR}/cinderella\"\nif [ -x \"$CINDY\" ]; then\n    ln -sf \"$CINDY\" \"$DEST\"\n    echo \"Linked cinderella -> $CINDY\"\nelse\n    echo \"warning: cinderella not found at $CINDY — run: cargo build --release\"\nfi\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXGroup section */
-		A4000001 /* = */ = {
+		A4000001 = {
 			isa = PBXGroup;
 			children = (
-				A4000002 /* GlassSlipper */,
+				A4000002 /* . */,
 				A4000003 /* Frameworks */,
 				A4000004 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		A4000002 /* GlassSlipper */ = {
+		A4000002 /* . */ = {
 			isa = PBXGroup;
 			children = (
 				A200000A /* AppDelegate.swift */,
 				A2000008 /* CinderellaScaffold.swift */,
+				A200000B /* main.swift */,
 				A2000006 /* Info.plist */,
 			);
 			path = .;
@@ -147,6 +118,38 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		A3000003 /* Copy Cinderella */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Cinderella";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Symlink the cargo-built cinderella binary next to the .app\n# so findCinderella can resolve it via the adjacent-to-bundle check.\nCINDY=\"${SRCROOT}/../target/release/cinderella\"\nDEST=\"${BUILT_PRODUCTS_DIR}/cinderella\"\nif [ -x \"$CINDY\" ]; then\n    ln -sf \"$CINDY\" \"$DEST\"\n    echo \"Linked cinderella -> $CINDY\"\nelse\n    echo \"warning: cinderella not found at $CINDY — run: cargo build --release\"\nfi\n";
+		};
+		A3000004 /* Build Cinderella */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Build Cinderella";
+			outputPaths = (
+				"${SRCROOT}/../target/release/cinderella",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export PATH=\"$HOME/.cargo/bin:$PATH\"\ncd \"${SRCROOT}/..\"\ncargo build --release 2>&1\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		A3000002 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -154,6 +157,7 @@
 			files = (
 				A1000004 /* CinderellaScaffold.swift in Sources */,
 				A1000005 /* AppDelegate.swift in Sources */,
+				A1000006 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -268,10 +272,16 @@
 		A7000006 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = E7FAHT2694;
 				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Cinderella;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.cinderella.glass-slipper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -279,10 +289,16 @@
 		A7000007 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = E7FAHT2694;
 				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Cinderella;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.cinderella.glass-slipper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -309,7 +325,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = A6000001 /* Project object */;
 }
