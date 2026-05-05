@@ -74,6 +74,7 @@ extension NSColor {
     static let accentDiagWarnLbl = NSColor(hex: 0x92400E)               // amber-800
     static let accentDiagFail    = NSColor(hex: 0xEF4444)               // red-500
     static let accentDiagFailLbl = NSColor(hex: 0xB91C1C)               // red-700
+    static let accentProgress    = NSColor(hex: 0x3B82F6)               // blue-500
 
     // Status pill — backgrounds
     static let statusOKBg        = NSColor(hex: 0xD1FAE5)               // emerald-100
@@ -166,10 +167,7 @@ enum Event {
     case diagnosis(text: String, status: EventStatus)
     case hwInfo(chip: String, ramUsed: Double, ramTotal: Double, gpu: String)
     case connecting
-    // Future card kinds — add here, then add a case in EventRowFactory and
-    // a corresponding NSView subclass:
-    // case waterfall(rows: [WaterfallSegment])
-    // case miniChart(label: String, samples: [Double])
+    case modelDownload
 }
 
 // MARK: - StatusPillView (reusable token-composed view)
@@ -249,6 +247,8 @@ enum EventRowFactory {
             return HwInfoRowView(chip: chip, ramUsed: ramUsed, ramTotal: ramTotal, gpu: gpu)
         case .connecting:
             return ConnectingRowView()
+        case .modelDownload:
+            return ModelDownloadRowView()
         }
     }
 }
@@ -677,6 +677,163 @@ final class ConnectingRowView: NSView {
     required init?(coder: NSCoder) { fatalError("not in IB") }
 }
 
+// MARK: - ModelDownloadRowView
+
+final class ModelDownloadRowView: NSView {
+
+    private let titleLabel = NSTextField(labelWithString: "")
+    private let detailLabel = NSTextField(labelWithString: "")
+    private let progressBar = NSProgressIndicator()
+    private let progressLabel = NSTextField(labelWithString: "")
+    private let actionButton = NSButton(title: "Download", target: nil, action: nil)
+    private let errorLabel = NSTextField(wrappingLabelWithString: "")
+
+    var onAction: (() -> Void)?
+
+    init() {
+        super.init(frame: .zero)
+
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.surfacePrimary.cgColor
+        translatesAutoresizingMaskIntoConstraints = false
+
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        detailLabel.translatesAutoresizingMaskIntoConstraints = false
+        progressBar.translatesAutoresizingMaskIntoConstraints = false
+        progressLabel.translatesAutoresizingMaskIntoConstraints = false
+        actionButton.translatesAutoresizingMaskIntoConstraints = false
+        errorLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        titleLabel.font = .cardTitle
+        titleLabel.textColor = .textPrimary
+
+        detailLabel.font = .detailText
+        detailLabel.textColor = .textSecondary
+
+        progressBar.style = .bar
+        progressBar.isIndeterminate = false
+        progressBar.minValue = 0
+        progressBar.maxValue = 1
+        progressBar.isHidden = true
+
+        progressLabel.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
+        progressLabel.textColor = .textSecondary
+        progressLabel.isHidden = true
+
+        actionButton.bezelStyle = .rounded
+        actionButton.controlSize = .regular
+        actionButton.target = self
+        actionButton.action = #selector(actionClicked)
+
+        errorLabel.font = .detailText
+        errorLabel.textColor = .statusERRFg
+        errorLabel.maximumNumberOfLines = 0
+        errorLabel.isHidden = true
+
+        addSubview(titleLabel)
+        addSubview(detailLabel)
+        addSubview(progressBar)
+        addSubview(progressLabel)
+        addSubview(actionButton)
+        addSubview(errorLabel)
+
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Spacing.rowHorizontal),
+            titleLabel.topAnchor.constraint(equalTo: topAnchor, constant: Spacing.rowVertical),
+            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -Spacing.rowHorizontal),
+
+            detailLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            detailLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: Spacing.xs),
+            detailLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -Spacing.rowHorizontal),
+
+            progressBar.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            progressBar.topAnchor.constraint(equalTo: detailLabel.bottomAnchor, constant: Spacing.md),
+            progressBar.trailingAnchor.constraint(equalTo: progressLabel.leadingAnchor, constant: -Spacing.md),
+
+            progressLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Spacing.rowHorizontal),
+            progressLabel.centerYAnchor.constraint(equalTo: progressBar.centerYAnchor),
+            progressLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 120),
+
+            errorLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            errorLabel.topAnchor.constraint(equalTo: detailLabel.bottomAnchor, constant: Spacing.md),
+            errorLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Spacing.rowHorizontal),
+
+            actionButton.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            actionButton.topAnchor.constraint(equalTo: progressBar.bottomAnchor, constant: Spacing.md),
+            actionButton.topAnchor.constraint(greaterThanOrEqualTo: errorLabel.bottomAnchor, constant: Spacing.md),
+            actionButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Spacing.rowVertical),
+            actionButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 100),
+        ])
+    }
+    required init?(coder: NSCoder) { fatalError("not in IB") }
+
+    @objc private func actionClicked() {
+        onAction?()
+    }
+
+    /// Show the initial "model needed" state.
+    func showMissing(name: String, sizeGB: String) {
+        titleLabel.stringValue = "Model Required"
+        detailLabel.stringValue = "\(name) (\(sizeGB))"
+        progressBar.isHidden = true
+        progressLabel.isHidden = true
+        errorLabel.isHidden = true
+        actionButton.title = "Download"
+        actionButton.isHidden = false
+    }
+
+    /// Show download progress.
+    func showProgress(downloaded: Int64, total: Int64) {
+        let pct = total > 0 ? Double(downloaded) / Double(total) : 0
+        let dlGB = String(format: "%.1f", Double(downloaded) / 1_073_741_824)
+        let totalGB = String(format: "%.1f", Double(total) / 1_073_741_824)
+
+        titleLabel.stringValue = "Downloading Model"
+        detailLabel.isHidden = true
+        progressBar.isHidden = false
+        progressBar.doubleValue = pct
+        progressLabel.isHidden = false
+        progressLabel.stringValue = "\(dlGB) / \(totalGB) GB (\(Int(pct * 100))%)"
+        errorLabel.isHidden = true
+        actionButton.isHidden = true
+    }
+
+    /// Show verification in progress.
+    func showVerifying() {
+        titleLabel.stringValue = "Verifying integrity\u{2026}"
+        detailLabel.isHidden = true
+        progressBar.isHidden = false
+        progressBar.isIndeterminate = true
+        progressBar.startAnimation(nil)
+        progressLabel.isHidden = true
+        errorLabel.isHidden = true
+        actionButton.isHidden = true
+    }
+
+    /// Show verified / ready.
+    func showReady() {
+        titleLabel.stringValue = "Model Ready"
+        detailLabel.stringValue = ""
+        detailLabel.isHidden = true
+        progressBar.isHidden = true
+        progressLabel.isHidden = true
+        errorLabel.isHidden = true
+        actionButton.isHidden = true
+    }
+
+    /// Show an error with retry.
+    func showError(_ message: String) {
+        titleLabel.stringValue = "Download Failed"
+        detailLabel.isHidden = true
+        progressBar.isHidden = true
+        progressLabel.isHidden = true
+        errorLabel.stringValue = message
+        errorLabel.isHidden = false
+        actionButton.title = "Retry"
+        actionButton.isHidden = false
+    }
+}
+
 // MARK: - Spine view controller
 
 final class SpineViewController: NSViewController {
@@ -761,6 +918,7 @@ final class SpineViewController: NSViewController {
         case .hwInfo(let chip, let ramUsed, let ramTotal, let gpu):
             return String(format: "%@ · RAM: %.1f/%.0f GB · GPU: %@", chip, ramUsed, ramTotal, gpu)
         case .connecting: return ""
+        case .modelDownload: return ""
         }
     }
 
@@ -778,7 +936,7 @@ final class SpineViewController: NSViewController {
     /// separation; don't add a hairline above them.
     private func shouldShowDividerAbove(_ event: Event) -> Bool {
         switch event {
-        case .diagnosis, .userPrompt, .hwInfo, .connecting: return false
+        case .diagnosis, .userPrompt, .hwInfo, .connecting, .modelDownload: return false
         default: return true
         }
     }

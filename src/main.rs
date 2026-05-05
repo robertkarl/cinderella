@@ -2,6 +2,7 @@ mod agent;
 mod config;
 mod hw;
 mod llm;
+mod model_manifest;
 mod orchestrator;
 mod server;
 mod tools;
@@ -22,7 +23,7 @@ struct Cli {
     #[arg(short = 'p', long = "prompt")]
     prompt: Option<String>,
 
-    /// Use the network-debug playbook (allows diagnostic commands like curl, dig, nmap).
+    /// Use the network-debug playbook (allows diagnostic commands like curl, dig, traceroute).
     #[arg(long = "playbook", value_name = "NAME")]
     playbook: Option<String>,
 

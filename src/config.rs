@@ -23,17 +23,18 @@ pub struct ModelEntry {
     pub n_gpu_layers: i32,
 }
 
-/// The bundled model. v1 ships exactly one.
+/// The bundled model. v1 ships exactly one: Qwen 3.5 9B Q5_K_M.
+/// This must match model-manifest.json — the manifest is the source of truth.
 pub const BUNDLED_MODEL: ModelEntry = ModelEntry {
-    name: "Qwen3.5-35B-MoE",
-    filename: "Qwen3.5-35B-MoE-Q4_K_M.gguf",
-    size_gb: 22.0,
-    // Model ~20GB + KV cache ~8-10GB + server ~1GB
-    total_ram_required_gb: 32.0,
-    quant: "Q4_K_M",
-    sha256: "TODO_FILL_AFTER_DOWNLOAD",
+    name: "Qwen3.5-9B",
+    filename: "Qwen3.5-9B-Q5_K_M.gguf",
+    size_gb: 6.1,
+    // Model ~6GB + KV cache ~4-6GB + server ~1GB
+    total_ram_required_gb: 16.0,
+    quant: "Q5_K_M",
+    sha256: "dc2a39aef291f91a9116ad214058da0d86eb648743a124bd8c333787c4b9c91c",
     ctx_size: DEFAULT_CTX_SIZE,
-    n_gpu_layers: 48, // partial offload for MoE
+    n_gpu_layers: -1, // full GPU offload for 9B
 };
 
 /// Server startup arguments derived from a model entry.
@@ -79,9 +80,10 @@ pub fn cinderella_home() -> std::path::PathBuf {
     dirs_home().join(CINDERELLA_DIR)
 }
 
-/// Get the models directory (~/models)
+/// Get the models directory (~/Library/Application Support/Cinderella/Models/)
 pub fn models_dir() -> std::path::PathBuf {
-    dirs_home().join("models")
+    dirs_home()
+        .join("Library/Application Support/Cinderella/Models")
 }
 
 fn dirs_home() -> std::path::PathBuf {
@@ -142,7 +144,7 @@ Valid step names: parse_target, dns, connectivity, route_analysis, port_check, s
 
 ### Before you begin: Resolve ambiguous targets
 If the user mentions a port with ambiguity (e.g., "5000ish", "around 5000", "that port"), you MUST find the actual port before proceeding.
-- For "5000ish" or similar: scan with `nmap -sT -p 4900-5100 localhost`
+- For "5000ish" or similar: scan with `for p in $(seq 4900 5100); do nc -zv localhost $p 2>&1 | grep succeeded; done`
 - For "that port" or "the port": run `lsof -i -P -n | grep LISTEN` to find listening services
 - Once you identify the actual port, use it for all subsequent steps.
 
@@ -335,7 +337,8 @@ mod tests {
         assert!(BUNDLED_MODEL.size_gb > 0.0);
         assert!(BUNDLED_MODEL.total_ram_required_gb > BUNDLED_MODEL.size_gb);
         assert!(BUNDLED_MODEL.ctx_size > 0);
-        assert!(BUNDLED_MODEL.n_gpu_layers > 0);
+        // n_gpu_layers: -1 means full offload, positive means partial
+        assert!(BUNDLED_MODEL.n_gpu_layers != 0);
     }
 
     #[test]
@@ -376,6 +379,6 @@ mod tests {
     #[test]
     fn test_models_dir() {
         let dir = models_dir();
-        assert!(dir.to_str().unwrap().contains("models"));
+        assert!(dir.to_str().unwrap().contains("Cinderella/Models"));
     }
 }

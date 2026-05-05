@@ -11,6 +11,7 @@
 		A1000004 /* CinderellaScaffold.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000008 /* CinderellaScaffold.swift */; };
 		A1000005 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000A /* AppDelegate.swift */; };
 		A1000006 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000B /* main.swift */; };
+		A1000007 /* ModelDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000C /* ModelDownloadManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +21,7 @@
 		A2000008 /* CinderellaScaffold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CinderellaScaffold.swift; sourceTree = "<group>"; };
 		A200000A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A200000B /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		A200000C /* ModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloadManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +51,7 @@
 				A200000A /* AppDelegate.swift */,
 				A2000008 /* CinderellaScaffold.swift */,
 				A200000B /* main.swift */,
+				A200000C /* ModelDownloadManager.swift */,
 				A2000006 /* Info.plist */,
 			);
 			path = .;
@@ -158,6 +161,7 @@
 				A1000004 /* CinderellaScaffold.swift in Sources */,
 				A1000005 /* AppDelegate.swift in Sources */,
 				A1000006 /* main.swift in Sources */,
+				A1000007 /* ModelDownloadManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

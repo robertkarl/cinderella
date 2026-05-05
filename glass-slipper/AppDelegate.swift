@@ -25,6 +25,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var logFileHandle: FileHandle?
     /// Tracks worst step status across the run for diagnosis coloring.
     private var worstStatus: EventStatus = .ok
+    private var downloadManager: ModelDownloadManager?
+    private var downloadRowView: ModelDownloadRowView?
 
     // MARK: - Application lifecycle
 
@@ -32,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupMenuBar()
         setupWindow()
         setupUI()
+        checkModelOnLaunch()
         window.makeKeyAndOrderFront(nil)
         if #available(macOS 14.0, *) {
             NSApp.activate()
@@ -48,6 +51,53 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let proc = process, proc.isRunning {
             proc.terminate()
         }
+        downloadManager?.cancelDownload()
+    }
+
+    // MARK: - Model check on launch
+
+    private func checkModelOnLaunch() {
+        guard let manifest = ModelDownloadManager.loadManifest(),
+              let modelDef = manifest.models.first(where: { $0.id == manifest.default_model }) else {
+            diagnoseButton.isEnabled = true  // no manifest = dev mode, let it through
+            return
+        }
+
+        let manager = ModelDownloadManager(model: modelDef)
+        manager.delegate = self
+        self.downloadManager = manager
+
+        if manager.isModelPresent {
+            diagnoseButton.isEnabled = true
+            return
+        }
+
+        // Show download row
+        let sizeGB = String(format: "%.1f GB", Double(modelDef.size_bytes) / 1_073_741_824)
+        let row = ModelDownloadRowView()
+        row.showMissing(name: modelDef.name, sizeGB: sizeGB)
+        row.onAction = { [weak self] in
+            self?.handleDownloadAction()
+        }
+        self.downloadRowView = row
+
+        // Show the download row in place of the spine
+        row.translatesAutoresizingMaskIntoConstraints = false
+        if let contentView = window.contentView {
+            // Remove spine temporarily, show download row in its place
+            spineVC.view.isHidden = true
+            contentView.addSubview(row)
+            NSLayoutConstraint.activate([
+                row.topAnchor.constraint(equalTo: urlField.bottomAnchor, constant: Spacing.lg),
+                row.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                row.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            ])
+        }
+    }
+
+    private func handleDownloadAction() {
+        downloadRowView?.showProgress(downloaded: 0, total: downloadManager?.model.size_bytes ?? 0)
+        downloadManager?.startDownload()
     }
 
     // MARK: - Menu bar
@@ -59,7 +109,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let appMenuItem = NSMenuItem()
         menubar.addItem(appMenuItem)
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "Quit Glass Slipper", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Quit Cinderella", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appMenuItem.submenu = appMenu
 
         // Edit menu — required for Cmd+C/V/X/A in text fields
@@ -81,7 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let frame = NSRect(x: 200, y: 200, width: 720, height: 580)
         let style: NSWindow.StyleMask = [.titled, .closable, .miniaturizable, .resizable]
         window = NSWindow(contentRect: frame, styleMask: style, backing: .buffered, defer: false)
-        window.title = "Glass Slipper"
+        window.title = "Cinderella"
         window.minSize = NSSize(width: 480, height: 360)
         window.center()
     }
@@ -105,6 +155,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         diagnoseButton.translatesAutoresizingMaskIntoConstraints = false
         diagnoseButton.bezelStyle = .rounded
         diagnoseButton.controlSize = .regular
+        diagnoseButton.isEnabled = false
         contentView.addSubview(diagnoseButton)
 
         // Spine view controller
@@ -185,8 +236,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let prompt = "Diagnose this URL: \(url)"
-        let home = NSHomeDirectory()
-        let modelPath = home + "/models/Qwen3.5-9B-Q5_K_M.gguf"
+        let modelPath = modelFilePath()
 
         // Build arguments
         var args = [".", "-p", prompt, "--playbook", "network-debug", "--format", "json", "--model", modelPath]
@@ -273,7 +323,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Find binaries
 
+    /// Whether we are running from inside an app bundle (release mode).
+    private var isReleaseBuild: Bool {
+        // In a proper app bundle, the executable is at .app/Contents/MacOS/Cinderella
+        let exe = Bundle.main.executablePath ?? ""
+        return exe.contains(".app/Contents/MacOS/")
+    }
+
     private func findCinderella() -> String? {
+        // Primary: bundled helper inside app bundle (named cinderella-agent to avoid
+        // case-insensitive collision with the Swift "Cinderella" executable)
+        let bundled = Bundle.main.bundlePath + "/Contents/MacOS/cinderella-agent"
+        if FileManager.default.isExecutableFile(atPath: bundled) {
+            return bundled
+        }
+
+        // Release mode: fail closed — don't fall back to PATH or Cargo outputs
+        if isReleaseBuild {
+            return nil
+        }
+
+        // --- Development-only fallbacks ---
         let appDir = Bundle.main.bundlePath
         let parentDir = (appDir as NSString).deletingLastPathComponent
 
@@ -316,6 +386,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func findLlamaServer() -> String? {
+        // Primary: bundled helper inside app bundle
+        let bundled = Bundle.main.bundlePath + "/Contents/MacOS/llama-server"
+        if FileManager.default.isExecutableFile(atPath: bundled) {
+            return bundled
+        }
+
+        // Release mode: fail closed — no Homebrew fallback
+        if isReleaseBuild {
+            return nil
+        }
+
+        // --- Development-only fallbacks ---
         let candidates = [
             "/opt/homebrew/bin/llama-server",
             "/usr/local/bin/llama-server",
@@ -326,6 +408,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         return nil
+    }
+
+    // MARK: - Model path
+
+    /// Model file path: ~/Library/Application Support/Cinderella/Models/Qwen3.5-9B-Q5_K_M.gguf
+    /// In development, falls back to ~/models/ if Application Support copy doesn't exist.
+    private func modelFilePath() -> String {
+        let home = NSHomeDirectory()
+        let appSupportPath = home + "/Library/Application Support/Cinderella/Models/Qwen3.5-9B-Q5_K_M.gguf"
+        if FileManager.default.fileExists(atPath: appSupportPath) {
+            return appSupportPath
+        }
+        // Development fallback (not used in release builds)
+        if !isReleaseBuild {
+            let legacyPath = home + "/models/Qwen3.5-9B-Q5_K_M.gguf"
+            if FileManager.default.fileExists(atPath: legacyPath) {
+                return legacyPath
+            }
+        }
+        // Return the canonical path even if missing — the Rust helper will report the error
+        return appSupportPath
     }
 
     // MARK: - Pipe reading
@@ -491,6 +594,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         logFileHandle?.closeFile()
         logFileHandle = nil
+    }
+}
+
+// MARK: - ModelDownloadManagerDelegate
+
+extension AppDelegate: ModelDownloadManagerDelegate {
+    func downloadDidUpdateProgress(downloaded: Int64, total: Int64) {
+        downloadRowView?.showProgress(downloaded: downloaded, total: total)
+    }
+
+    func downloadDidBeginVerification() {
+        downloadRowView?.showVerifying()
+    }
+
+    func downloadDidFinish() {
+        downloadRowView?.removeFromSuperview()
+        diagnoseButton.isEnabled = true
+        spineVC.view.isHidden = false
+    }
+
+    func downloadDidFail(error: String) {
+        downloadRowView?.showError(error)
+        downloadRowView?.onAction = { [weak self] in
+            self?.handleDownloadAction()
+        }
     }
 }
 

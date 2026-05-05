@@ -3,17 +3,23 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleExecutable</key>
-	<string>GlassSlipper</string>
+	<string>Cinderella</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.cinderella.glass-slipper</string>
+	<string>net.robertkarl.cinderella</string>
 	<key>CFBundleName</key>
-	<string>Glass Slipper</string>
+	<string>Cinderella</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.0</string>
+	<string>0.2.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>15.0</string>
+	<key>LSArchitecturePriority</key>
+	<array>
+		<string>arm64</string>
+	</array>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSPrincipalClass</key>

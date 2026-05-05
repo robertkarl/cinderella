@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "models": [
+    {
+      "id": "qwen3.5-9b-q5",
+      "name": "Qwen 3.5 9B",
+      "filename": "Qwen3.5-9B-Q5_K_M.gguf",
+      "quant": "Q5_K_M",
+      "size_bytes": 6577841376,
+      "sha256": "dc2a39aef291f91a9116ad214058da0d86eb648743a124bd8c333787c4b9c91c",
+      "url": "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-Q5_K_M.gguf",
+      "min_ram_gb": 16,
+      "min_macos": "15.0",
+      "arch": "arm64",
+      "ctx_size": 32768,
+      "n_gpu_layers": -1,
+      "app_support_subdir": "Cinderella/Models"
+    }
+  ],
+  "default_model": "qwen3.5-9b-q5"
+}

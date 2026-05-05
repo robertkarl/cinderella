@@ -273,7 +273,9 @@ fn spawn_agent_loop(
     })
 }
 
-/// Find the bundled model in ~/.cinderella/models/ or extract from release archive.
+/// Find the model in ~/Library/Application Support/Cinderella/Models/.
+/// In the v1 release, the model is downloaded on first run by the Swift app.
+/// The Rust helper expects it to already be present and verified.
 fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
     // Check RAM — use total RAM, not available. macOS unified memory will reclaim
     // inactive/purgeable pages under pressure, so "available" is misleadingly low.
@@ -288,25 +290,34 @@ fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
         );
     }
 
-    let models_dir = config::models_dir();
-    let model_path = models_dir.join(BUNDLED_MODEL.filename);
-
-    if model_path.exists() {
-        return Ok(model_path);
+    // Primary location: Application Support (where the GUI downloader puts it)
+    let app_support_path = config::models_dir().join(BUNDLED_MODEL.filename);
+    if app_support_path.exists() {
+        return Ok(app_support_path);
     }
 
-    // Model not yet extracted — in v1 bundled release, copy from archive location
-    // For development, suggest downloading manually
+    // Development fallback: ~/models/ (legacy location)
+    if !is_release_bundle() {
+        let home = std::env::var("HOME").unwrap_or_default();
+        let legacy_path = PathBuf::from(&home).join("models").join(BUNDLED_MODEL.filename);
+        if legacy_path.exists() {
+            return Ok(legacy_path);
+        }
+    }
+
     anyhow::bail!(
         "Model not found at {}.\n\
-         For development: download {} and place it there.\n\
-         In the release build, the model is bundled in the archive.",
-        model_path.display(),
+         The Cinderella app downloads the model on first launch.\n\
+         For development: download {} and place it in ~/Library/Application Support/Cinderella/Models/",
+        app_support_path.display(),
         BUNDLED_MODEL.filename
     );
 }
 
 /// Find the llama-server binary.
+///
+/// In release mode (inside an app bundle), only the bundled copy is accepted.
+/// Development mode additionally checks ~/.cinderella/bin and PATH.
 pub fn find_llama_server(custom_path: Option<&Path>) -> Result<PathBuf> {
     if let Some(p) = custom_path {
         if p.exists() {
@@ -315,7 +326,8 @@ pub fn find_llama_server(custom_path: Option<&Path>) -> Result<PathBuf> {
         anyhow::bail!("llama-server not found at {}", p.display());
     }
 
-    // Check bundled location (next to cinderella binary)
+    // Check bundled location (next to cinderella binary — works both in
+    // app bundle Contents/MacOS/ and when placed adjacent during development)
     if let Ok(exe) = std::env::current_exe() {
         if let Some(dir) = exe.parent() {
             let bundled = dir.join("llama-server");
@@ -324,6 +336,18 @@ pub fn find_llama_server(custom_path: Option<&Path>) -> Result<PathBuf> {
             }
         }
     }
+
+    // In release mode (running from an app bundle), fail closed.
+    // The app must not silently use Homebrew or PATH llama-server.
+    if is_release_bundle() {
+        anyhow::bail!(
+            "llama-server not found in app bundle.\n\
+             The release build requires llama-server at Contents/MacOS/llama-server.\n\
+             This is a packaging error — run scripts/package-macos.sh to rebuild."
+        );
+    }
+
+    // --- Development-only fallbacks below ---
 
     // Check ~/.cinderella/bin/
     let home_bin = config::cinderella_home().join("bin").join("llama-server");
@@ -346,4 +370,23 @@ pub fn find_llama_server(custom_path: Option<&Path>) -> Result<PathBuf> {
         "llama-server not found. Install it or provide --llama-server <path>.\n\
          For development: brew install llama.cpp"
     );
+}
+
+/// Returns true if the current binary is running from inside a macOS app bundle.
+/// Detected by checking if the executable's great-grandparent is a .app directory.
+fn is_release_bundle() -> bool {
+    std::env::current_exe()
+        .ok()
+        .and_then(|exe| {
+            // exe = Foo.app/Contents/MacOS/cinderella-agent
+            // parent = Foo.app/Contents/MacOS
+            // grandparent = Foo.app/Contents
+            // great-grandparent = Foo.app
+            let macos_dir = exe.parent()?;
+            let contents_dir = macos_dir.parent()?;
+            let bundle = contents_dir.parent()?;
+            let bundle_name = bundle.file_name()?.to_str()?;
+            Some(bundle_name.ends_with(".app"))
+        })
+        .unwrap_or(false)
 }
