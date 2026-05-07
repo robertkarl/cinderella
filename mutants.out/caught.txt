@@ -1,0 +1,99 @@
+src/agent.rs:119:9: replace StepTracker::feed_text -> Vec<AgentEvent> with vec![]
+src/agent.rs:119:12: delete ! in StepTracker::feed_text
+src/agent.rs:158:9: replace StepTracker::process_lines with ()
+src/agent.rs:166:9: replace StepTracker::handle_step_line with ()
+src/agent.rs:179:19: delete ! in StepTracker::handle_step_line
+src/agent.rs:180:16: delete ! in StepTracker::handle_step_line
+src/agent.rs:189:9: replace StepTracker::record_tool_result with ()
+src/agent.rs:233:9: replace StepTracker::flush -> Vec<AgentEvent> with vec![]
+src/agent.rs:233:12: delete ! in StepTracker::flush
+src/agent.rs:240:16: delete ! in StepTracker::flush
+src/agent.rs:238:12: delete ! in StepTracker::flush
+src/agent.rs:253:9: replace StepTracker::close_step -> Vec<AgentEvent> with vec![]
+src/agent.rs:269:17: replace == with != in StepTracker::close_step
+src/agent.rs:269:32: replace && with || in StepTracker::close_step
+src/agent.rs:269:35: delete ! in StepTracker::close_step
+src/agent.rs:279:5: replace step_display_title -> String with String::new()
+src/agent.rs:279:5: replace step_display_title -> String with "xyzzy".into()
+src/agent.rs:653:5: replace extract_step_marker -> Option<String> with None
+src/agent.rs:653:5: replace extract_step_marker -> Option<String> with Some(String::new())
+src/agent.rs:653:5: replace extract_step_marker -> Option<String> with Some("xyzzy".into())
+src/agent.rs:661:42: delete ! in derive_step_status
+src/agent.rs:670:5: replace extract_step_summary -> String with String::new()
+src/agent.rs:670:5: replace extract_step_summary -> String with "xyzzy".into()
+src/config.rs:61:9: replace ServerConfig::to_args -> Vec<String> with vec![]
+src/config.rs:61:9: replace ServerConfig::to_args -> Vec<String> with vec![String::new()]
+src/config.rs:61:9: replace ServerConfig::to_args -> Vec<String> with vec!["xyzzy".into()]
+src/config.rs:80:5: replace cinderella_home -> std::path::PathBuf with Default::default()
+src/config.rs:85:5: replace models_dir -> std::path::PathBuf with Default::default()
+src/config.rs:217:5: replace tool_definitions -> Vec<serde_json::Value> with vec![]
+src/config.rs:217:5: replace tool_definitions -> Vec<serde_json::Value> with vec![Default::default()]
+src/hw.rs:26:47: replace / with % in detect
+src/hw.rs:40:5: replace sysctl_total_ram -> Result<u64> with Ok(0)
+src/hw.rs:54:5: replace available_ram -> Result<f64> with Ok(0.0)
+src/hw.rs:54:5: replace available_ram -> Result<f64> with Ok(-1.0)
+src/hw.rs:65:32: replace + with - in available_ram
+src/hw.rs:72:5: replace parse_vm_stat_page_size -> Option<u64> with None
+src/hw.rs:72:5: replace parse_vm_stat_page_size -> Option<u64> with Some(0)
+src/hw.rs:72:5: replace parse_vm_stat_page_size -> Option<u64> with Some(1)
+src/hw.rs:72:47: replace + with - in parse_vm_stat_page_size
+src/hw.rs:72:47: replace + with * in parse_vm_stat_page_size
+src/hw.rs:73:42: replace + with - in parse_vm_stat_page_size
+src/hw.rs:73:42: replace + with * in parse_vm_stat_page_size
+src/hw.rs:78:5: replace parse_vm_stat_field -> u64 with 0
+src/hw.rs:78:5: replace parse_vm_stat_field -> u64 with 1
+src/llm.rs:364:5: replace repair_json -> String with String::new()
+src/llm.rs:364:5: replace repair_json -> String with "xyzzy".into()
+src/llm.rs:401:5: replace regex_lite_trailing_comma -> String with "xyzzy".into()
+src/llm.rs:405:13: replace < with == in regex_lite_trailing_comma
+src/llm.rs:405:13: replace < with <= in regex_lite_trailing_comma
+src/llm.rs:406:28: replace && with || in regex_lite_trailing_comma
+src/llm.rs:406:21: replace == with != in regex_lite_trailing_comma
+src/llm.rs:406:62: replace + with - in regex_lite_trailing_comma
+src/llm.rs:406:62: replace + with * in regex_lite_trailing_comma
+src/llm.rs:411:11: replace += with -= in regex_lite_trailing_comma
+src/llm.rs:419:5: replace is_followed_by_closer -> bool with false
+src/llm.rs:419:45: delete ! in is_followed_by_closer
+src/llm.rs:424:5: replace fix_unescaped_newlines -> String with "xyzzy".into()
+src/llm.rs:429:25: delete ! in fix_unescaped_newlines
+src/llm.rs:429:15: replace == with != in fix_unescaped_newlines
+src/llm.rs:430:25: delete ! in fix_unescaped_newlines
+src/llm.rs:433:36: replace && with || in fix_unescaped_newlines
+src/llm.rs:433:22: replace && with || in fix_unescaped_newlines
+src/llm.rs:433:28: replace == with != in fix_unescaped_newlines
+src/llm.rs:433:39: delete ! in fix_unescaped_newlines
+src/model_manifest.rs:64:28: replace == with != in Manifest::default_model
+src/model_manifest.rs:73:9: replace ModelDef::model_path -> PathBuf with Default::default()
+src/model_manifest.rs:78:9: replace ModelDef::part_path -> PathBuf with Default::default()
+src/model_manifest.rs:154:5: replace app_support_dir -> PathBuf with Default::default()
+src/tools/mod.rs:28:9: delete match arm "read_file" in execute
+src/tools/mod.rs:29:9: delete match arm "write_file" in execute
+src/tools/mod.rs:30:9: delete match arm "edit_file" in execute
+src/tools/mod.rs:31:9: delete match arm "bash" in execute
+src/tools/mod.rs:32:9: delete match arm "ls" in execute
+src/tools/mod.rs:43:5: replace resolve_path -> Result<PathBuf> with Ok(Default::default())
+src/tools/mod.rs:57:8: delete ! in resolve_path
+src/tools/mod.rs:67:5: replace canonicalize_with_ancestors -> Result<PathBuf> with Ok(Default::default())
+src/tools/mod.rs:82:5: replace find_existing_ancestor -> (PathBuf, Vec<std::ffi::OsString>) with (Default::default(), vec![])
+src/tools/mod.rs:68:8: delete ! in canonicalize_with_ancestors
+src/tools/mod.rs:82:5: replace find_existing_ancestor -> (PathBuf, Vec<std::ffi::OsString>) with (Default::default(), vec![Default::default()])
+src/tools/mod.rs:92:24: replace match guard p != ancestor with false in find_existing_ancestor
+src/tools/mod.rs:92:26: replace != with == in find_existing_ancestor
+src/tools/mod.rs:103:5: replace truncate_output -> String with String::new()
+src/tools/mod.rs:103:5: replace truncate_output -> String with "xyzzy".into()
+src/tools/mod.rs:104:20: replace <= with > in truncate_output
+src/tools/mod.rs:108:26: replace / with * in truncate_output
+src/tools/mod.rs:114:40: replace - with + in truncate_output
+src/tools/bash.rs:66:5: replace auto_allow_for -> &'static[Capability] with Vec::leak(Vec::new())
+src/tools/bash.rs:113:8: delete ! in classify_command
+src/tools/bash.rs:123:21: delete ! in classify_command
+src/tools/bash.rs:229:8: delete ! in run_command
+src/tools/bash.rs:241:36: replace > with < in run_command
+src/tools/ls.rs:8:5: replace format_dir_entry -> String with String::new()
+src/tools/ls.rs:8:5: replace format_dir_entry -> String with "xyzzy".into()
+src/tools/ls.rs:10:21: replace match guard meta.file_type().is_symlink() with true in format_dir_entry
+src/tools/ls.rs:11:21: replace match guard meta.is_dir() with false in format_dir_entry
+src/tools/ls.rs:33:8: delete ! in execute
+src/tools/ls.rs:40:8: delete ! in execute
+src/tools/write.rs:7:5: replace ensure_parent_dirs -> std::io::Result<()> with Ok(())
+src/tools/write.rs:8:12: delete ! in ensure_parent_dirs

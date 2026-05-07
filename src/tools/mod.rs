@@ -47,42 +47,53 @@ pub fn resolve_path(path_str: &str, project_dir: &Path) -> Result<PathBuf> {
         project_dir.join(path)
     };
 
-    // Canonicalize what exists, then check prefix.
-    // For new files/dirs, walk up to the nearest existing ancestor.
     let check_path = if resolved.exists() {
         resolved.canonicalize()?
     } else {
-        // Walk up to find the nearest existing ancestor
-        let mut ancestor = resolved.clone();
-        let mut suffix_parts: Vec<std::ffi::OsString> = Vec::new();
-        loop {
-            if ancestor.exists() {
-                let mut canonical = ancestor.canonicalize()?;
-                for part in suffix_parts.iter().rev() {
-                    canonical = canonical.join(part);
-                }
-                break canonical;
-            }
-            if let Some(name) = ancestor.file_name() {
-                suffix_parts.push(name.to_os_string());
-            }
-            match ancestor.parent() {
-                Some(p) if p != ancestor => ancestor = p.to_path_buf(),
-                _ => break resolved.clone(), // fallback
-            }
-        }
+        canonicalize_with_ancestors(&resolved)?
     };
 
     let canonical_project = project_dir.canonicalize()?;
     if !check_path.starts_with(&canonical_project) {
-        anyhow::bail!(
-            "Path {} is outside project directory",
-            path_str
-        );
+        anyhow::bail!("Path {} is outside project directory", path_str);
     }
 
-    // Return the canonicalized path to prevent TOCTOU attacks via symlinks
     Ok(check_path)
+}
+
+/// Canonicalize a non-existent path by walking up to the nearest existing ancestor,
+/// canonicalizing it, and reappending the remaining components.
+fn canonicalize_with_ancestors(resolved: &Path) -> Result<PathBuf> {
+    let (ancestor, suffix_parts) = find_existing_ancestor(resolved);
+    if !ancestor.exists() {
+        return Ok(resolved.to_path_buf());
+    }
+    let mut canonical = ancestor.canonicalize()?;
+    for part in suffix_parts.iter().rev() {
+        canonical = canonical.join(part);
+    }
+    Ok(canonical)
+}
+
+/// Walk up the path tree to find the nearest existing ancestor.
+/// Returns (ancestor, suffix_parts) where suffix_parts are the
+/// components between ancestor and the original path, in reverse order.
+fn find_existing_ancestor(path: &Path) -> (PathBuf, Vec<std::ffi::OsString>) {
+    let mut ancestor = path.to_path_buf();
+    let mut suffix_parts: Vec<std::ffi::OsString> = Vec::new();
+    loop {
+        if ancestor.exists() {
+            break;
+        }
+        if let Some(name) = ancestor.file_name() {
+            suffix_parts.push(name.to_os_string());
+        }
+        match ancestor.parent() {
+            Some(p) if p != ancestor => ancestor = p.to_path_buf(),
+            _ => break,
+        }
+    }
+    (ancestor, suffix_parts)
 }
 
 /// Truncate output for context management.

@@ -326,19 +326,10 @@ pub fn find_llama_server(custom_path: Option<&Path>) -> Result<PathBuf> {
         anyhow::bail!("llama-server not found at {}", p.display());
     }
 
-    // Check bundled location (next to cinderella binary — works both in
-    // app bundle Contents/MacOS/ and when placed adjacent during development)
-    if let Ok(exe) = std::env::current_exe() {
-        if let Some(dir) = exe.parent() {
-            let bundled = dir.join("llama-server");
-            if bundled.exists() {
-                return Ok(bundled);
-            }
-        }
+    if let Some(bundled) = find_bundled_llama_server() {
+        return Ok(bundled);
     }
 
-    // In release mode (running from an app bundle), fail closed.
-    // The app must not silently use Homebrew or PATH llama-server.
     if is_release_bundle() {
         anyhow::bail!(
             "llama-server not found in app bundle.\n\
@@ -347,29 +338,38 @@ pub fn find_llama_server(custom_path: Option<&Path>) -> Result<PathBuf> {
         );
     }
 
-    // --- Development-only fallbacks below ---
+    find_dev_llama_server()
+}
 
-    // Check ~/.cinderella/bin/
+/// Check for llama-server bundled next to the current executable.
+fn find_bundled_llama_server() -> Option<PathBuf> {
+    let exe = std::env::current_exe().ok()?;
+    let bundled = exe.parent()?.join("llama-server");
+    bundled.exists().then_some(bundled)
+}
+
+/// Development-only fallbacks: ~/.cinderella/bin/ and PATH.
+fn find_dev_llama_server() -> Result<PathBuf> {
     let home_bin = config::cinderella_home().join("bin").join("llama-server");
     if home_bin.exists() {
         return Ok(home_bin);
     }
 
-    // Check PATH
-    if let Ok(output) = std::process::Command::new("which")
-        .arg("llama-server")
-        .output()
-    {
-        let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        if !path.is_empty() {
-            return Ok(PathBuf::from(path));
-        }
+    if let Some(path) = find_in_path("llama-server") {
+        return Ok(path);
     }
 
     anyhow::bail!(
         "llama-server not found. Install it or provide --llama-server <path>.\n\
          For development: brew install llama.cpp"
     );
+}
+
+/// Find a binary in PATH using `which`.
+fn find_in_path(name: &str) -> Option<PathBuf> {
+    let output = std::process::Command::new("which").arg(name).output().ok()?;
+    let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if path.is_empty() { None } else { Some(PathBuf::from(path)) }
 }
 
 /// Returns true if the current binary is running from inside a macOS app bundle.

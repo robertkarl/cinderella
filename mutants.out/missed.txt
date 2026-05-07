@@ -1,0 +1,314 @@
+src/main.rs:59:5: replace main -> Result<()> with Ok(())
+src/agent.rs:77:29: replace > with == in StepStatus::worse
+src/agent.rs:77:29: replace > with < in StepStatus::worse
+src/agent.rs:77:29: replace > with >= in StepStatus::worse
+src/agent.rs:114:9: replace StepTracker::is_enabled -> bool with true
+src/agent.rs:114:9: replace StepTracker::is_enabled -> bool with false
+src/agent.rs:132:9: replace StepTracker::flush_pending_marker -> Vec<AgentEvent> with vec![]
+src/agent.rs:132:12: delete ! in StepTracker::flush_pending_marker
+src/agent.rs:138:16: delete ! in StepTracker::flush_pending_marker
+src/main.rs:70:8: delete ! in main
+src/agent.rs:69:9: replace StepStatus::severity -> u8 with 0
+src/agent.rs:69:9: replace StepStatus::severity -> u8 with 1
+src/agent.rs:192:16: delete ! in StepTracker::record_tool_result
+src/agent.rs:196:16: delete ! in StepTracker::record_tool_result
+src/agent.rs:208:9: replace StepTracker::should_force_tool_use -> (bool, Vec<AgentEvent>) with (true, vec![])
+src/agent.rs:208:9: replace StepTracker::should_force_tool_use -> (bool, Vec<AgentEvent>) with (false, vec![])
+src/agent.rs:208:12: delete ! in StepTracker::should_force_tool_use
+src/agent.rs:218:28: replace && with || in StepTracker::should_force_tool_use
+src/agent.rs:216:31: delete ! in StepTracker::should_force_tool_use
+src/agent.rs:220:30: replace += with -= in StepTracker::should_force_tool_use
+src/agent.rs:220:30: replace += with *= in StepTracker::should_force_tool_use
+src/agent.rs:221:30: replace <= with > in StepTracker::should_force_tool_use
+src/agent.rs:255:17: replace != with == in StepTracker::close_step
+src/agent.rs:260:40: replace == with != in StepTracker::close_step
+src/agent.rs:337:9: replace Agent::process_message -> Result<()> with Ok(())
+src/agent.rs:378:9: replace Agent::prepare_turn with ()
+src/agent.rs:384:25: replace += with -= in Agent::prepare_turn
+src/agent.rs:384:25: replace += with *= in Agent::prepare_turn
+src/agent.rs:399:28: replace > with == in Agent::prepare_turn
+src/agent.rs:399:28: replace > with < in Agent::prepare_turn
+src/agent.rs:399:28: replace > with >= in Agent::prepare_turn
+src/agent.rs:422:35: replace > with == in Agent::call_llm
+src/agent.rs:422:35: replace > with < in Agent::call_llm
+src/agent.rs:422:35: replace > with >= in Agent::call_llm
+src/agent.rs:423:51: replace / with % in Agent::call_llm
+src/agent.rs:423:72: replace / with % in Agent::call_llm
+src/agent.rs:423:51: replace / with * in Agent::call_llm
+src/agent.rs:423:72: replace / with * in Agent::call_llm
+src/agent.rs:441:9: replace Agent::handle_tool_calls -> bool with true
+src/agent.rs:441:9: replace Agent::handle_tool_calls -> bool with false
+src/agent.rs:448:34: replace >= with < in Agent::handle_tool_calls
+src/agent.rs:478:9: replace Agent::execute_single_tool_call -> bool with true
+src/agent.rs:478:9: replace Agent::execute_single_tool_call -> bool with false
+src/agent.rs:513:35: replace += with -= in Agent::execute_single_tool_call
+src/agent.rs:513:35: replace += with *= in Agent::execute_single_tool_call
+src/agent.rs:533:9: replace Agent::handle_parse_failure -> bool with true
+src/agent.rs:533:9: replace Agent::handle_parse_failure -> bool with false
+src/agent.rs:533:25: replace < with == in Agent::handle_parse_failure
+src/agent.rs:533:25: replace < with > in Agent::handle_parse_failure
+src/agent.rs:533:25: replace < with <= in Agent::handle_parse_failure
+src/agent.rs:534:26: replace += with -= in Agent::handle_parse_failure
+src/agent.rs:534:26: replace += with *= in Agent::handle_parse_failure
+src/agent.rs:558:9: replace Agent::handle_text_response -> bool with true
+src/agent.rs:558:9: replace Agent::handle_text_response -> bool with false
+src/agent.rs:562:12: delete ! in Agent::handle_text_response
+src/agent.rs:584:9: replace Agent::emit_context_check with ()
+src/agent.rs:589:28: replace > with == in Agent::emit_context_check
+src/agent.rs:589:28: replace > with >= in Agent::emit_context_check
+src/agent.rs:589:45: replace * with + in Agent::emit_context_check
+src/agent.rs:589:45: replace * with / in Agent::emit_context_check
+src/agent.rs:601:9: replace Agent::flush_and_complete with ()
+src/agent.rs:609:9: replace Agent::clear with ()
+src/agent.rs:615:9: replace Agent::estimate_tokens -> usize with 0
+src/agent.rs:615:9: replace Agent::estimate_tokens -> usize with 1
+src/agent.rs:624:62: replace + with - in Agent::estimate_tokens
+src/agent.rs:624:62: replace + with * in Agent::estimate_tokens
+src/agent.rs:628:42: replace / with % in Agent::estimate_tokens
+src/agent.rs:628:42: replace / with * in Agent::estimate_tokens
+src/agent.rs:628:30: replace + with - in Agent::estimate_tokens
+src/agent.rs:628:30: replace + with * in Agent::estimate_tokens
+src/agent.rs:635:9: replace Agent::summarize_old_turns with ()
+src/agent.rs:636:32: replace <= with > in Agent::summarize_old_turns
+src/agent.rs:636:47: replace + with - in Agent::summarize_old_turns
+src/agent.rs:636:47: replace + with * in Agent::summarize_old_turns
+src/agent.rs:640:49: replace - with + in Agent::summarize_old_turns
+src/agent.rs:640:49: replace - with / in Agent::summarize_old_turns
+src/agent.rs:659:30: replace || with && in derive_step_status
+src/agent.rs:673:27: replace && with || in extract_step_summary
+src/agent.rs:673:13: delete ! in extract_step_summary
+src/agent.rs:673:30: delete ! in extract_step_summary
+src/agent.rs:675:43: delete ! in extract_step_summary
+src/agent.rs:682:5: replace should_summarize_message -> bool with true
+src/agent.rs:682:5: replace should_summarize_message -> bool with false
+src/agent.rs:682:24: replace && with || in should_summarize_message
+src/agent.rs:682:14: replace == with != in should_summarize_message
+src/agent.rs:682:64: replace > with == in should_summarize_message
+src/agent.rs:682:64: replace > with < in should_summarize_message
+src/agent.rs:682:64: replace > with >= in should_summarize_message
+src/agent.rs:686:5: replace format_args_display -> String with String::new()
+src/agent.rs:686:5: replace format_args_display -> String with "xyzzy".into()
+src/agent.rs:687:9: delete match arm "read_file" in format_args_display
+src/agent.rs:692:9: delete match arm "write_file" in format_args_display
+src/agent.rs:697:9: delete match arm "edit_file" in format_args_display
+src/agent.rs:702:9: delete match arm "bash" in format_args_display
+src/agent.rs:707:9: delete match arm "ls" in format_args_display
+src/agent.rs:717:5: replace truncate_for_display -> String with String::new()
+src/agent.rs:717:5: replace truncate_for_display -> String with "xyzzy".into()
+src/agent.rs:718:20: replace <= with > in truncate_for_display
+src/agent.rs:723:33: replace - with + in truncate_for_display
+src/agent.rs:723:33: replace - with / in truncate_for_display
+src/agent.rs:729:5: replace truncate_for_context -> String with String::new()
+src/agent.rs:729:5: replace truncate_for_context -> String with "xyzzy".into()
+src/agent.rs:730:36: replace > with == in truncate_for_context
+src/agent.rs:730:36: replace > with < in truncate_for_context
+src/agent.rs:730:36: replace > with >= in truncate_for_context
+src/agent.rs:733:42: replace - with + in truncate_for_context
+src/agent.rs:733:42: replace - with / in truncate_for_context
+src/agent.rs:733:35: replace - with + in truncate_for_context
+src/agent.rs:733:35: replace - with / in truncate_for_context
+src/agent.rs:736:44: replace - with + in truncate_for_context
+src/agent.rs:736:44: replace - with / in truncate_for_context
+src/agent.rs:743:24: replace > with == in truncate_for_context
+src/agent.rs:743:24: replace > with < in truncate_for_context
+src/agent.rs:743:24: replace > with >= in truncate_for_context
+src/agent.rs:746:37: replace < with == in truncate_for_context
+src/agent.rs:746:37: replace < with > in truncate_for_context
+src/agent.rs:746:37: replace < with <= in truncate_for_context
+src/agent.rs:748:29: replace + with - in truncate_for_context
+src/agent.rs:748:29: replace + with * in truncate_for_context
+src/config.rs:37:19: delete -
+src/config.rs:90:5: replace dirs_home -> std::path::PathBuf with Default::default()
+src/config.rs:209:5: replace system_prompt_for -> &'static str with ""
+src/config.rs:209:5: replace system_prompt_for -> &'static str with "xyzzy"
+src/hw.rs:15:9: replace <impl std::fmt::Display for HardwareInfo>::fmt -> std::fmt::Result with Ok(Default::default())
+src/hw.rs:26:47: replace / with * in detect
+src/hw.rs:26:66: replace * with + in detect
+src/hw.rs:26:66: replace * with / in detect
+src/hw.rs:26:57: replace * with + in detect
+src/hw.rs:26:57: replace * with / in detect
+src/hw.rs:40:5: replace sysctl_total_ram -> Result<u64> with Ok(1)
+src/hw.rs:54:5: replace available_ram -> Result<f64> with Ok(1.0)
+src/hw.rs:65:43: replace + with - in available_ram
+src/hw.rs:65:43: replace + with * in available_ram
+src/hw.rs:65:32: replace + with * in available_ram
+src/hw.rs:66:43: replace * with + in available_ram
+src/hw.rs:66:43: replace * with / in available_ram
+src/hw.rs:67:31: replace / with % in available_ram
+src/hw.rs:67:31: replace / with * in available_ram
+src/hw.rs:67:50: replace * with + in available_ram
+src/hw.rs:67:50: replace * with / in available_ram
+src/hw.rs:67:41: replace * with + in available_ram
+src/hw.rs:67:41: replace * with / in available_ram
+src/hw.rs:90:5: replace detect_chip -> Result<String> with Ok(String::new())
+src/hw.rs:90:5: replace detect_chip -> Result<String> with Ok("xyzzy".into())
+src/llm.rs:165:24: replace || with && in classify_sse_line
+src/llm.rs:122:12: delete ! in LlmClient::chat_completion
+src/llm.rs:168:13: replace == with != in classify_sse_line
+src/llm.rs:186:5: replace process_sse_buffer -> bool with true
+src/llm.rs:186:5: replace process_sse_buffer -> bool with false
+src/llm.rs:188:30: replace + with * in process_sse_buffer
+src/llm.rs:188:30: replace + with - in process_sse_buffer
+src/llm.rs:217:5: replace process_choice_delta with ()
+src/llm.rs:229:40: replace == with != in process_choice_delta
+src/llm.rs:240:5: replace emit_thinking_delta with ()
+src/llm.rs:241:12: delete ! in emit_thinking_delta
+src/llm.rs:242:26: replace += with -= in emit_thinking_delta
+src/llm.rs:242:26: replace += with *= in emit_thinking_delta
+src/llm.rs:253:5: replace emit_completed_tool_calls with ()
+src/llm.rs:268:5: replace emit_text_delta with ()
+src/llm.rs:272:18: replace += with -= in emit_text_delta
+src/llm.rs:272:18: replace += with *= in emit_text_delta
+src/llm.rs:276:16: replace > with == in emit_text_delta
+src/llm.rs:276:16: replace > with < in emit_text_delta
+src/llm.rs:276:16: replace > with >= in emit_text_delta
+src/llm.rs:286:5: replace accumulate_tool_call_delta with ()
+src/llm.rs:287:28: replace <= with > in accumulate_tool_call_delta
+src/llm.rs:307:8: delete ! in build_response_message
+src/llm.rs:314:12: delete ! in build_response_message
+src/llm.rs:341:9: replace ToolCallBuilder::build -> Option<ToolCall> with None
+src/llm.rs:390:68: replace && with || in repair_json
+src/llm.rs:390:71: delete ! in repair_json
+src/llm.rs:401:5: replace regex_lite_trailing_comma -> String with String::new()
+src/llm.rs:405:13: replace < with > in regex_lite_trailing_comma
+src/llm.rs:419:5: replace is_followed_by_closer -> bool with true
+src/llm.rs:420:17: replace == with != in is_followed_by_closer
+src/llm.rs:424:5: replace fix_unescaped_newlines -> String with String::new()
+src/llm.rs:429:22: replace && with || in fix_unescaped_newlines
+src/llm.rs:439:41: replace && with || in fix_unescaped_newlines
+src/llm.rs:439:33: replace == with != in fix_unescaped_newlines
+src/llm.rs:439:44: delete ! in fix_unescaped_newlines
+src/llm.rs:447:5: replace parse_tool_args -> Result<serde_json::Value> with Ok(Default::default())
+src/model_manifest.rs:40:5: replace default_min_macos -> String with String::new()
+src/model_manifest.rs:40:5: replace default_min_macos -> String with "xyzzy".into()
+src/model_manifest.rs:44:5: replace default_arch -> String with String::new()
+src/model_manifest.rs:44:5: replace default_arch -> String with "xyzzy".into()
+src/model_manifest.rs:89:12: delete ! in ModelDef::quick_check
+src/model_manifest.rs:97:25: replace match guard meta.len() == self.size_bytes with true in ModelDef::quick_check
+src/model_manifest.rs:97:25: replace match guard meta.len() == self.size_bytes with false in ModelDef::quick_check
+src/model_manifest.rs:97:36: replace == with != in ModelDef::quick_check
+src/model_manifest.rs:112:12: delete ! in ModelDef::verify_sha256
+src/model_manifest.rs:128:18: replace == with != in ModelDef::verify_sha256
+src/model_manifest.rs:108:9: replace ModelDef::verify_sha256 -> Result<bool> with Ok(true)
+src/model_manifest.rs:108:9: replace ModelDef::verify_sha256 -> Result<bool> with Ok(false)
+src/model_manifest.rs:134:17: replace == with != in ModelDef::verify_sha256
+src/orchestrator.rs:46:16: delete ! in run
+src/orchestrator.rs:34:5: replace run -> Result<()> with Ok(())
+src/orchestrator.rs:104:38: replace - with / in run
+src/orchestrator.rs:104:38: replace - with + in run
+src/orchestrator.rs:141:5: replace run_remote -> Result<()> with Ok(())
+src/orchestrator.rs:209:33: replace - with + in run_prompt
+src/orchestrator.rs:202:5: replace run_prompt -> Result<()> with Ok(())
+src/orchestrator.rs:209:33: replace - with / in run_prompt
+src/orchestrator.rs:282:5: replace find_or_extract_bundled_model -> Result<PathBuf> with Ok(Default::default())
+src/orchestrator.rs:282:24: replace < with == in find_or_extract_bundled_model
+src/orchestrator.rs:282:24: replace < with > in find_or_extract_bundled_model
+src/orchestrator.rs:282:24: replace < with <= in find_or_extract_bundled_model
+src/orchestrator.rs:300:8: delete ! in find_or_extract_bundled_model
+src/orchestrator.rs:322:5: replace find_llama_server -> Result<PathBuf> with Ok(Default::default())
+src/orchestrator.rs:346:5: replace find_bundled_llama_server -> Option<PathBuf> with None
+src/orchestrator.rs:346:5: replace find_bundled_llama_server -> Option<PathBuf> with Some(Default::default())
+src/orchestrator.rs:353:5: replace find_dev_llama_server -> Result<PathBuf> with Ok(Default::default())
+src/orchestrator.rs:370:5: replace find_in_path -> Option<PathBuf> with None
+src/orchestrator.rs:370:5: replace find_in_path -> Option<PathBuf> with Some(Default::default())
+src/orchestrator.rs:378:5: replace is_release_bundle -> bool with true
+src/orchestrator.rs:378:5: replace is_release_bundle -> bool with false
+src/server.rs:44:9: replace ServerManager::start -> Result<()> with Ok(())
+src/server.rs:80:9: replace ServerManager::wait_for_health -> Result<()> with Ok(())
+src/server.rs:83:13: replace + with - in ServerManager::wait_for_health
+src/server.rs:86:44: replace >= with < in ServerManager::wait_for_health
+src/server.rs:108:9: replace ServerManager::check_gpu_layers -> Result<()> with Ok(())
+src/server.rs:116:9: replace ServerManager::is_running -> bool with true
+src/server.rs:116:9: replace ServerManager::is_running -> bool with false
+src/server.rs:130:9: replace ServerManager::ensure_running -> Result<bool> with Ok(true)
+src/server.rs:130:9: replace ServerManager::ensure_running -> Result<bool> with Ok(false)
+src/server.rs:134:31: replace >= with < in ServerManager::ensure_running
+src/server.rs:141:28: replace += with -= in ServerManager::ensure_running
+src/server.rs:141:28: replace += with *= in ServerManager::ensure_running
+src/server.rs:149:9: replace ServerManager::restart_count -> u32 with 0
+src/server.rs:149:9: replace ServerManager::restart_count -> u32 with 1
+src/server.rs:154:9: replace ServerManager::api_url -> String with String::new()
+src/server.rs:154:9: replace ServerManager::api_url -> String with "xyzzy".into()
+src/server.rs:159:9: replace ServerManager::stop with ()
+src/server.rs:182:5: replace check_health_once -> bool with true
+src/server.rs:182:5: replace check_health_once -> bool with false
+src/server.rs:192:9: replace <impl Drop for ServerManager>::drop with ()
+src/tools/mod.rs:92:24: replace match guard p != ancestor with true in find_existing_ancestor
+src/tools/mod.rs:108:26: replace / with % in truncate_output
+src/tools/mod.rs:109:26: replace - with + in truncate_output
+src/tools/mod.rs:109:26: replace - with / in truncate_output
+src/tools/mod.rs:110:38: replace - with + in truncate_output
+src/tools/mod.rs:110:38: replace - with / in truncate_output
+src/tools/mod.rs:110:31: replace - with + in truncate_output
+src/tools/mod.rs:110:31: replace - with / in truncate_output
+src/tools/mod.rs:114:40: replace - with / in truncate_output
+src/tui.rs:44:5: replace print_dim with ()
+src/tui.rs:53:5: replace print_warn with ()
+src/tui.rs:62:5: replace print_prompt with ()
+src/tui.rs:73:5: replace read_input -> Option<String> with None
+src/tui.rs:73:5: replace read_input -> Option<String> with Some(String::new())
+src/tui.rs:73:5: replace read_input -> Option<String> with Some("xyzzy".into())
+src/tui.rs:78:12: delete ! in read_input
+src/tui.rs:86:13: delete match arm (KeyCode::Char('c'), KeyModifiers::CONTROL) in read_input
+src/tui.rs:91:13: delete match arm (KeyCode::Char('z'), KeyModifiers::CONTROL) in read_input
+src/tui.rs:94:13: delete match arm (KeyCode::Enter, _) in read_input
+src/tui.rs:99:13: delete match arm (KeyCode::Backspace, _) in read_input
+src/tui.rs:100:13: delete match arm (KeyCode::Left, _) in read_input
+src/tui.rs:101:13: delete match arm (KeyCode::Right, _) in read_input
+src/tui.rs:102:13: delete match arm (KeyCode::Char(c), _) in read_input
+src/tui.rs:110:5: replace redraw_input_line with ()
+src/tui.rs:112:20: replace > with == in redraw_input_line
+src/tui.rs:112:20: replace > with < in redraw_input_line
+src/tui.rs:112:20: replace > with >= in redraw_input_line
+src/tui.rs:120:5: replace handle_suspend with ()
+src/tui.rs:129:5: replace handle_backspace with ()
+src/tui.rs:129:16: replace == with != in handle_backspace
+src/tui.rs:144:5: replace move_cursor_left with ()
+src/tui.rs:144:16: replace == with != in move_cursor_left
+src/tui.rs:158:5: replace move_cursor_right with ()
+src/tui.rs:158:16: replace >= with < in move_cursor_right
+src/tui.rs:164:31: replace + with - in move_cursor_right
+src/tui.rs:164:31: replace + with * in move_cursor_right
+src/tui.rs:172:5: replace handle_char_insert with ()
+src/tui.rs:173:13: replace += with -= in handle_char_insert
+src/tui.rs:173:13: replace += with *= in handle_char_insert
+src/tui.rs:184:5: replace run -> anyhow::Result<()> with Ok(())
+src/tui.rs:234:5: replace parse_input -> Option<InputAction> with None
+src/tui.rs:242:17: delete match arm "/clear" in parse_input
+src/tui.rs:243:17: delete match arm "/help" in parse_input
+src/tui.rs:277:5: replace print_event -> bool with true
+src/tui.rs:252:5: replace drain_until_complete with ()
+src/tui.rs:277:5: replace print_event -> bool with false
+src/tui.rs:278:9: delete match arm AgentEvent::ThinkingDelta(text) in print_event
+src/tui.rs:279:9: delete match arm AgentEvent::TextDelta(text) in print_event
+src/tui.rs:280:9: delete match arm AgentEvent::ToolStart{name, args_display} in print_event
+src/tui.rs:281:9: delete match arm AgentEvent::ToolResult{output, success} in print_event
+src/tui.rs:282:9: delete match arm AgentEvent::Warning(msg) in print_event
+src/tui.rs:283:9: delete match arm AgentEvent::TurnComplete in print_event
+src/tui.rs:289:9: delete match arm AgentEvent::ServerRestarted{attempt} in print_event
+src/tui.rs:284:30: replace || with && in print_event
+src/tui.rs:298:5: replace print_thinking_delta with ()
+src/tui.rs:298:8: delete ! in print_thinking_delta
+src/tui.rs:312:5: replace print_text_delta with ()
+src/tui.rs:316:8: delete ! in print_text_delta
+src/tui.rs:325:5: replace print_tool_start with ()
+src/tui.rs:337:5: replace print_tool_result with ()
+src/tui.rs:345:5: replace json_hw_info with ()
+src/tui.rs:362:5: replace json_event -> bool with true
+src/tui.rs:362:5: replace json_event -> bool with false
+src/tools/bash.rs:29:9: replace ProcessGroupGuard::defuse with ()
+src/tools/bash.rs:35:9: replace <impl Drop for ProcessGroupGuard>::drop with ()
+src/tools/bash.rs:232:8: delete ! in run_command
+src/tools/bash.rs:233:12: delete ! in run_command
+src/tools/bash.rs:241:36: replace > with == in run_command
+src/tools/bash.rs:241:36: replace > with >= in run_command
+src/tools/bash.rs:244:42: replace - with + in run_command
+src/tools/bash.rs:244:42: replace - with / in run_command
+src/tools/bash.rs:244:35: replace - with + in run_command
+src/tools/bash.rs:244:35: replace - with / in run_command
+src/tools/bash.rs:247:44: replace - with + in run_command
+src/tools/bash.rs:247:44: replace - with / in run_command
+src/tools/edit.rs:72:76: replace + with - in execute
+src/tools/edit.rs:72:76: replace + with * in execute
+src/tools/ls.rs:10:21: replace match guard meta.file_type().is_symlink() with false in format_dir_entry
+src/tools/ls.rs:11:21: replace match guard meta.is_dir() with true in format_dir_entry

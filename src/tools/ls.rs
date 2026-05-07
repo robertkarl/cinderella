@@ -3,6 +3,17 @@ use serde_json::Value;
 use std::fs;
 use std::path::Path;
 
+/// Format a directory entry with a type suffix (/ for dirs, @ for symlinks).
+fn format_dir_entry(entry: &fs::DirEntry) -> String {
+    let name = entry.file_name().to_string_lossy().to_string();
+    let suffix = match entry.path().symlink_metadata() {
+        Ok(meta) if meta.file_type().is_symlink() => "@",
+        Ok(meta) if meta.is_dir() => "/",
+        _ => "",
+    };
+    format!("{}{}", name, suffix)
+}
+
 pub fn execute(args: &Value, project_dir: &Path) -> ToolResult {
     let path_str = args
         .get("path")
@@ -43,14 +54,7 @@ pub fn execute(args: &Value, project_dir: &Path) -> ToolResult {
             items.sort_by_key(|e| e.file_name());
 
             for entry in items {
-                let name = entry.file_name().to_string_lossy().to_string();
-                // Use symlink_metadata to detect symlinks (file_type() follows them)
-                let suffix = match entry.path().symlink_metadata() {
-                    Ok(meta) if meta.file_type().is_symlink() => "@",
-                    Ok(meta) if meta.is_dir() => "/",
-                    _ => "",
-                };
-                entries.push(format!("{}{}", name, suffix));
+                entries.push(format_dir_entry(&entry));
             }
         }
         Err(e) => {

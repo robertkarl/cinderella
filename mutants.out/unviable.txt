@@ -1,0 +1,37 @@
+src/agent.rs:77:9: replace StepStatus::worse -> Self with Default::default()
+src/agent.rs:119:9: replace StepTracker::feed_text -> Vec<AgentEvent> with vec![Default::default()]
+src/agent.rs:132:9: replace StepTracker::flush_pending_marker -> Vec<AgentEvent> with vec![Default::default()]
+src/agent.rs:208:9: replace StepTracker::should_force_tool_use -> (bool, Vec<AgentEvent>) with (true, vec![Default::default()])
+src/agent.rs:208:9: replace StepTracker::should_force_tool_use -> (bool, Vec<AgentEvent>) with (false, vec![Default::default()])
+src/agent.rs:233:9: replace StepTracker::flush -> Vec<AgentEvent> with vec![Default::default()]
+src/agent.rs:253:9: replace StepTracker::close_step -> Vec<AgentEvent> with vec![Default::default()]
+src/agent.rs:408:9: replace Agent::call_llm -> Result<Message> with Ok(Default::default())
+src/agent.rs:589:28: replace > with < in Agent::emit_context_check
+src/agent.rs:659:5: replace derive_step_status -> StepStatus with Default::default()
+src/config.rs:51:9: replace ServerConfig::from_model -> Self with Default::default()
+src/hw.rs:25:5: replace detect -> Result<HardwareInfo> with Ok(Default::default())
+src/llm.rs:105:9: replace LlmClient::chat_completion -> Result<Message> with Ok(Default::default())
+src/llm.rs:165:5: replace classify_sse_line -> SseLine<'_> with Default::default()
+src/llm.rs:307:5: replace build_response_message -> Message with Default::default()
+src/llm.rs:341:9: replace ToolCallBuilder::build -> Option<ToolCall> with Some(Default::default())
+src/model_manifest.rs:50:9: replace Manifest::from_file -> Result<Self> with Ok(Default::default())
+src/model_manifest.rs:57:9: replace Manifest::from_str -> Result<Self> with Ok(Default::default())
+src/model_manifest.rs:62:9: replace Manifest::default_model -> Result<&ModelDef> with Ok(Box::leak(Box::new(Default::default())))
+src/model_manifest.rs:88:9: replace ModelDef::quick_check -> ModelState with Default::default()
+src/model_manifest.rs:168:5: replace find_manifest -> Result<Manifest> with Ok(Default::default())
+src/orchestrator.rs:242:5: replace spawn_agent_loop -> tokio::task::JoinHandle<()> with JoinHandle::new()
+src/orchestrator.rs:242:5: replace spawn_agent_loop -> tokio::task::JoinHandle<()> with JoinHandle::from_iter([()])
+src/orchestrator.rs:242:5: replace spawn_agent_loop -> tokio::task::JoinHandle<()> with JoinHandle::from(())
+src/orchestrator.rs:242:5: replace spawn_agent_loop -> tokio::task::JoinHandle<()> with JoinHandle::new(())
+src/server.rs:83:13: replace + with * in ServerManager::wait_for_health
+src/tools/mod.rs:27:5: replace execute -> ToolResult with Default::default()
+src/tui.rs:82:13: delete match arm Ok(Event::Key(key)) in read_input
+src/tui.rs:234:5: replace parse_input -> Option<InputAction> with Some(Default::default())
+src/tools/bash.rs:66:5: replace auto_allow_for -> &'static[Capability] with Vec::leak(vec![Default::default()])
+src/tools/bash.rs:90:5: replace classify_command -> CommandClassification with Default::default()
+src/tools/bash.rs:142:5: replace execute -> ToolResult with Default::default()
+src/tools/bash.rs:207:5: replace run_command -> anyhow::Result<ToolResult> with Ok(Default::default())
+src/tools/edit.rs:7:5: replace execute -> ToolResult with Default::default()
+src/tools/ls.rs:18:5: replace execute -> ToolResult with Default::default()
+src/tools/read.rs:7:5: replace execute -> ToolResult with Default::default()
+src/tools/write.rs:16:5: replace execute -> ToolResult with Default::default()

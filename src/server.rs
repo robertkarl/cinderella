@@ -92,10 +92,10 @@ impl ServerManager {
                 );
             }
 
-            match client.get(&url).send().await {
-                Ok(resp) if resp.status().is_success() => return Ok(()),
-                _ => sleep(Duration::from_millis(HEALTH_CHECK_INTERVAL_MS)).await,
+            if check_health_once(&client, &url).await {
+                return Ok(());
             }
+            sleep(Duration::from_millis(HEALTH_CHECK_INTERVAL_MS)).await;
         }
     }
 
@@ -175,6 +175,16 @@ impl ServerManager {
         }
         self.child = None;
     }
+}
+
+/// Send a single health check request. Returns true if the server is healthy.
+async fn check_health_once(client: &reqwest::Client, url: &str) -> bool {
+    client
+        .get(url)
+        .send()
+        .await
+        .map(|r| r.status().is_success())
+        .unwrap_or(false)
 }
 
 impl Drop for ServerManager {

@@ -22,3 +22,6 @@ xcuserdata/
 *.xccheckout
 DerivedData/
 build/
+
+mutants.out/diff/
+mutants.out/log/

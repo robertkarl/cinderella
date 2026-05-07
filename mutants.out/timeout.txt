@@ -1,0 +1,6 @@
+src/agent.rs:160:50: replace + with - in StepTracker::process_lines
+src/agent.rs:160:50: replace + with * in StepTracker::process_lines
+src/llm.rs:381:19: replace == with != in repair_json
+src/llm.rs:407:15: replace += with -= in regex_lite_trailing_comma
+src/llm.rs:407:15: replace += with *= in regex_lite_trailing_comma
+src/llm.rs:411:11: replace += with *= in regex_lite_trailing_comma

@@ -140,114 +140,192 @@ impl LlmClient {
             let chunk = chunk.context("Stream error")?;
             buffer.push_str(&String::from_utf8_lossy(&chunk));
 
-            // Process complete SSE lines
-            while let Some(pos) = buffer.find('\n') {
-                let line = buffer[..pos].trim().to_string();
-                buffer = buffer[pos + 1..].to_string();
+            done = process_sse_buffer(
+                &mut buffer,
+                &mut content,
+                &mut tool_calls,
+                &mut token_count,
+                start,
+                &mut on_event,
+            );
+        }
 
-                if line.is_empty() || line.starts_with(':') {
-                    continue;
-                }
+        Ok(build_response_message(content, tool_calls))
+    }
+}
 
-                if line == "data: [DONE]" {
-                    on_event(StreamEvent::Done);
-                    done = true;
-                    break;
-                }
+/// Classify a single SSE line.
+enum SseLine<'a> {
+    Skip,
+    Done,
+    Data(&'a str),
+}
 
-                if let Some(data) = line.strip_prefix("data: ") {
-                    if let Ok(chunk) = serde_json::from_str::<SseChunk>(data) {
-                        for choice in &chunk.choices {
-                            // Handle thinking/reasoning content
-                            if let Some(ref text) = choice.delta.reasoning_content {
-                                if !text.is_empty() {
-                                    token_count += 1;
-                                    on_event(StreamEvent::ThinkingDelta(text.clone()));
-                                }
-                            }
+fn classify_sse_line(line: &str) -> SseLine<'_> {
+    if line.is_empty() || line.starts_with(':') {
+        return SseLine::Skip;
+    }
+    if line == "data: [DONE]" {
+        return SseLine::Done;
+    }
+    if let Some(data) = line.strip_prefix("data: ") {
+        return SseLine::Data(data);
+    }
+    SseLine::Skip
+}
 
-                            // Handle text content
-                            if let Some(ref text) = choice.delta.content {
-                                if !text.is_empty() {
-                                    content.push_str(text);
-                                    token_count += 1;
-                                    on_event(StreamEvent::TextDelta(text.clone()));
+/// Process all complete SSE lines in the buffer. Returns true if stream is done.
+fn process_sse_buffer(
+    buffer: &mut String,
+    content: &mut String,
+    tool_calls: &mut Vec<ToolCallBuilder>,
+    token_count: &mut u64,
+    start: Instant,
+    on_event: &mut impl FnMut(StreamEvent),
+) -> bool {
+    while let Some(pos) = buffer.find('\n') {
+        let line = buffer[..pos].trim().to_string();
+        *buffer = buffer[pos + 1..].to_string();
 
-                                    let elapsed = start.elapsed().as_millis() as u64;
-                                    if elapsed > 0 {
-                                        on_event(StreamEvent::TokenTick {
-                                            tokens: token_count,
-                                            elapsed_ms: elapsed,
-                                        });
-                                    }
-                                }
-                            }
-
-                            // Handle tool call deltas
-                            if let Some(ref tc_deltas) = choice.delta.tool_calls {
-                                for delta in tc_deltas {
-                                    let idx = delta.index.unwrap_or(0);
-                                    while tool_calls.len() <= idx {
-                                        tool_calls.push(ToolCallBuilder::default());
-                                    }
-                                    let builder = &mut tool_calls[idx];
-
-                                    if let Some(ref id) = delta.id {
-                                        builder.id = Some(id.clone());
-                                    }
-                                    if let Some(ref func) = delta.function {
-                                        if let Some(ref name) = func.name {
-                                            builder.name = Some(name.clone());
-                                        }
-                                        if let Some(ref args) = func.arguments {
-                                            builder.arguments.push_str(args);
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Check for finish
-                            if choice.finish_reason.as_deref() == Some("tool_calls") {
-                                for (i, builder) in tool_calls.iter().enumerate() {
-                                    if let Some(tc) = builder.build(i) {
-                                        on_event(StreamEvent::ToolCallComplete(tc));
-                                    }
-                                }
-                            }
-                        }
+        match classify_sse_line(&line) {
+            SseLine::Skip => continue,
+            SseLine::Done => {
+                on_event(StreamEvent::Done);
+                return true;
+            }
+            SseLine::Data(data) => {
+                if let Ok(chunk) = serde_json::from_str::<SseChunk>(data) {
+                    for choice in &chunk.choices {
+                        process_choice_delta(choice, content, tool_calls, token_count, start, on_event);
                     }
                 }
             }
         }
+    }
+    false
+}
 
-        // Build the response message
-        if !tool_calls.is_empty() {
-            let built: Vec<ToolCall> = tool_calls
-                .iter()
-                .enumerate()
-                .filter_map(|(i, b)| b.build(i))
-                .collect();
+/// Process a single SSE choice delta: text, thinking, tool calls, and finish.
+fn process_choice_delta(
+    choice: &SseChoice,
+    content: &mut String,
+    tool_calls: &mut Vec<ToolCallBuilder>,
+    token_count: &mut u64,
+    start: Instant,
+    on_event: &mut impl FnMut(StreamEvent),
+) {
+    emit_thinking_delta(&choice.delta, token_count, on_event);
 
-            if !built.is_empty() {
-                return Ok(Message {
-                    role: "assistant".to_string(),
-                    content: if content.is_empty() {
-                        None
-                    } else {
-                        Some(content)
-                    },
-                    tool_calls: Some(built),
-                    tool_call_id: None,
-                });
-            }
+    if let Some(ref text) = choice.delta.content {
+        emit_text_delta(text, content, token_count, start, on_event);
+    }
+
+    if let Some(ref tc_deltas) = choice.delta.tool_calls {
+        for delta in tc_deltas {
+            accumulate_tool_call_delta(tool_calls, delta);
         }
+    }
 
-        Ok(Message {
-            role: "assistant".to_string(),
-            content: Some(content),
-            tool_calls: None,
-            tool_call_id: None,
-        })
+    if choice.finish_reason.as_deref() == Some("tool_calls") {
+        emit_completed_tool_calls(tool_calls, on_event);
+    }
+}
+
+/// Emit a thinking delta if present and non-empty.
+fn emit_thinking_delta(
+    delta: &SseDelta,
+    token_count: &mut u64,
+    on_event: &mut impl FnMut(StreamEvent),
+) {
+    if let Some(ref text) = delta.reasoning_content {
+        if !text.is_empty() {
+            *token_count += 1;
+            on_event(StreamEvent::ThinkingDelta(text.clone()));
+        }
+    }
+}
+
+/// Emit ToolCallComplete events for all built tool calls.
+fn emit_completed_tool_calls(
+    tool_calls: &[ToolCallBuilder],
+    on_event: &mut impl FnMut(StreamEvent),
+) {
+    for (i, builder) in tool_calls.iter().enumerate() {
+        if let Some(tc) = builder.build(i) {
+            on_event(StreamEvent::ToolCallComplete(tc));
+        }
+    }
+}
+
+/// Buffer text content and emit TextDelta + TokenTick events.
+fn emit_text_delta(
+    text: &str,
+    content: &mut String,
+    token_count: &mut u64,
+    start: Instant,
+    on_event: &mut impl FnMut(StreamEvent),
+) {
+    if text.is_empty() {
+        return;
+    }
+    content.push_str(text);
+    *token_count += 1;
+    on_event(StreamEvent::TextDelta(text.to_string()));
+
+    let elapsed = start.elapsed().as_millis() as u64;
+    if elapsed > 0 {
+        on_event(StreamEvent::TokenTick {
+            tokens: *token_count,
+            elapsed_ms: elapsed,
+        });
+    }
+}
+
+/// Merge a single tool call delta into the builder vector.
+fn accumulate_tool_call_delta(tool_calls: &mut Vec<ToolCallBuilder>, delta: &SseToolCallDelta) {
+    let idx = delta.index.unwrap_or(0);
+    while tool_calls.len() <= idx {
+        tool_calls.push(ToolCallBuilder::default());
+    }
+    let builder = &mut tool_calls[idx];
+
+    if let Some(ref id) = delta.id {
+        builder.id = Some(id.clone());
+    }
+    if let Some(ref func) = delta.function {
+        if let Some(ref name) = func.name {
+            builder.name = Some(name.clone());
+        }
+        if let Some(ref args) = func.arguments {
+            builder.arguments.push_str(args);
+        }
+    }
+}
+
+/// Assemble the final response Message from accumulated content and tool calls.
+fn build_response_message(content: String, tool_calls: Vec<ToolCallBuilder>) -> Message {
+    if !tool_calls.is_empty() {
+        let built: Vec<ToolCall> = tool_calls
+            .iter()
+            .enumerate()
+            .filter_map(|(i, b)| b.build(i))
+            .collect();
+
+        if !built.is_empty() {
+            return Message {
+                role: "assistant".to_string(),
+                content: if content.is_empty() { None } else { Some(content) },
+                tool_calls: Some(built),
+                tool_call_id: None,
+            };
+        }
+    }
+
+    Message {
+        role: "assistant".to_string(),
+        content: Some(content),
+        tool_calls: None,
+        tool_call_id: None,
     }
 }
 
@@ -325,23 +403,21 @@ fn regex_lite_trailing_comma(input: &str, closer: char) -> String {
     let mut i = 0;
 
     while i < chars.len() {
-        if chars[i] == ',' {
-            // Look ahead past whitespace for closer
-            let mut j = i + 1;
-            while j < chars.len() && chars[j].is_whitespace() {
-                j += 1;
-            }
-            if j < chars.len() && chars[j] == closer {
-                // Skip the comma
-                i += 1;
-                continue;
-            }
+        if chars[i] == ',' && is_followed_by_closer(&chars[i + 1..], closer) {
+            i += 1;
+            continue;
         }
         result.push(chars[i]);
         i += 1;
     }
 
     result
+}
+
+/// Check if a char slice starts with optional whitespace then the closer char.
+fn is_followed_by_closer(chars: &[char], closer: char) -> bool {
+    let next_non_ws = chars.iter().find(|c| !c.is_whitespace());
+    next_non_ws == Some(&closer)
 }
 
 fn fix_unescaped_newlines(input: &str) -> String {

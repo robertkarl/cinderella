@@ -75,90 +75,103 @@ fn read_input() -> Option<String> {
     let mut cursor = 0usize;
 
     loop {
-        if event::poll(std::time::Duration::from_millis(100)).unwrap_or(false) {
-            if let Ok(Event::Key(key)) = event::read() {
-                match (key.code, key.modifiers) {
-                    (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
-                        let _ = disable_raw_mode();
-                        println!();
-                        return None;
-                    }
-                    (KeyCode::Char('z'), KeyModifiers::CONTROL) => {
-                        // Restore terminal, send SIGTSTP to self, re-enable raw mode on resume
-                        let _ = disable_raw_mode();
-                        println!("\nCinderella is receiving SIGTSTP now. Depending on your shell, use bg to continue in the background or fg to resume.");
-                        let _ = signal::kill(Pid::this(), Signal::SIGTSTP);
-                        // When we resume (fg), re-enter raw mode and redraw
-                        let _ = enable_raw_mode();
-                        print!("\r\x1b[2K\x1b[1m>\x1b[0m {}", input);
-                        let chars_after = input[cursor..].chars().count();
-                        if chars_after > 0 {
-                            print!("\x1b[{}D", chars_after);
-                        }
-                        let _ = io::stdout().flush();
-                    }
-                    (KeyCode::Enter, _) => {
-                        let _ = disable_raw_mode();
-                        println!();
-                        return Some(input);
-                    }
-                    (KeyCode::Backspace, _) => {
-                        if cursor > 0 {
-                            let prev = input[..cursor]
-                                .char_indices()
-                                .next_back()
-                                .map(|(i, _)| i)
-                                .unwrap_or(0);
-                            input.drain(prev..cursor);
-                            cursor = prev;
-                            // Redraw the line
-                            print!("\r\x1b[2K\x1b[1m>\x1b[0m {}", input);
-                            // Position cursor
-                            let chars_after = input[cursor..].chars().count();
-                            if chars_after > 0 {
-                                print!("\x1b[{}D", chars_after);
-                            }
-                            let _ = io::stdout().flush();
-                        }
-                    }
-                    (KeyCode::Left, _) => {
-                        if cursor > 0 {
-                            cursor = input[..cursor]
-                                .char_indices()
-                                .next_back()
-                                .map(|(i, _)| i)
-                                .unwrap_or(0);
-                            print!("\x1b[1D");
-                            let _ = io::stdout().flush();
-                        }
-                    }
-                    (KeyCode::Right, _) => {
-                        if cursor < input.len() {
-                            cursor = input[cursor..]
-                                .char_indices()
-                                .nth(1)
-                                .map(|(i, _)| cursor + i)
-                                .unwrap_or(input.len());
-                            print!("\x1b[1C");
-                            let _ = io::stdout().flush();
-                        }
-                    }
-                    (KeyCode::Char(c), _) => {
-                        input.insert(cursor, c);
-                        cursor += c.len_utf8();
-                        // Redraw the line
-                        print!("\r\x1b[2K\x1b[1m>\x1b[0m {}", input);
-                        let chars_after = input[cursor..].chars().count();
-                        if chars_after > 0 {
-                            print!("\x1b[{}D", chars_after);
-                        }
-                        let _ = io::stdout().flush();
-                    }
-                    _ => {}
-                }
+        if !event::poll(std::time::Duration::from_millis(100)).unwrap_or(false) {
+            continue;
+        }
+        let key = match event::read() {
+            Ok(Event::Key(key)) => key,
+            _ => continue,
+        };
+        match (key.code, key.modifiers) {
+            (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
+                let _ = disable_raw_mode();
+                println!();
+                return None;
             }
+            (KeyCode::Char('z'), KeyModifiers::CONTROL) => {
+                handle_suspend(&input, cursor);
+            }
+            (KeyCode::Enter, _) => {
+                let _ = disable_raw_mode();
+                println!();
+                return Some(input);
+            }
+            (KeyCode::Backspace, _) => handle_backspace(&mut input, &mut cursor),
+            (KeyCode::Left, _) => move_cursor_left(&input, &mut cursor),
+            (KeyCode::Right, _) => move_cursor_right(&input, &mut cursor),
+            (KeyCode::Char(c), _) => handle_char_insert(&mut input, &mut cursor, c),
+            _ => {}
         }
     }
+}
+
+/// Redraw the input line and position the cursor.
+fn redraw_input_line(input: &str, cursor: usize) {
+    print!("\r\x1b[2K\x1b[1m>\x1b[0m {}", input);
+    let chars_after = input[cursor..].chars().count();
+    if chars_after > 0 {
+        print!("\x1b[{}D", chars_after);
+    }
+    let _ = io::stdout().flush();
+}
+
+/// Handle Ctrl-Z suspend and resume.
+fn handle_suspend(input: &str, cursor: usize) {
+    let _ = disable_raw_mode();
+    println!("\nCinderella is receiving SIGTSTP now. Depending on your shell, use bg to continue in the background or fg to resume.");
+    let _ = signal::kill(Pid::this(), Signal::SIGTSTP);
+    let _ = enable_raw_mode();
+    redraw_input_line(input, cursor);
+}
+
+/// Handle backspace key: delete char before cursor, redraw.
+fn handle_backspace(input: &mut String, cursor: &mut usize) {
+    if *cursor == 0 {
+        return;
+    }
+    let prev = input[..*cursor]
+        .char_indices()
+        .next_back()
+        .map(|(i, _)| i)
+        .unwrap_or(0);
+    input.drain(prev..*cursor);
+    *cursor = prev;
+    redraw_input_line(input, *cursor);
+}
+
+/// Move cursor one character left.
+fn move_cursor_left(input: &str, cursor: &mut usize) {
+    if *cursor == 0 {
+        return;
+    }
+    *cursor = input[..*cursor]
+        .char_indices()
+        .next_back()
+        .map(|(i, _)| i)
+        .unwrap_or(0);
+    print!("\x1b[1D");
+    let _ = io::stdout().flush();
+}
+
+/// Move cursor one character right.
+fn move_cursor_right(input: &str, cursor: &mut usize) {
+    if *cursor >= input.len() {
+        return;
+    }
+    *cursor = input[*cursor..]
+        .char_indices()
+        .nth(1)
+        .map(|(i, _)| *cursor + i)
+        .unwrap_or(input.len());
+    print!("\x1b[1C");
+    let _ = io::stdout().flush();
+}
+
+/// Insert a character at cursor position, redraw.
+fn handle_char_insert(input: &mut String, cursor: &mut usize, c: char) {
+    input.insert(*cursor, c);
+    *cursor += c.len_utf8();
+    redraw_input_line(input, *cursor);
 }
 
 /// Run the plain stdout interface. Returns when the user quits.
@@ -176,48 +189,72 @@ pub async fn run(
     loop {
         print_prompt();
 
-        // Read input in a blocking task so we can't miss agent events
-        // (but for simplicity, we read synchronously here — agent events
-        // are processed after each turn completes)
         let input = tokio::task::spawn_blocking(read_input).await?;
+        let cmd = match parse_input(input) {
+            Some(cmd) => cmd,
+            None => continue,
+        };
 
-        let msg = match input {
-            None => {
+        match cmd {
+            InputAction::Quit => {
                 let _ = command_tx.send(TuiCommand::Quit).await;
                 break;
             }
-            Some(s) => s.trim().to_string(),
-        };
-
-        if msg.is_empty() {
-            continue;
-        }
-
-        if msg == "/clear" {
-            let _ = command_tx.send(TuiCommand::Clear).await;
-            println!("Conversation cleared.");
-            continue;
-        }
-
-        if msg == "/help" {
-            println!("{}", HELP_TEXT);
-            continue;
-        }
-
-        println!("\n  You: {}", msg);
-        let _ = command_tx.send(TuiCommand::SendMessage(msg)).await;
-
-        // Process agent events until turn completes
-        let mut state = OutputState::default();
-
-        while let Some(event) = agent_events.recv().await {
-            if print_event(event, &mut state) {
-                break;
+            InputAction::Clear => {
+                let _ = command_tx.send(TuiCommand::Clear).await;
+                println!("Conversation cleared.");
+                continue;
+            }
+            InputAction::Help => {
+                println!("{}", HELP_TEXT);
+                continue;
+            }
+            InputAction::Message(msg) => {
+                println!("\n  You: {}", msg);
+                let _ = command_tx.send(TuiCommand::SendMessage(msg)).await;
             }
         }
+
+        drain_until_complete(&mut agent_events).await;
     }
 
     Ok(())
+}
+
+enum InputAction {
+    Quit,
+    Clear,
+    Help,
+    Message(String),
+}
+
+/// Parse raw input into an action. None from read_input means Ctrl-C (quit).
+/// Returns None for empty input (no action needed).
+fn parse_input(input: Option<String>) -> Option<InputAction> {
+    match input {
+        None => Some(InputAction::Quit),
+        Some(s) => {
+            let trimmed = s.trim().to_string();
+            if trimmed.is_empty() {
+                return None;
+            }
+            Some(match trimmed.as_str() {
+                "/clear" => InputAction::Clear,
+                "/help" => InputAction::Help,
+                _ => InputAction::Message(trimmed),
+            })
+        }
+    }
+}
+
+/// Process agent events until TurnComplete.
+async fn drain_until_complete(events: &mut mpsc::Receiver<AgentEvent>) {
+    let mut state = OutputState::default();
+    while let Some(event) = events.recv().await {
+        if print_event(event, &mut state) {
+            break;
+        }
+    }
 }
 
 /// State for event printing (shared between TUI and -p mode).
@@ -238,53 +275,11 @@ impl Default for OutputState {
 /// Print a single agent event to stdout. Returns true if the turn is complete.
 pub fn print_event(event: AgentEvent, state: &mut OutputState) -> bool {
     match event {
-        AgentEvent::ThinkingDelta(text) => {
-            if !state.in_thinking {
-                state.in_thinking = true;
-                state.in_text = false;
-                print!("\n");
-            }
-            if std::env::var("NO_COLOR").is_ok() {
-                print!("{}", text);
-            } else {
-                print!("\x1b[2m{}\x1b[0m", text);
-            }
-            let _ = io::stdout().flush();
-        }
-        AgentEvent::TextDelta(text) => {
-            if state.in_thinking {
-                state.in_thinking = false;
-                print!("\n");
-            }
-            if !state.in_text {
-                state.in_text = true;
-                print!("\n  ");
-            }
-            print!("{}", text);
-            let _ = io::stdout().flush();
-        }
-        AgentEvent::ToolStart { name, args_display } => {
-            if state.in_thinking {
-                state.in_thinking = false;
-                print!("\n");
-            }
-            if state.in_text {
-                state.in_text = false;
-                println!();
-            }
-            println!("\n  {} {}", name, args_display);
-        }
-        AgentEvent::ToolResult { output, success } => {
-            let indicator = if success { "|" } else { "| x" };
-            for line in output.lines() {
-                println!("  {} {}", indicator, line);
-            }
-        }
-        AgentEvent::TokenRate { .. } => {}
-        AgentEvent::ContextUsage { .. } => {}
-        AgentEvent::Warning(msg) => {
-            print_warn(&msg);
-        }
+        AgentEvent::ThinkingDelta(text) => print_thinking_delta(&text, state),
+        AgentEvent::TextDelta(text) => print_text_delta(&text, state),
+        AgentEvent::ToolStart { name, args_display } => print_tool_start(&name, &args_display, state),
+        AgentEvent::ToolResult { output, success } => print_tool_result(&output, success),
+        AgentEvent::Warning(msg) => print_warn(&msg),
         AgentEvent::TurnComplete => {
             if state.in_text || state.in_thinking {
                 println!();
@@ -294,13 +289,55 @@ pub fn print_event(event: AgentEvent, state: &mut OutputState) -> bool {
         AgentEvent::ServerRestarted { attempt } => {
             print_warn(&format!("llama-server restarted ({}/3). Retrying...", attempt));
         }
-        AgentEvent::StepStart { .. } => {}
-        AgentEvent::StepComplete { .. } => {}
-        AgentEvent::UserPrompt(_) => {}
-        AgentEvent::Plan(_) => {}
-        AgentEvent::Diagnosis(_) => {}
+        _ => {} // TokenRate, ContextUsage, StepStart, StepComplete, UserPrompt, Plan, Diagnosis
     }
     false
+}
+
+fn print_thinking_delta(text: &str, state: &mut OutputState) {
+    if !state.in_thinking {
+        state.in_thinking = true;
+        state.in_text = false;
+        print!("\n");
+    }
+    if std::env::var("NO_COLOR").is_ok() {
+        print!("{}", text);
+    } else {
+        print!("\x1b[2m{}\x1b[0m", text);
+    }
+    let _ = io::stdout().flush();
+}
+
+fn print_text_delta(text: &str, state: &mut OutputState) {
+    if state.in_thinking {
+        state.in_thinking = false;
+        print!("\n");
+    }
+    if !state.in_text {
+        state.in_text = true;
+        print!("\n  ");
+    }
+    print!("{}", text);
+    let _ = io::stdout().flush();
+}
+
+fn print_tool_start(name: &str, args_display: &str, state: &mut OutputState) {
+    if state.in_thinking {
+        state.in_thinking = false;
+        print!("\n");
+    }
+    if state.in_text {
+        state.in_text = false;
+        println!();
+    }
+    println!("\n  {} {}", name, args_display);
+}
+
+fn print_tool_result(output: &str, success: bool) {
+    let indicator = if success { "|" } else { "| x" };
+    for line in output.lines() {
+        println!("  {} {}", indicator, line);
+    }
 }
 
 /// Emit a hw_info JSON line before the agent starts.

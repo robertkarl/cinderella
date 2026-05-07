@@ -3,6 +3,15 @@ use serde_json::Value;
 use std::fs;
 use std::path::Path;
 
+fn ensure_parent_dirs(path: &Path) -> std::io::Result<()> {
+    if let Some(parent) = path.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+    Ok(())
+}
+
 pub fn execute(args: &Value, project_dir: &Path) -> ToolResult {
     let path_str = match args.get("path").and_then(|v| v.as_str()) {
         Some(p) => p,
@@ -35,15 +44,11 @@ pub fn execute(args: &Value, project_dir: &Path) -> ToolResult {
     };
 
     // Create parent directories if needed
-    if let Some(parent) = path.parent() {
-        if !parent.exists() {
-            if let Err(e) = fs::create_dir_all(parent) {
-                return ToolResult {
-                    output: format!("Error creating directories: {}", e),
-                    success: false,
-                };
-            }
-        }
+    if let Err(e) = ensure_parent_dirs(&path) {
+        return ToolResult {
+            output: format!("Error creating directories: {}", e),
+            success: false,
+        };
     }
 
     match fs::write(&path, content) {
