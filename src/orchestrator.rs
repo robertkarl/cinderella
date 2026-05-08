@@ -4,8 +4,9 @@ use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 
 use crate::agent::Agent;
-use crate::config::{self, SafetyProfile, BUNDLED_MODEL};
-use crate::hw::{self, HardwareInfo};
+use crate::config::{self, SafetyProfile};
+use crate::model_manifest::ModelDef;
+use crate::hw;
 use crate::server::ServerManager;
 use crate::tui::{self, StatusBar, TuiCommand};
 use tokio::sync::mpsc;
@@ -40,7 +41,13 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
     let hw = hw::detect().context("Hardware detection failed")?;
     println!("Hardware: {}", hw);
 
-    // Step 2: Find model
+    // Step 2: Load manifest and select model for this machine's RAM
+    let manifest = crate::model_manifest::find_manifest()
+        .context("Failed to load model manifest")?;
+    let active_model = manifest.model_for_ram(hw.total_ram_gb as u32)
+        .context("No model fits this machine's RAM")?;
+
+    // Step 3: Find model file
     let model_path = match cfg.model_path {
         Some(p) => {
             if !p.exists() {
@@ -50,17 +57,18 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
             p
         }
         None => {
-            let path = find_or_extract_bundled_model(&hw)?;
+            let path = find_model_file(active_model)?;
+            let size_gb = active_model.size_bytes as f64 / (1024.0 * 1024.0 * 1024.0);
             println!(
                 "Model: {} {} ({:.1} GiB) \u{2713}",
-                BUNDLED_MODEL.name, BUNDLED_MODEL.quant, BUNDLED_MODEL.size_gb
+                active_model.name, active_model.quant, size_gb
             );
             path
         }
     };
 
-    // Step 3: Start llama-server
-    let server_config = config::ServerConfig::from_model(model_path, cfg.port, &BUNDLED_MODEL);
+    // Step 4: Start llama-server
+    let server_config = config::ServerConfig::from_model_def(model_path, cfg.port, active_model);
     let mut server = ServerManager::new(server_config, cfg.llama_server_path);
 
     println!("Starting llama-server...");
@@ -71,7 +79,7 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
         println!("\u{2713} GPU layers: {}/{}", loaded, total);
     }
 
-    // Step 4: Prompt mode or interactive TUI
+    // Step 5: Prompt mode or interactive TUI
     if let Some(ref prompt) = cfg.prompt {
         let result = run_prompt(
             &server.api_url(),
@@ -80,6 +88,7 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
             cfg.safety_profile,
             prompt,
             cfg.format_json,
+            active_model.ctx_size,
         )
         .await;
         server.stop().await;
@@ -98,13 +107,13 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
         .to_string();
 
     let initial_status = StatusBar {
-        model_name: BUNDLED_MODEL.name.to_string(),
-        quant: BUNDLED_MODEL.quant.to_string(),
+        model_name: active_model.name.clone(),
+        quant: active_model.quant.clone(),
         tok_per_sec: None,
         ram_used_gb: hw.total_ram_gb - hw.available_ram_gb,
         ram_total_gb: hw.total_ram_gb,
         ctx_used: 0,
-        ctx_max: BUNDLED_MODEL.ctx_size as usize,
+        ctx_max: active_model.ctx_size as usize,
         gpu_layers: server
             .gpu_layers_loaded
             .map(|l| {
@@ -120,7 +129,7 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
     let agent_handle = spawn_agent_loop(
         &server.api_url(),
         cfg.project_dir.clone(),
-        BUNDLED_MODEL.ctx_size,
+        active_model.ctx_size,
         cfg.model_name.clone(),
         cfg.safety_profile,
         agent_tx,
@@ -137,6 +146,13 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
 
 /// Run with a remote API — no local server.
 async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
+    // Load manifest to get ctx_size even in remote mode
+    let manifest = crate::model_manifest::find_manifest()
+        .context("Failed to load model manifest")?;
+    let default_model = manifest.default_model()
+        .context("No default model in manifest")?;
+    let ctx_size = default_model.ctx_size;
+
     // Prompt mode
     if let Some(ref prompt) = cfg.prompt {
         return run_prompt(
@@ -146,6 +162,7 @@ async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
             cfg.safety_profile,
             prompt,
             cfg.format_json,
+            ctx_size,
         )
         .await;
     }
@@ -168,14 +185,14 @@ async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
         ram_used_gb: 0.0,
         ram_total_gb: 0.0,
         ctx_used: 0,
-        ctx_max: BUNDLED_MODEL.ctx_size as usize,
+        ctx_max: ctx_size as usize,
         gpu_layers: "remote".to_string(),
     };
 
     let agent_handle = spawn_agent_loop(
         api_url,
         cfg.project_dir.clone(),
-        BUNDLED_MODEL.ctx_size,
+        ctx_size,
         cfg.model_name.clone(),
         cfg.safety_profile,
         agent_tx,
@@ -198,8 +215,9 @@ async fn run_prompt(
     safety_profile: SafetyProfile,
     prompt: &str,
     format_json: bool,
+    ctx_size: u32,
 ) -> Result<()> {
-    let mut agent = Agent::new(api_url, project_dir, BUNDLED_MODEL.ctx_size, model_name, safety_profile, format_json);
+    let mut agent = Agent::new(api_url, project_dir, ctx_size, model_name, safety_profile, format_json);
 
     if format_json {
         // Emit hardware info before agent starts
@@ -273,25 +291,12 @@ fn spawn_agent_loop(
     })
 }
 
-/// Find the model in ~/Library/Application Support/Cinderella/Models/.
-/// In the v1 release, the model is downloaded on first run by the Swift app.
-/// The Rust helper expects it to already be present and verified.
-fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
-    // Check RAM — use total RAM, not available. macOS unified memory will reclaim
-    // inactive/purgeable pages under pressure, so "available" is misleadingly low.
-    if hw.total_ram_gb < BUNDLED_MODEL.total_ram_required_gb {
-        anyhow::bail!(
-            "Cannot fit bundled model ({} needs ~{:.0} GiB).\n\
-             Your Mac has {:.0} GB total.\n\
-             Try: cinderella --model /path/to/smaller-model.gguf <project>",
-            BUNDLED_MODEL.name,
-            BUNDLED_MODEL.total_ram_required_gb,
-            hw.total_ram_gb
-        );
-    }
-
+/// Find the model file on disk.
+/// Checks the manifest-defined path (Application Support) first,
+/// then falls back to ~/models/ for development convenience.
+fn find_model_file(model: &ModelDef) -> Result<PathBuf> {
     // Primary location: Application Support (where the GUI downloader puts it)
-    let app_support_path = config::models_dir().join(BUNDLED_MODEL.filename);
+    let app_support_path = model.model_path();
     if app_support_path.exists() {
         return Ok(app_support_path);
     }
@@ -299,7 +304,7 @@ fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
     // Development fallback: ~/models/ (legacy location)
     if !is_release_bundle() {
         let home = std::env::var("HOME").unwrap_or_default();
-        let legacy_path = PathBuf::from(&home).join("models").join(BUNDLED_MODEL.filename);
+        let legacy_path = PathBuf::from(&home).join("models").join(&model.filename);
         if legacy_path.exists() {
             return Ok(legacy_path);
         }
@@ -307,10 +312,11 @@ fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
 
     anyhow::bail!(
         "Model not found at {}.\n\
-         The Cinderella app downloads the model on first launch.\n\
-         For development: download {} and place it in ~/Library/Application Support/Cinderella/Models/",
+         The Glass Slipper app downloads the model on first launch.\n\
+         For development: download {} and place it in ~/Library/Application Support/{}/",
         app_support_path.display(),
-        BUNDLED_MODEL.filename
+        model.filename,
+        model.app_support_subdir
     );
 }
 

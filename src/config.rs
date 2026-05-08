@@ -1,41 +1,12 @@
-/// Hardcoded model registry and server defaults.
-/// Single model family (Qwen 3.5) for v1. Multi-model is v2.
+/// Server defaults and configuration constants.
+/// Model selection is driven by model-manifest.json via src/model_manifest.rs.
 
 pub const DEFAULT_PORT: u16 = 8787;
-pub const DEFAULT_CTX_SIZE: u32 = 32768;
 pub const CINDERELLA_DIR: &str = ".cinderella";
 #[allow(dead_code)]
 pub const MODELS_DIR: &str = "models";
 #[allow(dead_code)]
 pub const TEMPLATES_DIR: &str = "templates";
-
-/// RAM tiers for model selection.
-/// total_ram_required_gb includes model weights + KV cache + llama-server overhead.
-pub struct ModelEntry {
-    pub name: &'static str,
-    pub filename: &'static str,
-    pub size_gb: f64,
-    pub total_ram_required_gb: f64,
-    pub quant: &'static str,
-    #[allow(dead_code)]
-    pub sha256: &'static str,
-    pub ctx_size: u32,
-    pub n_gpu_layers: i32,
-}
-
-/// The bundled model. v1 ships exactly one: Qwen 3.5 9B Q5_K_M.
-/// This must match model-manifest.json — the manifest is the source of truth.
-pub const BUNDLED_MODEL: ModelEntry = ModelEntry {
-    name: "Qwen3.5-9B",
-    filename: "Qwen3.5-9B-Q5_K_M.gguf",
-    size_gb: 6.1,
-    // Model ~6GB + KV cache ~4-6GB + server ~1GB
-    total_ram_required_gb: 16.0,
-    quant: "Q5_K_M",
-    sha256: "dc2a39aef291f91a9116ad214058da0d86eb648743a124bd8c333787c4b9c91c",
-    ctx_size: DEFAULT_CTX_SIZE,
-    n_gpu_layers: -1, // full GPU offload for 9B
-};
 
 /// Server startup arguments derived from a model entry.
 pub struct ServerConfig {
@@ -47,12 +18,12 @@ pub struct ServerConfig {
 }
 
 impl ServerConfig {
-    pub fn from_model(model_path: std::path::PathBuf, port: u16, entry: &ModelEntry) -> Self {
+    pub fn from_model_def(model_path: std::path::PathBuf, port: u16, model: &crate::model_manifest::ModelDef) -> Self {
         Self {
             model_path,
             port,
-            ctx_size: entry.ctx_size,
-            n_gpu_layers: entry.n_gpu_layers,
+            ctx_size: model.ctx_size,
+            n_gpu_layers: model.n_gpu_layers,
             jinja: true,
         }
     }
@@ -330,23 +301,46 @@ pub fn tool_definitions() -> Vec<serde_json::Value> {
 mod tests {
     use super::*;
 
+    const TEST_MANIFEST_JSON: &str = r#"{
+        "version": 1,
+        "models": [{
+            "id": "qwen3.5-9b-q5",
+            "name": "Qwen 3.5 9B",
+            "filename": "Qwen3.5-9B-Q5_K_M.gguf",
+            "quant": "Q5_K_M",
+            "size_bytes": 6577841376,
+            "sha256": "dc2a39aef291f91a9116ad214058da0d86eb648743a124bd8c333787c4b9c91c",
+            "url": "https://example.com/model.gguf",
+            "min_ram_gb": 16,
+            "ctx_size": 32768,
+            "n_gpu_layers": -1,
+            "app_support_subdir": "Cinderella/Models"
+        }],
+        "default_model": "qwen3.5-9b-q5"
+    }"#;
+
     #[test]
-    fn test_bundled_model_sanity() {
-        assert!(!BUNDLED_MODEL.name.is_empty());
-        assert!(!BUNDLED_MODEL.filename.is_empty());
-        assert!(BUNDLED_MODEL.size_gb > 0.0);
-        assert!(BUNDLED_MODEL.total_ram_required_gb > BUNDLED_MODEL.size_gb);
-        assert!(BUNDLED_MODEL.ctx_size > 0);
-        // n_gpu_layers: -1 means full offload, positive means partial
-        assert!(BUNDLED_MODEL.n_gpu_layers != 0);
+    fn test_server_config_from_model_def() {
+        let manifest = crate::model_manifest::Manifest::from_str(TEST_MANIFEST_JSON).unwrap();
+        let model = manifest.default_model().unwrap();
+        let cfg = ServerConfig::from_model_def(
+            std::path::PathBuf::from("/tmp/model.gguf"),
+            8787,
+            model,
+        );
+        assert_eq!(cfg.ctx_size, 32768);
+        assert_eq!(cfg.n_gpu_layers, -1);
+        assert!(cfg.jinja);
     }
 
     #[test]
     fn test_server_config_args() {
-        let cfg = ServerConfig::from_model(
+        let manifest = crate::model_manifest::Manifest::from_str(TEST_MANIFEST_JSON).unwrap();
+        let model = manifest.default_model().unwrap();
+        let cfg = ServerConfig::from_model_def(
             std::path::PathBuf::from("/tmp/model.gguf"),
             8787,
-            &BUNDLED_MODEL,
+            model,
         );
         let args = cfg.to_args();
         assert!(args.contains(&"--model".to_string()));
