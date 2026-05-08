@@ -76,6 +76,17 @@ extension NSColor {
     static let accentDiagFailLbl = NSColor(hex: 0xB91C1C)               // red-700
     static let accentProgress    = NSColor(hex: 0x3B82F6)               // blue-500
 
+    // Memory pressure banners
+    static let surfaceWarningBanner = NSColor(hex: 0xFEFCE8)       // yellow-50
+    static let accentWarningBanner  = NSColor(hex: 0xEAB308)       // yellow-500
+    static let textWarningBanner    = NSColor(hex: 0x713F12)       // yellow-900
+    static let surfaceCriticalBanner = NSColor(hex: 0xFEF2F2)      // red-50
+    static let accentCriticalBanner  = NSColor(hex: 0xEF4444)      // red-500
+    static let textCriticalBanner    = NSColor(hex: 0x7F1D1D)      // red-900
+    static let surfacePromotionBanner = NSColor(hex: 0xECFDF5)     // emerald-50
+    static let accentPromotionBanner  = NSColor(hex: 0x10B981)     // emerald-500
+    static let textPromotionBanner    = NSColor(hex: 0x064E3B)     // emerald-900
+
     // Status pill — backgrounds
     static let statusOKBg        = NSColor(hex: 0xD1FAE5)               // emerald-100
     static let statusERRBg       = NSColor(hex: 0xFEE2E2)               // red-100
@@ -98,6 +109,7 @@ extension NSFont {
     static var diagnosisLabel: NSFont { .systemFont(ofSize: 11, weight: .bold) }
     static var diagnosisText:  NSFont { .systemFont(ofSize: 15, weight: .regular) }
     static var stampLabel:     NSFont { .systemFont(ofSize: 10, weight: .bold) }
+    static var bannerBody:     NSFont { .systemFont(ofSize: 12, weight: .medium) }
     static var promptInput:    NSFont { .systemFont(ofSize: 14, weight: .regular) }
 
     /// Italic 13pt for thought rows. Falls back to regular if the
