@@ -1,13 +1,13 @@
 ---
 status: SHIPPED
 planning_mode: PRODUCT
-design_doc: /Users/robertkarl/.gauntlette/designs/cinderella/init-design-20260422-170500.md
+design_doc: /Users/robertkarl/.gauntlette/designs/glass-slipper/init-design-20260422-170500.md
 ---
-# Cinderella — The Shoe That Fits
+# Glass Slipper — The Shoe That Fits
 
 Created by /gauntlette-start on 2026-04-22
-Branch: init | Repo: cinderella
-Design doc: /Users/robertkarl/.gauntlette/designs/cinderella/init-design-20260422-170500.md
+Branch: init | Repo: glass-slipper
+Design doc: /Users/robertkarl/.gauntlette/designs/glass-slipper/init-design-20260422-170500.md
 
 ## Problem Statement
 
@@ -15,7 +15,7 @@ Cloud AI coding tools are bleeding developers with unstable pricing ($20→$200�
 
 ## Vision
 
-`cinderella myprojectname` → you're coding with a local AI agent. No API keys. No config files. No model selection. One command. The shoe fits your hardware automatically.
+`glass-slipper myprojectname` → you're coding with a local AI agent. No API keys. No config files. No model selection. One command. The shoe fits your hardware automatically.
 
 The value is not the agent — dozens of open-source agents exist. The value is the orchestration: hardware detection → right model → right quant → sane server defaults → working tool-calling → observability. That entire chain, zero-config, in one binary. Dropbox for local AI coding: judgement and defaults, not novel technology.
 
@@ -27,10 +27,10 @@ PRODUCT — This targets career developers fleeing cloud AI pricing. The demand 
 
 ## Feature Spec
 
-The user downloads cinderella from the website (one green button, ~6.3GB). Extracts it. Runs `cinderella myprojectname`. Cinderella:
+The user downloads glass-slipper from the website (one green button, ~6.3GB). Extracts it. Runs `glass-slipper myprojectname`. Glass Slipper:
 
 1. **Detects hardware** — Reads total/available RAM via sysctl. Displays a one-line summary: "M3 Pro, 18GB unified, 12GB available for model."
-2. **Extracts bundled model** — On first run, copies the bundled Qwen3.5-9B-abliterated Q4_K_M GGUF (~6.1GB) from the release archive to `~/.cinderella/models/`. Subsequent runs skip this step.
+2. **Extracts bundled model** — On first run, copies the bundled Qwen3.5-9B-abliterated Q4_K_M GGUF (~6.1GB) from the release archive to `~/.glass-slipper/models/`. Subsequent runs skip this step.
 3. **Starts inference server** — Launches the bundled llama-server with tuned defaults: `--jinja`, correct context size, full GPU offload, no thinking tokens, explicit chat template for Qwen. Verifies all layers are on GPU. If RAM is too low, tells the user to close apps.
 4. **Launches coding agent** — Opens a TUI (Ratatui) in the specified project directory. The agent has tools: file read, file write, file edit, bash execution, ls. Uses llama-server's OpenAI-compatible API with tool_use.
 5. **Shows observability** — Status bar displays: model name, quant, tok/s (live), memory usage, context utilization. Errors are surfaced with actionable messages, not stack traces.
@@ -41,7 +41,7 @@ The user types their coding request in natural language. The agent reads files, 
 
 | Item | Decision | Effort | Why |
 |------|----------|--------|-----|
-| CLI binary (`cinderella myproject`) | ACCEPTED | M | Core entry point, proves the thesis |
+| CLI binary (`glass-slipper myproject`) | ACCEPTED | M | Core entry point, proves the thesis |
 | Bundled model (Qwen3.5-9B-abliterated Q4_K_M) in release artifact | ACCEPTED | S | One green button. No separate download. Airgapped works. |
 | Bundled llama-server in release artifact | ACCEPTED | M | Zero external dependencies. User never installs anything separately. |
 | HW detection via sysctl/sysinfo (no llmfit) | ACCEPTED | S | We control the model table. Just need available RAM. |
@@ -81,7 +81,7 @@ The user types their coding request in natural language. The agent reads files, 
 | Hardcoded model registry | Single model family (Qwen 3.5). Const table mapping RAM tiers to GGUF URLs + SHA256 checksums. Dead simple, works offline. | llmfit recommendation (no download URLs), HuggingFace API search (network dependency) |
 | Bundle 9B GGUF in release | One green button on the website. ~6.3GB download, includes everything. Airgapped machines work. Nobody else does this. | Download on first run (breaks airgap), bundle smaller 4B (worse quality) |
 | Bundle prebuilt llama-server | Zero external dependencies. User never runs brew install anything. CI compiles llama.cpp with Metal for Apple Silicon, packages it. | Require brew install llama.cpp (breaks one-command promise), download on first run (breaks airgap) |
-| Two distribution paths | Website: one green button (~6.3GB, model + llama-server bundled). Nerds: `cargo install cinderella` + BYOM via `--model` flag. | Single artifact (forces 6GB on nerds), no BYOM (alienates HN crowd) |
+| Two distribution paths | Website: one green button (~6.3GB, model + llama-server bundled). Nerds: `cargo install glass-slipper` + BYOM via `--model` flag. | Single artifact (forces 6GB on nerds), no BYOM (alienates HN crowd) |
 | Single crate, flat src/ layout | One Cargo.toml, all files under src/. For a v1 greenfield project with one developer, workspace overhead buys nothing. | Cargo workspace (premature, slower builds, internal API boundaries to design) |
 | llama-server for inference | Industry standard, OpenAI-compatible API, tool calling support. Bundled, not installed separately. | Ollama (less control), vLLM (overkill for local) |
 | Persona A (pricing refugee) first | They have hardware, motivation, taste. Build for ourselves first. | Persona B (curious onlooker) |
@@ -93,7 +93,7 @@ The user types their coding request in natural language. The agent reads files, 
 | Single model family for v1 (Qwen 3.5) | Tool-calling reliability varies wildly between model families. Testing one deeply beats testing five shallowly. Qwen 3.5 has best local tool-use reports. | Model-agnostic (untested matrix), blessed list of 3+ models (too much QA surface) |
 | Keep edit tool with exact-match guard | Edit fails safely if old_string not found — worst case is rejected edit, not corrupted file. Investigating local model tool-use quality is part of the thesis. | Drop edit (loses learning opportunity), edit without guard (dangerous) |
 | yah-core for bash safety | AST-based shell command classification via tree-sitter-bash. 14 semantic capabilities, allow/ask/deny policies. Real parser, not a regex deny list. Already built and tested. | Regex deny list (fragile, bypassable), no guardrails (irresponsible), project-dir sandbox (too restrictive) |
-| Auto-restart llama-server on crash | llama-server is stateless — conversation lives in cinderella. Crash loses nothing. Auto-restart + retry last call, max 3 attempts. One-line TUI warning. | Pause and ask user (interrupts flow for no reason) |
+| Auto-restart llama-server on crash | llama-server is stateless — conversation lives in glass-slipper. Crash loses nothing. Auto-restart + retry last call, max 3 attempts. One-line TUI warning. | Pause and ask user (interrupts flow for no reason) |
 | Tool call reliability is first-class | JSON repair on malformed args (fix trailing commas, missing quotes). Retry with re-prompt on parse failure (max 2). Explicit --jinja + chat template. This is the existential risk. | Fail on malformed JSON (unusable with smaller models), ignore the problem |
 | Tested model: Qwen3.5-9B-abliterated Q4_K_M | Confirmed working GGUF with tool calling. Abliterated variant. This is the bundled model. | Untested models, hypothetical model families |
 | SSE streaming from llama-server | At 15 tok/s, 500 tokens = 33s blank screen without streaming. Text tokens stream live, tool calls buffer until complete. tok/s counter driven by stream chunk timing. | Atomic responses (unacceptable UX), defer streaming (same) |
@@ -101,7 +101,7 @@ The user types their coding request in natural language. The agent reads files, 
 | Bash timeout: 120s + process group kill | Default 120s timeout. Esc or timeout sends SIGTERM to process group, waits 5s, then SIGKILL. Timeout error returned as tool result. | No timeout (hangs forever), short timeout (breaks cargo build) |
 | RAM check includes KV cache overhead | 32K context KV cache adds 2-4GB on top of model weights. Pre-flight RAM check must require model_size + estimated_kv_cache. For 9B Q4_K_M + 32K ctx, require ~10GB available, not ~5GB. | Check model size only (misleading, causes swap thrashing) |
 | CDN hosting via Cloudflare R2 | GitHub Releases caps at 2GB per asset. 6.3GB release artifact hosted on Cloudflare R2. Free tier: 10GB storage, 10M reads/month. Download page on R2 or project website. | GitHub Releases only (can't host 6.3GB), S3 (costs more) |
-| macOS code signing + notarization | Unsigned binaries trigger Gatekeeper. User has Apple Developer account ($99/yr). CI: codesign both binaries (cinderella + llama-server), notarize the .tar.gz, staple ticket. | Unsigned (multi-step Gatekeeper bypass defeats zero-friction thesis) |
+| macOS code signing + notarization | Unsigned binaries trigger Gatekeeper. User has Apple Developer account ($99/yr). CI: codesign both binaries (glass-slipper + llama-server), notarize the .tar.gz, staple ticket. | Unsigned (multi-step Gatekeeper bypass defeats zero-friction thesis) |
 
 ## Codebase Health
 
@@ -156,10 +156,10 @@ N/A — no code yet.
 
 ```mermaid
 flowchart TD
-    A["cinderella myproject"] --> B[Orchestrator]
+    A["glass-slipper myproject"] --> B[Orchestrator]
     B --> C[sysctl: Read RAM]
     C --> D{Bundled GGUF cached?}
-    D -->|No| E[Extract GGUF to ~/.cinderella/models/]
+    D -->|No| E[Extract GGUF to ~/.glass-slipper/models/]
     D -->|Yes| F[Start bundled llama-server]
     E --> F
     F --> G{All layers on GPU?}
@@ -243,9 +243,9 @@ sequenceDiagram
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    cinderella release artifact                │
+│                    glass-slipper release artifact                │
 │  ┌──────────────┐  ┌──────────────┐  ┌───────────────────┐  │
-│  │ cinderella    │  │ llama-server │  │ qwen3.5-9b-q5km  │  │
+│  │ glass-slipper    │  │ llama-server │  │ qwen3.5-9b-q5km  │  │
 │  │ (33 MB Rust)  │  │ (12 MB C++)  │  │ (6.1 GB GGUF)    │  │
 │  └──────┬───────┘  └──────────────┘  └───────────────────┘  │
 │         │                                                    │
@@ -302,14 +302,14 @@ sequenceDiagram
 | Not enough RAM for any model | 8GB Mac, heavy load | "Cannot fit model. Need at least 8GB Mac with memory available." + exit | User upgrades or closes apps | YES |
 | GPU offload incomplete | Memory pressure during server start | "Only 20/33 layers on GPU. Performance will be degraded. Close apps for full speed." | Warning, continue anyway | YES |
 | llama-server crash mid-session | Segfault, OOM in C++ | "⚠ Server restarted (1/3). Retrying..." | Auto-restart, retry last call. Max 3. | YES (new) |
-| llama-server won't start | Port conflict, corrupt binary | "llama-server failed to start: [error]. Try: cinderella --port 8081 myproject" | User fixes or picks different port | YES |
+| llama-server won't start | Port conflict, corrupt binary | "llama-server failed to start: [error]. Try: glass-slipper --port 8081 myproject" | User fixes or picks different port | YES |
 | Tool call JSON malformed | Qwen produces bad JSON (trailing comma, unquoted key) | Nothing visible — JSON repair runs silently | Repair pass → retry with re-prompt (max 2) | YES (new) |
 | Tool call unparseable after retries | Model consistently produces garbage | "Model couldn't format tool call after 3 attempts. Try rephrasing your request." | User rephrases | YES (new) |
 | Bash command denied by yah-core | `rm -rf /`, `sudo`, pipe-to-shell | "⚠ Command requires: privilege-escalation. [Y]es [N]o" | User approves or denies | YES (new) |
 | Network down during BYOM download | BYOM user updating model, network drops | Progress bar freezes → "Download interrupted. Will resume on next run." | HTTP Range resume from partial | YES (new) |
 | Corrupt GGUF after download | Bitrot, incomplete download | "Model file checksum mismatch. Re-downloading." | SHA256 verify, delete + re-download | YES (new) |
-| Project directory doesn't exist | `cinderella /nonexistent` | "Directory /nonexistent does not exist." + exit | User fixes path | YES |
-| Disk full during GGUF extraction | ~/.cinderella partition full | "Not enough disk space. Need 6.1GB free in ~/.cinderella/" | User frees space | YES |
+| Project directory doesn't exist | `glass-slipper /nonexistent` | "Directory /nonexistent does not exist." + exit | User fixes path | YES |
+| Disk full during GGUF extraction | ~/.glass-slipper partition full | "Not enough disk space. Need 6.1GB free in ~/.glass-slipper/" | User frees space | YES |
 | Context window exhausted | Long conversation fills 32K | "⚠ Context 80% full" warning → auto-summarize old turns → /clear if still full | Auto-summarize, then /clear | YES (improved) |
 | Bash command timeout | Model emits infinite loop or long build | "Command timed out after 120s" returned as tool result | SIGTERM→SIGKILL process group. Agent decides next step. | YES (new) |
 | Bash command cancelled | User presses Esc during execution | "Command cancelled by user" returned as tool result | SIGTERM→SIGKILL process group | YES (new) |
@@ -396,10 +396,10 @@ Minimal agent loop, 5 tools, Ratatui TUI. Build exactly what we need.
 Single crate, flat src/:
 
 ```
-cinderella/
+glass-slipper/
   Cargo.toml
   src/
-    main.rs          — CLI entry point, arg parsing (cinderella <projectname> [--model path])
+    main.rs          — CLI entry point, arg parsing (glass-slipper <projectname> [--model path])
     orchestrator.rs  — RAM check → extract GGUF → start server → agent launch
     hw.rs            — sysctl/sysinfo: total RAM, available RAM, chip name
     server.rs        — llama-server lifecycle (start, health check, GPU verify, auto-restart)
@@ -447,7 +447,7 @@ sysinfo = "0.32"          # RAM detection
 ### Checkpoints
 
 1. **Agent loop works against manually-started llama-server** (steps 1-3) — Prove the thesis: can a local Qwen 3.5 do useful tool-calling work through our agent?
-2. **Full orchestration: `cinderella myproject` from zero to coding** (steps 4-6) — One command, everything starts.
+2. **Full orchestration: `glass-slipper myproject` from zero to coding** (steps 4-6) — One command, everything starts.
 3. **Complete tool suite + observability + safety** (steps 7-9) — Production-ready v1.
 
 ### Tool Call Reliability (Critical Path)
@@ -457,12 +457,12 @@ This is the existential risk. If tool calls don't work reliably, the product is 
 **Server startup args:**
 ```
 llama-server \
-  --model ~/.cinderella/models/Qwen3.5-9B-abliterated.Q4_K_M.gguf \
+  --model ~/.glass-slipper/models/Qwen3.5-9B-abliterated.Q4_K_M.gguf \
   --jinja \
   --ctx-size 32768 \
   --n-gpu-layers 999 \
   --port 8787 \
-  --chat-template-file ~/.cinderella/templates/qwen3.5.jinja
+  --chat-template-file ~/.glass-slipper/templates/qwen3.5.jinja
 ```
 
 **JSON repair pipeline:**
@@ -527,7 +527,7 @@ If available RAM < total_ram_required_gb: "Not enough memory. Need ~10 GiB free,
 
 ### Server Supervision
 
-llama-server is stateless. Conversation history lives in cinderella's `Vec<Message>`. Server crash loses nothing.
+llama-server is stateless. Conversation history lives in glass-slipper's `Vec<Message>`. Server crash loses nothing.
 
 - Monitor server process via PID
 - On unexpected exit: restart, wait for health check (timeout 30s), retry the last LLM call
@@ -539,7 +539,7 @@ llama-server is stateless. Conversation history lives in cinderella's `Vec<Messa
 **Website:** One green button.
 ```
 [============================]
-[  Download Cinderella        ]
+[  Download Glass Slipper        ]
 [  Qwen 3.5 9B · 6.3 GB      ]
 [  macOS Apple Silicon        ]
 [============================]
@@ -547,27 +547,27 @@ llama-server is stateless. Conversation history lives in cinderella's `Vec<Messa
 
 **Release artifact:**
 ```
-cinderella-v0.1.0-macos-arm64.tar.gz (6.3 GB):
-  cinderella                              (33 MB, Rust binary, signed + notarized)
+glass-slipper-v0.1.0-macos-arm64.tar.gz (6.3 GB):
+  glass-slipper                              (33 MB, Rust binary, signed + notarized)
   llama-server                            (12 MB, C++ binary, Metal, signed + notarized)
   models/Qwen3.5-9B-abliterated.Q4_K_M.gguf  (6.1 GB)
   templates/qwen3.5.jinja                 (2 KB)
   LICENSE
 ```
 
-**Nerds:** `cargo install cinderella` → 33MB binary, BYOM via `--model /path/to/my.gguf`.
+**Nerds:** `cargo install glass-slipper` → 33MB binary, BYOM via `--model /path/to/my.gguf`.
 
 **Hosting:** Cloudflare R2. GitHub Releases caps at 2GB per asset — can't host the full artifact there. R2 free tier: 10GB storage, 10M class B reads/month, free egress. Upload release artifact to R2 bucket. Green button on website points to R2 download URL. GitHub Releases hosts the lite binary (<2GB) for nerds.
 
 **Code signing:** Apple Developer account (user has one). CI pipeline:
-1. Compile cinderella + llama-server
-2. `codesign --deep --force --sign "Developer ID Application: ..." cinderella llama-server`
+1. Compile glass-slipper + llama-server
+2. `codesign --deep --force --sign "Developer ID Application: ..." glass-slipper llama-server`
 3. Package .tar.gz
-4. `xcrun notarytool submit cinderella-*.tar.gz --apple-id ... --wait`
-5. `xcrun stapler staple cinderella-*.tar.gz`
+4. `xcrun notarytool submit glass-slipper-*.tar.gz --apple-id ... --wait`
+5. `xcrun stapler staple glass-slipper-*.tar.gz`
 6. Upload to R2
 
-**Build CI:** GitHub Actions. Compile cinderella (Rust, aarch64-apple-darwin, macOS 13+ SDK). Compile llama-server (C++, Metal, macOS 13+ SDK). Sign, notarize, package with GGUF. Upload to R2 + GitHub Releases (lite).
+**Build CI:** GitHub Actions. Compile glass-slipper (Rust, aarch64-apple-darwin, macOS 13+ SDK). Compile llama-server (C++, Metal, macOS 13+ SDK). Sign, notarize, package with GGUF. Upload to R2 + GitHub Releases (lite).
 
 ## UX Design
 
@@ -576,7 +576,7 @@ cinderella-v0.1.0-macos-arm64.tar.gz (6.3 GB):
 #### First Run — Bundled Model
 
 ```
-┌───────────────────────────── cinderella ────────────────────────────────┐
+┌───────────────────────────── glass-slipper ────────────────────────────────┐
 │                                                                         │
 │  Hardware: Apple M3 Pro · 18 GB unified · 12.4 GB available             │
 │                                                                         │
@@ -594,7 +594,7 @@ cinderella-v0.1.0-macos-arm64.tar.gz (6.3 GB):
 #### Main Agent TUI — Idle
 
 ```
-┌─ cinderella v0.1.0 · myproject/ ───────────────────────────────────────┐
+┌─ glass-slipper v0.1.0 · myproject/ ───────────────────────────────────────┐
 │                                                                         │
 │                                                                         │
 │            Working in myproject/ (47 files).                             │
@@ -611,7 +611,7 @@ cinderella-v0.1.0-macos-arm64.tar.gz (6.3 GB):
 #### Main Agent TUI — Active Conversation + Tool Use
 
 ```
-┌─ cinderella v0.1.0 · myproject/ ───────────────────────────────────────┐
+┌─ glass-slipper v0.1.0 · myproject/ ───────────────────────────────────────┐
 │                                                                         │
 │  You: Add a health check endpoint to the API server                     │
 │                                                                         │
@@ -644,7 +644,7 @@ cinderella-v0.1.0-macos-arm64.tar.gz (6.3 GB):
 #### Bash Safety Confirmation (yah-core)
 
 ```
-┌─ cinderella v0.1.0 · myproject/ ───────────────────────────────────────┐
+┌─ glass-slipper v0.1.0 · myproject/ ───────────────────────────────────────┐
 │                                                                         │
 │  You: Clean up the old build artifacts                                  │
 │                                                                         │
@@ -665,7 +665,7 @@ cinderella-v0.1.0-macos-arm64.tar.gz (6.3 GB):
 #### Error State — Not Enough RAM
 
 ```
-┌───────────────────────────── cinderella ────────────────────────────────┐
+┌───────────────────────────── glass-slipper ────────────────────────────────┐
 │                                                                         │
 │  Hardware: Apple M3 Pro · 18 GB unified · 3.1 GB available              │
 │                                                                         │
@@ -680,14 +680,14 @@ cinderella-v0.1.0-macos-arm64.tar.gz (6.3 GB):
 #### Error State — Fatal (8GB Mac)
 
 ```
-┌───────────────────────────── cinderella ────────────────────────────────┐
+┌───────────────────────────── glass-slipper ────────────────────────────────┐
 │                                                                         │
 │  Hardware: MacBook Air · 8 GB unified · 2.1 GB available                │
 │                                                                         │
 │  ✗ Cannot fit bundled model (Qwen 3.5 9B needs ~8 GiB free).           │
 │                                                                         │
-│  Your Mac has 8 GB total. Cinderella needs at least 16 GB.              │
-│  Try: cinderella --model /path/to/smaller-model.gguf myproject          │
+│  Your Mac has 8 GB total. Glass Slipper needs at least 16 GB.              │
+│  Try: glass-slipper --model /path/to/smaller-model.gguf myproject          │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -702,7 +702,7 @@ cinderella-v0.1.0-macos-arm64.tar.gz (6.3 GB):
 | Copy Quality | 7 | Raw quants in status bar. Idle copy is project-specific. |
 | Error Handling UX | 8 | Fallback designed. Fatal exit designed. Server crash auto-recovery. Tool call retry. |
 | Accessibility | 4 | v1 baseline: NO_COLOR, text indicators (✓ ✗ ⚠), light+dark terminals. |
-| AI Slop Score | 9 | No generic chrome, no hero sections, no feature grids, no "Welcome to Cinderella." |
+| AI Slop Score | 9 | No generic chrome, no hero sections, no feature grids, no "Welcome to Glass Slipper." |
 
 ### Keybindings (v1)
 

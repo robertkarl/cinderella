@@ -109,7 +109,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let appMenuItem = NSMenuItem()
         menubar.addItem(appMenuItem)
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "Quit Cinderella", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Quit Glass Slipper", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appMenuItem.submenu = appMenu
 
         // Edit menu — required for Cmd+C/V/X/A in text fields
@@ -131,7 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let frame = NSRect(x: 200, y: 200, width: 720, height: 580)
         let style: NSWindow.StyleMask = [.titled, .closable, .miniaturizable, .resizable]
         window = NSWindow(contentRect: frame, styleMask: style, backing: .buffered, defer: false)
-        window.title = "Cinderella"
+        window.title = "Glass Slipper"
         window.minSize = NSSize(width: 480, height: 360)
         window.center()
     }
@@ -225,11 +225,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Immediate feedback
         spineVC.append(.connecting)
 
-        // Find cinderella binary
-        guard let cinderellaPath = findCinderella() else {
+        // Find glass-slipper binary
+        guard let glassSlipperPath = findGlassSlipper() else {
             let alert = NSAlert()
-            alert.messageText = "cinderella not found"
-            alert.informativeText = "Build cinderella first: cargo build --release\nThen ensure it's in your PATH or next to this app."
+            alert.messageText = "glass-slipper not found"
+            alert.informativeText = "Build glass-slipper first: cargo build --release\nThen ensure it's in your PATH or next to this app."
             alert.alertStyle = .warning
             alert.runModal()
             return
@@ -246,7 +246,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Launch process
         let proc = Process()
-        proc.executableURL = URL(fileURLWithPath: cinderellaPath)
+        proc.executableURL = URL(fileURLWithPath: glassSlipperPath)
         proc.arguments = args
 
         let stdout = Pipe()
@@ -287,7 +287,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             try proc.run()
         } catch {
             let alert = NSAlert()
-            alert.messageText = "Failed to launch cinderella"
+            alert.messageText = "Failed to launch glass-slipper"
             alert.informativeText = error.localizedDescription
             alert.alertStyle = .warning
             alert.runModal()
@@ -325,15 +325,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Whether we are running from inside an app bundle (release mode).
     private var isReleaseBuild: Bool {
-        // In a proper app bundle, the executable is at .app/Contents/MacOS/Cinderella
+        // In a proper app bundle, the executable is at .app/Contents/MacOS/Glass Slipper
         let exe = Bundle.main.executablePath ?? ""
         return exe.contains(".app/Contents/MacOS/")
     }
 
-    private func findCinderella() -> String? {
-        // Primary: bundled helper inside app bundle (named cinderella-agent to avoid
-        // case-insensitive collision with the Swift "Cinderella" executable)
-        let bundled = Bundle.main.bundlePath + "/Contents/MacOS/cinderella-agent"
+    private func findGlassSlipper() -> String? {
+        // Primary: bundled helper inside app bundle (named glass-slipper-agent to avoid
+        // case-insensitive collision with the Swift "Glass Slipper" executable)
+        let bundled = Bundle.main.bundlePath + "/Contents/MacOS/glass-slipper-agent"
         if FileManager.default.isExecutableFile(atPath: bundled) {
             return bundled
         }
@@ -348,19 +348,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let parentDir = (appDir as NSString).deletingLastPathComponent
 
         // Adjacent to app
-        let adjacent = (parentDir as NSString).appendingPathComponent("cinderella")
+        let adjacent = (parentDir as NSString).appendingPathComponent("glass-slipper")
         if FileManager.default.isExecutableFile(atPath: adjacent) {
             return adjacent
         }
 
         // Cargo debug build
-        let cargoDebug = ((parentDir as NSString).appendingPathComponent("../target/debug/cinderella") as NSString).standardizingPath
+        let cargoDebug = ((parentDir as NSString).appendingPathComponent("../target/debug/glass-slipper") as NSString).standardizingPath
         if FileManager.default.isExecutableFile(atPath: cargoDebug) {
             return cargoDebug
         }
 
         // Cargo release build
-        let cargoRelease = ((parentDir as NSString).appendingPathComponent("../target/release/cinderella") as NSString).standardizingPath
+        let cargoRelease = ((parentDir as NSString).appendingPathComponent("../target/release/glass-slipper") as NSString).standardizingPath
         if FileManager.default.isExecutableFile(atPath: cargoRelease) {
             return cargoRelease
         }
@@ -368,7 +368,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Check PATH via which
         let which = Process()
         which.executableURL = URL(fileURLWithPath: "/usr/bin/which")
-        which.arguments = ["cinderella"]
+        which.arguments = ["glass-slipper"]
         let whichPipe = Pipe()
         which.standardOutput = whichPipe
         which.standardError = Pipe()
@@ -412,11 +412,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Model path
 
-    /// Model file path: ~/Library/Application Support/Cinderella/Models/Qwen3.5-9B-Q5_K_M.gguf
+    /// Model file path: ~/Library/Application Support/Glass Slipper/Models/Qwen3.5-9B-Q5_K_M.gguf
     /// In development, falls back to ~/models/ if Application Support copy doesn't exist.
     private func modelFilePath() -> String {
         let home = NSHomeDirectory()
-        let appSupportPath = home + "/Library/Application Support/Cinderella/Models/Qwen3.5-9B-Q5_K_M.gguf"
+        let appSupportPath = home + "/Library/Application Support/Glass Slipper/Models/Qwen3.5-9B-Q5_K_M.gguf"
         if FileManager.default.fileExists(atPath: appSupportPath) {
             return appSupportPath
         }
@@ -587,7 +587,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let stderrText = (String(data: stderrBuffer, encoding: .utf8) ?? "Unknown error")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             let errorMsg = stderrText.isEmpty
-                ? "cinderella exited with code \(task.terminationStatus)"
+                ? "glass-slipper exited with code \(task.terminationStatus)"
                 : stderrText
             spineVC.append(.check(name: "Error", status: .err, detail: errorMsg))
         }

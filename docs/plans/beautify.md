@@ -1,13 +1,13 @@
 ---
 status: SHIPPED
 planning_mode: BUILDER
-design_doc: /Users/robertkarl/.gauntlette/designs/cinderella/beautify-design-20260430-224634.md
+design_doc: /Users/robertkarl/.gauntlette/designs/glass-slipper/beautify-design-20260430-224634.md
 ---
 # Beautify — Glass Slipper Visual Polish
 
 Created by /gauntlette-start on 2026-04-30
-Branch: master (feature name: beautify) | Repo: cinderella
-Design doc: /Users/robertkarl/.gauntlette/designs/cinderella/beautify-design-20260430-224634.md
+Branch: master (feature name: beautify) | Repo: glass-slipper
+Design doc: /Users/robertkarl/.gauntlette/designs/glass-slipper/beautify-design-20260430-224634.md
 
 ## Problem Statement
 
@@ -65,7 +65,7 @@ Port AppDelegate to Swift: NSTask lifecycle, NSPipe stdout/stderr handling, JSON
 | Enrich Rust JSON protocol (not heuristic mapping) | Scaffold Event enum needs user_prompt/plan/diagnosis event types; adding ~40 LOC to Rust is cleaner than heuristic Swift translation. user_prompt echoes input, plan is hardcoded runbook, diagnosis wraps synthesis StepComplete. | Heuristic mapping (fragile), redesign Event enum (loses mock fidelity) |
 | Plan event is hardcoded runbook, not LLM-extracted | The agent doesn't produce a structured "plan" — the runbook steps are static. Hardcoding step names is honest and reliable. LLM extraction would be fragile and the plan items would just be the runbook steps anyway. | LLM plan extraction (fragile, ~100 LOC, same output) |
 | @main entry point (not main.swift) | Idiomatic Swift, compiler generates entry point, avoids top-level-code footgun | C-style main.swift with top-level code |
-| Separate AppDelegate.swift file | Scaffold is design system + views; process management is a separate concern | Single 800+ line CinderellaScaffold.swift |
+| Separate AppDelegate.swift file | Scaffold is design system + views; process management is a separate concern | Single 800+ line Glass SlipperScaffold.swift |
 | Defer pipe drain fix (match ObjC) | User chose to port existing behavior; race is documented tech debt | Fix the race in the port (~5 LOC) |
 | Wire smoke test as checkpoint 1 | Hardcoded events verify views render before subprocess wiring is added | Manual-only testing, XCTest snapshot tests |
 
@@ -83,8 +83,8 @@ STATUS: HEALTHY
 ## Relevant Code
 
 Files to read/modify:
-- `glass-slipper/CinderellaScaffold.swift:377-410` — PlanRowView, ThoughtRowView, DiagnosisRowView stubs
-- `glass-slipper/CinderellaScaffold.swift:414-496` — SpineViewController (working, needs to become main UI)
+- `glass-slipper/Glass SlipperScaffold.swift:377-410` — PlanRowView, ThoughtRowView, DiagnosisRowView stubs
+- `glass-slipper/Glass SlipperScaffold.swift:414-496` — SpineViewController (working, needs to become main UI)
 - `glass-slipper/main.m:1-546` — Full ObjC AppDelegate to port
 - `glass-slipper/AppDelegate.h` — ObjC interface to port
 - `glass-slipper/DiagnosticStepCell.m` — ObjC cell to replace
@@ -134,7 +134,7 @@ Key types in scaffold:
 ```mermaid
 flowchart TD
     A[User: enters URL, clicks Diagnose] --> B[Swift AppDelegate]
-    B --> C[Process: launches cinderella -p --format json]
+    B --> C[Process: launches glass-slipper -p --format json]
     C --> D[JSON stdout stream]
     D --> E[Line buffer + JSON parse]
     E --> F{event field?}
@@ -156,7 +156,7 @@ flowchart TD
 sequenceDiagram
     participant U as User
     participant AD as AppDelegate
-    participant P as Process (cinderella)
+    participant P as Process (glass-slipper)
     participant SVC as SpineViewController
 
     U->>AD: Click "Diagnose" with URL
@@ -203,7 +203,7 @@ User clicks "Diagnose"
     v
 Swift AppDelegate (AppDelegate.swift, @main)
     |-- creates NSWindow, URL field, Diagnose button
-    |-- launches cinderella via Process
+    |-- launches glass-slipper via Process
     |-- reads stdout via Pipe (readabilityHandler or notification)
     |-- buffers lines, parses JSON {"event":"...", ...}
     |
@@ -232,8 +232,8 @@ SpineViewController.append(event)
 
 | Failure | Trigger | User sees | Logs | Plan handles? |
 |---------|---------|-----------|------|---------------|
-| cinderella binary not found | Missing from PATH, cargo target, and app-adjacent | Alert: "cinderella not found" | NSLog path search | YES — findCinderella ported from ObjC |
-| cinderella exits non-zero | Bad model path, crash | Error row appended to spine | stderr dumped | YES — taskDidTerminate checks exit code |
+| glass-slipper binary not found | Missing from PATH, cargo target, and app-adjacent | Alert: "glass-slipper not found" | NSLog path search | YES — findGlass Slipper ported from ObjC |
+| glass-slipper exits non-zero | Bad model path, crash | Error row appended to spine | stderr dumped | YES — taskDidTerminate checks exit code |
 | Invalid JSON line | Rust panic output, non-JSON stderr leak to stdout | Line skipped | NSLog "invalid JSON" | YES — processJSONLine guards |
 | Final stdout chunk dropped | termination handler fires before last notification | Diagnosis row missing | None (silent) | DEFERRED — matches ObjC behavior, documented tech debt |
 | Process hangs | Model download stalls, llama-server unresponsive | UI stuck on last step, Diagnose button shows "Stop" | None | YES — Stop button sends SIGTERM, 3s SIGKILL fallback |
@@ -280,7 +280,7 @@ Approach B — user chose one language. Port risk is moderate (NSTask/Pipe/JSON 
 
 | File | What | Notes |
 |------|------|-------|
-| `glass-slipper/CinderellaScaffold.swift` | Implement PlanRowView (line 377), ThoughtRowView (line 388), DiagnosisRowView (line 399) | Follow CheckRowView pattern. Tokens only, no literals. |
+| `glass-slipper/Glass SlipperScaffold.swift` | Implement PlanRowView (line 377), ThoughtRowView (line 388), DiagnosisRowView (line 399) | Follow CheckRowView pattern. Tokens only, no literals. |
 | `glass-slipper/AppDelegate.swift` | **NEW** — Swift AppDelegate with @main, window setup, Process management, JSON parsing, event dispatch | Port from main.m. Separate file from scaffold. |
 | `glass-slipper/GlassSlipper.xcodeproj/project.pbxproj` | Remove ObjC sources from build, add AppDelegate.swift, remove bridging header setting | Must remove SWIFT_OBJC_BRIDGING_HEADER from target configs. |
 | `glass-slipper/Info.plist` | No change needed | NSPrincipalClass stays NSApplication (compatible with @main). |
@@ -303,7 +303,7 @@ Approach B — user chose one language. Port risk is moderate (NSTask/Pipe/JSON 
    - **`plan`**: The agent's "plan" is the fixed runbook steps from the system prompt (parse_target → dns → connectivity → route_analysis → port_check → service_check → synthesis). Emit `AgentEvent::Plan(Vec<String>)` once, immediately after `UserPrompt`. Hardcode the step display names from `step_display_title()`. No LLM extraction needed — the runbook is static.
    - **`diagnosis`**: The synthesis step's `StepComplete` already carries the diagnosis text. Add `AgentEvent::Diagnosis(String)`. In `StepTracker::make_step_complete()`, when `step == "synthesis"`, also return a `Diagnosis` event containing the `step_text`. Alternatively, emit it in `flush()` when closing the synthesis step.
    - **All three match arms** must be added to both `json_event()` (tui.rs:308) AND `print_event()` (tui.rs:239) to keep Rust's exhaustive match happy. `print_event` can ignore them (no-op arms).
-2. **Implement 3 stub row views** — PlanRowView, ThoughtRowView, DiagnosisRowView in CinderellaScaffold.swift per TODO specs.
+2. **Implement 3 stub row views** — PlanRowView, ThoughtRowView, DiagnosisRowView in Glass SlipperScaffold.swift per TODO specs.
 3. **CHECKPOINT 1: Smoke test** — Wire the hardcoded smoke test (scaffold lines 498-517) into a temporary @main AppDelegate. Build via Xcode. Verify all 5 row types render. Screenshot.
 4. **Create AppDelegate.swift** — Port from main.m: window setup, URL field, Diagnose button, Process launch, Pipe reading, JSON line buffering, event dispatch to SpineViewController.append(). Use @main attribute. Match ObjC taskDidTerminate behavior (no pipe drain). **Also port:**
    - **Menu bar**: App menu (Cmd+Q via `terminate:`), Edit menu (Cmd+C/V/X/A via `copy:`, `paste:`, `cut:`, `selectAll:`). Required for URL field to accept keyboard shortcuts.
@@ -338,7 +338,7 @@ default: break      // step_start, text, tool_*, warning — ignore or log
 **Process launch in Swift:**
 ```swift
 let process = Process()
-process.executableURL = URL(fileURLWithPath: cinderellaPath)
+process.executableURL = URL(fileURLWithPath: glass-slipperPath)
 process.arguments = [".", "-p", prompt, "--playbook", "network-debug", "--format", "json", "--model", modelPath]
 let stdout = Pipe()
 process.standardOutput = stdout

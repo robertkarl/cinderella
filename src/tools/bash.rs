@@ -266,7 +266,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn test_dir() -> PathBuf {
-        PathBuf::from("/tmp/cinderella-test")
+        PathBuf::from("/tmp/glass-slipper-test")
     }
 
     use crate::config::SafetyProfile;

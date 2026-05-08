@@ -80,10 +80,10 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A7000003 /* Build configuration list for PBXNativeTarget "GlassSlipper" */;
 			buildPhases = (
-				A3000004 /* Build Cinderella */,
+				A3000004 /* Build Glass Slipper */,
 				A3000002 /* Sources */,
 				A3000001 /* Frameworks */,
-				A3000003 /* Copy Cinderella */,
+				A3000003 /* Copy Glass Slipper */,
 			);
 			buildRules = (
 			);
@@ -122,30 +122,30 @@
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		A3000003 /* Copy Cinderella */ = {
+		A3000003 /* Copy Glass Slipper */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Copy Cinderella";
+			name = "Copy Glass Slipper";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Symlink the cargo-built cinderella binary next to the .app\n# so findCinderella can resolve it via the adjacent-to-bundle check.\nCINDY=\"${SRCROOT}/../target/release/cinderella\"\nDEST=\"${BUILT_PRODUCTS_DIR}/cinderella\"\nif [ -x \"$CINDY\" ]; then\n    ln -sf \"$CINDY\" \"$DEST\"\n    echo \"Linked cinderella -> $CINDY\"\nelse\n    echo \"warning: cinderella not found at $CINDY — run: cargo build --release\"\nfi\n";
+			shellScript = "# Symlink the cargo-built glass-slipper binary next to the .app\n# so findGlassSlipper can resolve it via the adjacent-to-bundle check.\nCINDY=\"${SRCROOT}/../target/release/glass-slipper\"\nDEST=\"${BUILT_PRODUCTS_DIR}/glass-slipper\"\nif [ -x \"$CINDY\" ]; then\n    ln -sf \"$CINDY\" \"$DEST\"\n    echo \"Linked glass-slipper -> $CINDY\"\nelse\n    echo \"warning: glass-slipper not found at $CINDY — run: cargo build --release\"\nfi\n";
 		};
-		A3000004 /* Build Cinderella */ = {
+		A3000004 /* Build Glass Slipper */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Build Cinderella";
+			name = "Build Glass Slipper";
 			outputPaths = (
-				"${SRCROOT}/../target/release/cinderella",
+				"${SRCROOT}/../target/release/glass-slipper",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -282,8 +282,8 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = E7FAHT2694;
 				INFOPLIST_FILE = Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Cinderella;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.cinderella.glass-slipper";
+				INFOPLIST_KEY_CFBundleDisplayName = "Glass Slipper";
+				PRODUCT_BUNDLE_IDENTIFIER = "net.robertkarl.glass-slipper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -299,8 +299,8 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = E7FAHT2694;
 				INFOPLIST_FILE = Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Cinderella;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.cinderella.glass-slipper";
+				INFOPLIST_KEY_CFBundleDisplayName = "Glass Slipper";
+				PRODUCT_BUNDLE_IDENTIFIER = "net.robertkarl.glass-slipper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;

@@ -12,9 +12,9 @@ use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
 
-/// Cinderella: local AI coding agent. The shoe that fits.
+/// Glass Slipper: local AI coding agent. The shoe that fits.
 #[derive(Parser)]
-#[command(name = "cinderella", version, about)]
+#[command(name = "glass-slipper", version, about)]
 struct Cli {
     /// Project directory to work in.
     project: PathBuf,

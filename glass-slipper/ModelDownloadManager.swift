@@ -1,6 +1,6 @@
 //
 //  ModelDownloadManager.swift
-//  Cinderella — first-run model download
+//  Glass Slipper — first-run model download
 //
 //  Downloads the Qwen GGUF to Application Support on first launch.
 //  Resumable via URLSession resume data. SHA-256 verified after download.

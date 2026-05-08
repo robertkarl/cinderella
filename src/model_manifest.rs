@@ -1,7 +1,7 @@
 /// Model manifest: parses the bundled model-manifest.json and provides
 /// paths for Application Support model storage.
 ///
-/// This is the single source of truth for model identity in Cinderella.
+/// This is the single source of truth for model identity in Glass Slipper.
 /// Swift, Rust, and release scripts all derive from model-manifest.json.
 
 use anyhow::{Context, Result};
@@ -211,7 +211,7 @@ mod tests {
             "arch": "arm64",
             "ctx_size": 32768,
             "n_gpu_layers": -1,
-            "app_support_subdir": "Cinderella/Models"
+            "app_support_subdir": "Glass Slipper/Models"
         }],
         "default_model": "qwen3.5-9b-q5"
     }"#;
@@ -240,7 +240,7 @@ mod tests {
         let manifest = Manifest::from_str(TEST_MANIFEST).unwrap();
         let model = manifest.default_model().unwrap();
         let path = model.model_path();
-        assert!(path.to_str().unwrap().contains("Application Support/Cinderella/Models"));
+        assert!(path.to_str().unwrap().contains("Application Support/Glass Slipper/Models"));
         assert!(path.to_str().unwrap().ends_with("Qwen3.5-9B-Q5_K_M.gguf"));
 
         let part = model.part_path();
@@ -251,8 +251,8 @@ mod tests {
     fn test_quick_check_missing() {
         // Use a fake subdir so the model path won't exist on any machine
         let json = TEST_MANIFEST.replace(
-            "Cinderella/Models",
-            "Cinderella/TestNonexistent_12345",
+            "Glass Slipper/Models",
+            "Glass Slipper/TestNonexistent_12345",
         );
         let manifest = Manifest::from_str(&json).unwrap();
         let model = manifest.default_model().unwrap();

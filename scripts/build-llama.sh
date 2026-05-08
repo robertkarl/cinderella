@@ -133,4 +133,4 @@ fi
 
 echo ""
 echo "=== build-llama.sh complete ==="
-echo "Next: embed $OUTPUT_DIR/llama-server into Cinderella.app/Contents/MacOS/"
+echo "Next: embed $OUTPUT_DIR/llama-server into Glass Slipper.app/Contents/MacOS/"

@@ -1,6 +1,6 @@
 # What is this
 
-Cinderella makes small, open-weights models like Qwen 3.5 9B capable of performing
+Glass Slipper makes small, open-weights models like Qwen 3.5 9B capable of performing
 meaningful work on modern Macs (Apple Silicon / 18GB+ unified RAM).
 
 On more capable machines with more unified memory, Cindy picks the "LLM that fits perfectly" and is even more capable.
@@ -28,7 +28,7 @@ I see four components that should be bundled (this is discussed in DEV-GOALS md 
 3) local models have different strengths and weakness. ambiguity is tough. Need good prompting. Superpowers/gstack/gauntlette should be the default experience, especially with smaller models. Also, need reasonable llama-server params like temperature.
 4) One-click install. No more fiddling with params. Nothing nails this either.
 
-Aspirationally, Cinderella or Cindy bundles all of this stuff into one beautiful MacOS application.
+Aspirationally, Glass Slipper bundles all of this stuff into one beautiful MacOS application.
 
 
 # notes from 4-26
@@ -42,7 +42,7 @@ The implication here is that MoE models may be more capable than dense models if
 
 # Glass Slipper
 
-Glass Slipper is a native macOS diagnostic app built with AppKit. It drives Cinderella's agent core through a structured JSON protocol and renders each runbook step as a chunky Transmission-style table row — title, summary, detail, and a big green checkmark or red exclamation mark.
+Glass Slipper is a native macOS diagnostic app built with AppKit. It drives the agent core through a structured JSON protocol and renders each runbook step as a chunky Transmission-style table row — title, summary, detail, and a big green checkmark or red exclamation mark.
 
 ![Glass Slipper running a network diagnostic](cindy-network-debug-flow-v0.png)
 
@@ -52,7 +52,7 @@ The following is a transcript of Cindy debugging a Flask app that has deliberate
 
 
 ```
-     Running `target/debug/cinderella . -p 'debug connectivity to http://localhost:14094. periodic failures are seen about 1/3 of the time.' --playbook network-debug --model /Users/robertkarl/models/Qwen3.5-9B-Q5_K_M.gguf`
+     Running `target/debug/glass-slipper . -p 'debug connectivity to http://localhost:14094. periodic failures are seen about 1/3 of the time.' --playbook network-debug --model /Users/robertkarl/models/Qwen3.5-9B-Q5_K_M.gguf`
 Hardware: Apple M3 Pro · 18 GB unified · 2.7 GB available
 Model: /Users/robertkarl/models/Qwen3.5-9B-Q5_K_M.gguf (user-provided)
 Starting llama-server...

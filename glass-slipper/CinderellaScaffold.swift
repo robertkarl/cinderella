@@ -1,6 +1,6 @@
 //
 //  CinderellaScaffold.swift
-//  Cinderella's Glass Slipper — AppKit starter
+//  Glass Slipper — AppKit starter
 //
 //  PURPOSE
 //  -------
@@ -22,7 +22,7 @@
 //  - Spine is NSScrollView wrapping NSStackView. ~20 events: stack view
 //    is fine. If history grows past a few hundred events later, swap to
 //    NSTableView with cell reuse. Don't preoptimize.
-//  - Append events from your cinderella JSON stream by calling
+//  - Append events from your glass-slipper JSON stream by calling
 //    SpineViewController.append(_:) on the main thread.
 //
 //  DEV LOOP
@@ -885,7 +885,7 @@ final class SpineViewController: NSViewController {
         ])
     }
 
-    /// Append a new event from the cinderella JSON stream. Main thread only.
+    /// Append a new event from the glass-slipper JSON stream. Main thread only.
     func append(_ event: Event) {
         let needsDivider = !events.isEmpty && shouldShowDividerAbove(event)
         let copyText = Self.copyableText(for: event)
@@ -945,7 +945,7 @@ final class SpineViewController: NSViewController {
 // MARK: - Smoke test
 //
 // Add this to your AppDelegate's applicationDidFinishLaunching to verify
-// the scaffold renders before wiring up the cinderella subprocess.
+// the scaffold renders before wiring up the glass-slipper subprocess.
 //
 //     let vc = SpineViewController()
 //     window.contentViewController = vc

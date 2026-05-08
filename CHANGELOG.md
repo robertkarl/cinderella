@@ -14,11 +14,11 @@ All notable changes to this project will be documented in this file.
 - Portable llama-server bundling in app bundle Contents/MacOS
 
 ### Changed
-- Model storage moved from ~/models/ to ~/Library/Application Support/Cinderella/Models/
+- Model storage moved from ~/models/ to ~/Library/Application Support/Glass Slipper/Models/
 - Bundled model changed from Qwen3.5-35B-MoE Q4_K_M to Qwen3.5-9B Q5_K_M (6.1 GB)
 - Diagnose button disabled until model is present
 - Release mode fails closed: no Homebrew/PATH fallback for llama-server or model
-- App title renamed from "Glass Slipper" to "Cinderella"
+- App title renamed from "Cinderella" to "Glass Slipper"
 - Diagnostic runbook uses portable `nc` loop instead of nmap for port scanning
 
 ### Fixed
@@ -34,7 +34,7 @@ All notable changes to this project will be documented in this file.
 - Click-to-copy on row views via gesture recognizer
 - JSONL debug logging to NSTemporaryDirectory for tail -f
 - Regression test for Diagnosis emission via STEP marker
-- Xcode build phase to auto-build cinderella via cargo
+- Xcode build phase to auto-build glass-slipper via cargo
 - Ambiguous port resolution step in diagnostic runbook
 
 ### Changed
@@ -56,12 +56,12 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Xcode project for Glass Slipper (ObjC/Swift mixed build)
-- CinderellaScaffold.swift design system with color, typography, and spacing tokens
+- CinderellaScaffold.swift (Glass Slipper) design system with color, typography, and spacing tokens
 - UserPromptRowView implementation following CheckRowView token pattern
 - SpineViewController with NSScrollView/NSStackView spine layout
 - Bridging header for ObjC/Swift interop
-- Run Script build phase to symlink cinderella binary into build products
-- `findLlamaServer` to pass `--llama-server` path explicitly to cinderella
+- Run Script build phase to symlink glass-slipper binary into build products
+- `findLlamaServer` to pass `--llama-server` path explicitly to glass-slipper
 
 ### Changed
 - StepTracker now captures tool command/output for step_complete detail fields

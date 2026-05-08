@@ -1,7 +1,7 @@
 Hardware: Apple M3 Pro · 18 GB unified · 5.2 GB available
 Model: Qwen3.5-9B-abliterated Q4_K_M (6.1 GiB) ✓
 Starting llama-server...
-robertkarl@rk-mbp cinderella % cargo run -- . 2>&1
+robertkarl@rk-mbp glass-slipper % cargo run -- . 2>&1
 warning: variant `ServerRestarted` is never constructed
   --> src/agent.rs:37:5
    |
@@ -82,13 +82,13 @@ warning: field `name` is never read
    |
    = note: `ChatEntry` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
 
-warning: `cinderella` (bin "cinderella") generated 9 warnings
+warning: `glass-slipper` (bin "glass-slipper") generated 9 warnings
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.15s
-     Running `target/debug/cinderella .`
+     Running `target/debug/glass-slipper .`
 Hardware: Apple M3 Pro · 18 GB unified · 5.3 GB available
 Model: Qwen3.5-9B-abliterated Q4_K_M (6.1 GiB) ✓
 Starting llama-server...
 Error: Failed to start llama-server
 
 Caused by:
-    Port 8787 is already in use. Another instance of cinderella or another service may be running. Try: cinderella --port 8788 <project>
+    Port 8787 is already in use. Another instance of glass-slipper or another service may be running. Try: glass-slipper --port 8788 <project>

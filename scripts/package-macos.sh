@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# package-macos.sh — Build, embed, sign, and package Cinderella.app for distribution.
+# package-macos.sh — Build, embed, sign, and package Glass Slipper.app for distribution.
 #
 # This script:
-# 1. Builds the Rust cinderella helper (release, arm64)
+# 1. Builds the Rust glass-slipper helper (release, arm64)
 # 2. Builds llama-server from pinned llama.cpp (if not already built)
 # 3. Builds the Swift app via xcodebuild
 # 4. Embeds helpers into the app bundle (Contents/MacOS/)
@@ -21,7 +21,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUILD_DIR="$REPO_ROOT/build"
-APP_NAME="Cinderella"
+APP_NAME="Glass Slipper"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 
 # Signing identity
@@ -38,12 +38,12 @@ echo "Identity: $IDENTITY"
 echo ""
 
 # --- Step 1: Build Rust helper ---
-echo "=== Step 1: Build Rust cinderella helper ==="
+echo "=== Step 1: Build Rust glass-slipper helper ==="
 cargo build --release --manifest-path "$REPO_ROOT/Cargo.toml" --target aarch64-apple-darwin
-RUST_BINARY="$REPO_ROOT/target/aarch64-apple-darwin/release/cinderella"
+RUST_BINARY="$REPO_ROOT/target/aarch64-apple-darwin/release/glass-slipper"
 if [ ! -f "$RUST_BINARY" ]; then
     # Fallback to non-target-specific path
-    RUST_BINARY="$REPO_ROOT/target/release/cinderella"
+    RUST_BINARY="$REPO_ROOT/target/release/glass-slipper"
 fi
 echo "Rust helper: $RUST_BINARY"
 file "$RUST_BINARY"
@@ -92,14 +92,14 @@ cp -R "$XCODE_APP" "$APP_BUNDLE"
 
 # Rename the executable to match CFBundleExecutable
 MACOS_DIR="$APP_BUNDLE/Contents/MacOS"
-if [ -f "$MACOS_DIR/GlassSlipper" ] && [ ! -f "$MACOS_DIR/Cinderella" ]; then
-    mv "$MACOS_DIR/GlassSlipper" "$MACOS_DIR/Cinderella"
+if [ -f "$MACOS_DIR/GlassSlipper" ] && [ ! -f "$MACOS_DIR/Glass Slipper" ]; then
+    mv "$MACOS_DIR/GlassSlipper" "$MACOS_DIR/Glass Slipper"
 fi
 
 # Embed helpers
-# Note: Rust helper is named "cinderella-agent" to avoid case-insensitive collision
-# with the Swift "Cinderella" executable on macOS (HFS+/APFS default).
-cp "$RUST_BINARY" "$MACOS_DIR/cinderella-agent"
+# Note: Rust helper is named "glass-slipper-agent" to avoid case-insensitive collision
+# with the Swift "Glass Slipper" executable on macOS (HFS+/APFS default).
+cp "$RUST_BINARY" "$MACOS_DIR/glass-slipper-agent"
 cp "$LLAMA_BINARY" "$MACOS_DIR/llama-server"
 
 # Copy model manifest to Resources
@@ -117,7 +117,7 @@ echo ""
 # --- Step 5: Verify otool -L (hard gate) ---
 echo "=== Step 5: Dependency verification (hard gate) ==="
 GATE_PASS=true
-for binary in "$MACOS_DIR/Cinderella" "$MACOS_DIR/cinderella-agent" "$MACOS_DIR/llama-server"; do
+for binary in "$MACOS_DIR/Glass Slipper" "$MACOS_DIR/glass-slipper-agent" "$MACOS_DIR/llama-server"; do
     if [ ! -f "$binary" ]; then
         echo "FAIL: Missing binary: $binary"
         GATE_PASS=false
@@ -143,7 +143,7 @@ echo ""
 # --- Step 6: Code signing ---
 echo "=== Step 6: Code signing ==="
 # Sign nested helpers first (inside-out order required by Apple)
-codesign --force --options runtime --timestamp --sign "$IDENTITY" "$MACOS_DIR/cinderella-agent"
+codesign --force --options runtime --timestamp --sign "$IDENTITY" "$MACOS_DIR/glass-slipper-agent"
 codesign --force --options runtime --timestamp --sign "$IDENTITY" "$MACOS_DIR/llama-server"
 
 # Sign Frameworks if present

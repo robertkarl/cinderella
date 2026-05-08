@@ -1,12 +1,12 @@
 [package]
-name = "cinderella"
+name = "glass-slipper"
 version = "0.1.0"
 edition = "2021"
 description = "Local AI coding agent. The shoe that fits."
 license = "MIT"
 
 [[bin]]
-name = "cinderella"
+name = "glass-slipper"
 path = "src/main.rs"
 
 [dependencies]

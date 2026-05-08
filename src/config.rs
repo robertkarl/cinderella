@@ -3,7 +3,7 @@
 
 pub const DEFAULT_PORT: u16 = 8787;
 pub const DEFAULT_CTX_SIZE: u32 = 32768;
-pub const CINDERELLA_DIR: &str = ".cinderella";
+pub const GLASS_SLIPPER_DIR: &str = ".glass-slipper";
 #[allow(dead_code)]
 pub const MODELS_DIR: &str = "models";
 #[allow(dead_code)]
@@ -75,15 +75,15 @@ impl ServerConfig {
     }
 }
 
-/// Get the cinderella home directory (~/.cinderella)
-pub fn cinderella_home() -> std::path::PathBuf {
-    dirs_home().join(CINDERELLA_DIR)
+/// Get the glass-slipper home directory (~/.glass-slipper)
+pub fn glass_slipper_home() -> std::path::PathBuf {
+    dirs_home().join(GLASS_SLIPPER_DIR)
 }
 
-/// Get the models directory (~/Library/Application Support/Cinderella/Models/)
+/// Get the models directory (~/Library/Application Support/Glass Slipper/Models/)
 pub fn models_dir() -> std::path::PathBuf {
     dirs_home()
-        .join("Library/Application Support/Cinderella/Models")
+        .join("Library/Application Support/Glass Slipper/Models")
 }
 
 fn dirs_home() -> std::path::PathBuf {
@@ -108,7 +108,7 @@ impl Default for SafetyProfile {
 }
 
 /// System prompt for the coding agent.
-pub const SYSTEM_PROMPT: &str = r#"You are Cinderella, a local AI coding assistant. You help users read, write, and edit code.
+pub const SYSTEM_PROMPT: &str = r#"You are Glass Slipper, a local AI coding assistant. You help users read, write, and edit code.
 
 FIRST STEP: Always start by running `ls` to see the project structure. Read README.md if it exists.
 
@@ -129,7 +129,7 @@ Rules:
 "#;
 
 /// System prompt for the network debugging agent.
-pub const NETWORK_DEBUG_PROMPT: &str = r#"You are Cinderella, a network diagnostic agent. You follow a structured diagnostic runbook to identify connectivity and service problems.
+pub const NETWORK_DEBUG_PROMPT: &str = r#"You are Glass Slipper, a network diagnostic agent. You follow a structured diagnostic runbook to identify connectivity and service problems.
 
 Your primary tool is bash. You MUST use the bash tool to execute each diagnostic step. Do not explain what you would do — execute the commands. Act, do not narrate.
 
@@ -371,14 +371,14 @@ mod tests {
     }
 
     #[test]
-    fn test_cinderella_home() {
-        let home = cinderella_home();
-        assert!(home.to_str().unwrap().contains(".cinderella"));
+    fn test_glass_slipper_home() {
+        let home = glass_slipper_home();
+        assert!(home.to_str().unwrap().contains(".glass-slipper"));
     }
 
     #[test]
     fn test_models_dir() {
         let dir = models_dir();
-        assert!(dir.to_str().unwrap().contains("Cinderella/Models"));
+        assert!(dir.to_str().unwrap().contains("Glass Slipper/Models"));
     }
 }

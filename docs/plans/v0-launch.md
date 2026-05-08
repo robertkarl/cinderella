@@ -15,7 +15,7 @@ Date: 2026-05-05
 
 ## Minimum viable distribution
 
-6. **Single static page at robertkarl.net/cinderella** — email capture + what it is + a video of the demo
+6. **Single static page at robertkarl.net/glass-slipper** — email capture + what it is + a video of the demo
 7. **One blog post on that page** — building Cindy, the local-first thesis, whatever feels natural
 
 ## Onboarding (minimal, not PDF)

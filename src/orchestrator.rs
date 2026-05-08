@@ -273,7 +273,7 @@ fn spawn_agent_loop(
     })
 }
 
-/// Find the model in ~/Library/Application Support/Cinderella/Models/.
+/// Find the model in ~/Library/Application Support/Glass Slipper/Models/.
 /// In the v1 release, the model is downloaded on first run by the Swift app.
 /// The Rust helper expects it to already be present and verified.
 fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
@@ -283,7 +283,7 @@ fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
         anyhow::bail!(
             "Cannot fit bundled model ({} needs ~{:.0} GiB).\n\
              Your Mac has {:.0} GB total.\n\
-             Try: cinderella --model /path/to/smaller-model.gguf <project>",
+             Try: glass-slipper --model /path/to/smaller-model.gguf <project>",
             BUNDLED_MODEL.name,
             BUNDLED_MODEL.total_ram_required_gb,
             hw.total_ram_gb
@@ -307,8 +307,8 @@ fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
 
     anyhow::bail!(
         "Model not found at {}.\n\
-         The Cinderella app downloads the model on first launch.\n\
-         For development: download {} and place it in ~/Library/Application Support/Cinderella/Models/",
+         The Glass Slipper app downloads the model on first launch.\n\
+         For development: download {} and place it in ~/Library/Application Support/Glass Slipper/Models/",
         app_support_path.display(),
         BUNDLED_MODEL.filename
     );
@@ -317,7 +317,7 @@ fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
 /// Find the llama-server binary.
 ///
 /// In release mode (inside an app bundle), only the bundled copy is accepted.
-/// Development mode additionally checks ~/.cinderella/bin and PATH.
+/// Development mode additionally checks ~/.glass-slipper/bin and PATH.
 pub fn find_llama_server(custom_path: Option<&Path>) -> Result<PathBuf> {
     if let Some(p) = custom_path {
         if p.exists() {
@@ -348,9 +348,9 @@ fn find_bundled_llama_server() -> Option<PathBuf> {
     bundled.exists().then_some(bundled)
 }
 
-/// Development-only fallbacks: ~/.cinderella/bin/ and PATH.
+/// Development-only fallbacks: ~/.glass-slipper/bin/ and PATH.
 fn find_dev_llama_server() -> Result<PathBuf> {
-    let home_bin = config::cinderella_home().join("bin").join("llama-server");
+    let home_bin = config::glass_slipper_home().join("bin").join("llama-server");
     if home_bin.exists() {
         return Ok(home_bin);
     }
@@ -378,7 +378,7 @@ fn is_release_bundle() -> bool {
     std::env::current_exe()
         .ok()
         .and_then(|exe| {
-            // exe = Foo.app/Contents/MacOS/cinderella-agent
+            // exe = Foo.app/Contents/MacOS/glass-slipper-agent
             // parent = Foo.app/Contents/MacOS
             // grandparent = Foo.app/Contents
             // great-grandparent = Foo.app

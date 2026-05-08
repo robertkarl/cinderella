@@ -14,7 +14,7 @@
       "arch": "arm64",
       "ctx_size": 32768,
       "n_gpu_layers": -1,
-      "app_support_subdir": "Cinderella/Models"
+      "app_support_subdir": "Glass Slipper/Models"
     }
   ],
   "default_model": "qwen3.5-9b-q5"

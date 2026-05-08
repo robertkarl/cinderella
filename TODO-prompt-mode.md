@@ -1,7 +1,7 @@
 # Plan: Add `-p` non-interactive prompt mode
 
 ## Context
-Cinderella currently only runs interactively. You want `cinderella -p "fix the bug"` — send one prompt, print output, exit. Like `claude -p`.
+Glass Slipper currently only runs interactively. You want `glass-slipper -p "fix the bug"` — send one prompt, print output, exit. Like `claude -p`.
 
 ## Approach: Bypass channels, call agent directly
 
@@ -26,11 +26,11 @@ The agent's `process_message()` already takes an `FnMut(AgentEvent)` callback. I
 ### 4. `src/agent.rs` — no changes
 
 ## Files
-- `/Users/robertkarl/Code/cinderella/src/main.rs`
-- `/Users/robertkarl/Code/cinderella/src/orchestrator.rs`
-- `/Users/robertkarl/Code/cinderella/src/tui.rs`
+- `/Users/robertkarl/Code/glass-slipper/src/main.rs`
+- `/Users/robertkarl/Code/glass-slipper/src/orchestrator.rs`
+- `/Users/robertkarl/Code/glass-slipper/src/tui.rs`
 
 ## Verification
 - `cargo build`
-- `cinderella /some/project -p "list the files in this project"` — should print output and exit
-- Interactive mode (`cinderella /some/project`) still works as before
+- `glass-slipper /some/project -p "list the files in this project"` — should print output and exit
+- Interactive mode (`glass-slipper /some/project`) still works as before

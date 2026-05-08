@@ -1,4 +1,4 @@
-"""Flaky Flask service for Cinderella network-debug demo.
+"""Flaky Flask service for Glass Slipper network-debug demo.
 
 Returns 503 every 3rd request. The agent should detect the pattern.
 """

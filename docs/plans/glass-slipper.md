@@ -1,17 +1,17 @@
 ---
 status: SHIPPED v0.1.2
 planning_mode: BUILDER
-design_doc: /Users/robertkarl/.gauntlette/designs/cinderella/glass-slipper-design-20260430-165522.md
+design_doc: /Users/robertkarl/.gauntlette/designs/glass-slipper/glass-slipper-design-20260430-165522.md
 ---
 # Glass Slipper — Native macOS Diagnostic App
 
 Created by /gauntlette-start on 2026-04-30
-Branch: master (feature name: glass-slipper) | Repo: cinderella
-Design doc: /Users/robertkarl/.gauntlette/designs/cinderella/glass-slipper-design-20260430-165522.md
+Branch: master (feature name: glass-slipper) | Repo: glass-slipper
+Design doc: /Users/robertkarl/.gauntlette/designs/glass-slipper/glass-slipper-design-20260430-165522.md
 
 ## Problem Statement
 
-Cinderella's agent core works — Qwen 3.5 9B follows a network-debug runbook, runs diagnostic commands, and produces correct diagnoses via `cinderella -p`. But there's no native GUI. The output is a wall of terminal text. The thesis is that nothing ties together local inference + polished native UX + genuine model reasoning. Glass Slipper is the native macOS app that completes that triangle.
+Glass Slipper's agent core works — Qwen 3.5 9B follows a network-debug runbook, runs diagnostic commands, and produces correct diagnoses via `glass-slipper -p`. But there's no native GUI. The output is a wall of terminal text. The thesis is that nothing ties together local inference + polished native UX + genuine model reasoning. Glass Slipper is the native macOS app that completes that triangle.
 
 Weekend sprint (Thu 2026-04-30 to Mon 2026-05-03) for a YC Summer 2026 demo recording. The YC deadline is a forcing function — the real goal is proving the thesis.
 
@@ -107,7 +107,7 @@ The `step_complete` event's `summary` field is the first line of the model's tex
 9. `done` → diagnosis is complete
 
 **Error handling:**
-- NSTask launch failure (cinderella not found): show alert, suggest building cinderella first
+- NSTask launch failure (glass-slipper not found): show alert, suggest building glass-slipper first
 - Process exits non-zero: show error in a final table row, displaying stderr content (see below)
 - Malformed JSON line: skip it, log to console
 
@@ -129,7 +129,7 @@ The `step_complete` event's `summary` field is the first line of the model's tex
 | Custom NSTableCellView subclass | ACCEPTED | S | Required for the chunky row layout |
 | URL input + Diagnose/Stop button | ACCEPTED | S | Minimal input surface; Stop calls [task terminate] |
 | stderr pipe from NSTask | ACCEPTED | S | Required to show error messages on non-zero exit |
-| NSTask + NSPipe integration | ACCEPTED | S | Shells out to cinderella binary |
+| NSTask + NSPipe integration | ACCEPTED | S | Shells out to glass-slipper binary |
 | Row expand/disclosure for full output | DEFERRED | M | Nice for exploring raw tool output, but not needed for demo recording |
 | Service type popup selector | DEFERRED | S | Only one playbook exists. Remove the selector entirely for now |
 | Multiple playbooks in the app | DEFERRED | L | v2. Architecture supports it (step names are dynamic) but UI only has one path |
@@ -191,8 +191,8 @@ STATUS: HEALTHY
 
 ## Relevant Design History
 
-- `cocoa` design: `/Users/robertkarl/.gauntlette/designs/cinderella/cocoa-design-20260430-122556.md` — Phase 2 AppKit spec was thin (URL field, popup, NSTextView). Glass Slipper supersedes that spec with Transmission-style rows and structured JSON protocol.
-- `init` design: `/Users/robertkarl/.gauntlette/designs/cinderella/init-design-20260422-170500.md` — original v0.1.0 agent architecture.
+- `cocoa` design: `/Users/robertkarl/.gauntlette/designs/glass-slipper/cocoa-design-20260430-122556.md` — Phase 2 AppKit spec was thin (URL field, popup, NSTextView). Glass Slipper supersedes that spec with Transmission-style rows and structured JSON protocol.
+- `init` design: `/Users/robertkarl/.gauntlette/designs/glass-slipper/init-design-20260422-170500.md` — original v0.1.0 agent architecture.
 
 ## Open Wounds
 
@@ -238,12 +238,12 @@ flowchart TD
         PIPE[NSPipe stdout]
         JSON[JSON-lines parser]
         WIN -->|"user clicks Diagnose"| TASK
-        TASK -->|"cinderella -p --format json"| PIPE
+        TASK -->|"glass-slipper -p --format json"| PIPE
         PIPE -->|"readInBackgroundAndNotify"| JSON
         JSON -->|"dispatch_async main"| TABLE
     end
 
-    subgraph "Cinderella (Rust)"
+    subgraph "Glass Slipper (Rust)"
         CLI[main.rs --format json]
         ORCH[orchestrator.rs]
         AGENT["agent.rs + StepTracker<br/>(scans TextDelta for STEP: markers)"]
@@ -344,10 +344,10 @@ sequenceDiagram
 │  └─────────────────────────────────────────────────┘    │
 │         │ NSTask + NSPipe (argument array, no shell)    │
 │         ▼                                               │
-│  cinderella . -p "..." --playbook network-debug         │
+│  glass-slipper . -p "..." --playbook network-debug         │
 │                         --format json                   │
 ├─────────────────────────────────────────────────────────┤
-│  cinderella (Rust)                                      │
+│  glass-slipper (Rust)                                      │
 │                                                         │
 │  main.rs ──► orchestrator.rs ──► run_prompt()           │
 │                                    │                    │
@@ -373,13 +373,13 @@ sequenceDiagram
 
 | Failure | Trigger | What User Sees | What Logs Show | Plan Covers? |
 |---------|---------|---------------|----------------|--------------|
-| cinderella not in PATH | NSTask launch fails | Alert dialog: "cinderella not found" | NSTask terminationStatus | YES |
-| llama-server not running | cinderella exits non-zero | Error row in table: "Failed to connect to llama-server" | stderr in NSPipe | YES |
+| glass-slipper not in PATH | NSTask launch fails | Alert dialog: "glass-slipper not found" | NSTask terminationStatus | YES |
+| llama-server not running | glass-slipper exits non-zero | Error row in table: "Failed to connect to llama-server" | stderr in NSPipe | YES |
 | Model doesn't emit STEP markers | Model ignores prompt instruction | All events land in a single "unknown" row, or no step transitions | JSON events have no step_start | PARTIAL — app renders unknown steps generically, but demo quality degrades. Mitigation: test with actual model before demo. |
 | Malformed JSON from Rust | Bug in serializer | Line skipped, console log | NSLog in JSON parser | YES |
 | stdout buffering (no flush) | Piped stdout block-buffers | Nothing for 5-10s, then burst | No obvious log — silent | YES (eng review added explicit flush requirement) |
 | NSPipe partial line | Large JSON line split across read callbacks | JSON parse error on fragment | NSLog "invalid JSON" | PARTIAL — need line buffer in NSFileHandle callback to accumulate until newline |
-| Process killed mid-diagnosis | User closes app, cinderella killed | Incomplete table, no "done" event | NSTask terminationStatus != 0 | YES — process exits non-zero path |
+| Process killed mid-diagnosis | User closes app, glass-slipper killed | Incomplete table, no "done" event | NSTask terminationStatus != 0 | YES — process exits non-zero path |
 | Demo target not running | Docker container down | All steps pass until service_check, which fails | Tool output shows connection refused | YES — this is a valid diagnosis |
 | Context window exhaustion | Long diagnosis, many tool calls | Agent warns "Context X% full" then stops | Warning event in JSON | YES — existing agent behavior |
 | traceroute hangs | No response from hops | Timeout after 15s (in system prompt), tool result shows timeout | Tool output: "Command timed out after 120s" | YES — bash timeout handles it |
@@ -414,7 +414,7 @@ End-to-end             |     —      |     —      |     —         |     □
 ### JSON-lines Protocol
 
 ```
-Direction: cinderella stdout → glass-slipper stdin (NSPipe)
+Direction: glass-slipper stdout → glass-slipper stdin (NSPipe)
 Format: one JSON object per line (newline-delimited JSON / NDJSON)
 Encoding: UTF-8
 CRITICAL: Each line MUST be followed by stdout flush().
@@ -482,16 +482,16 @@ Implementation order:
 1. **System prompt update** — Add `STEP: <step_name>` marker instruction to NETWORK_DEBUG_PROMPT in config.rs. List all 7 valid step names.
 2. **StepTracker + AgentEvent variants** — Add StepStart/StepComplete to AgentEvent. Add StepTracker struct to agent.rs: scans TextDelta for `STEP:` markers, tracks current step, accumulates text per step, derives summary (first sentence) and status (from tool exit codes). Wire into process_message().
 3. **`--format json` flag + json_event()** — Add CLI flag to main.rs, plumb `format_json: bool` through OrchestratorConfig, write json_event() in tui.rs that serializes all AgentEvent variants to JSON-lines. **Flush stdout after every line.**
-4. **Test JSON output against demo target** — Run `cinderella -p --format json --playbook network-debug` against the flaky Flask container. Verify: well-formed NDJSON, all 7 step_start events, step_complete with summary/detail, correct status values.
+4. **Test JSON output against demo target** — Run `glass-slipper -p --format json --playbook network-debug` against the flaky Flask container. Verify: well-formed NDJSON, all 7 step_start events, step_complete with summary/detail, correct status values.
 5. **ObjC app scaffold** — Makefile, main.m, AppDelegate, NSWindow, minimal URL input + button. Verify it compiles and shows a window.
-6. **NSTask + NSPipe integration** — Launch cinderella via NSTask with argument array (no shell). Read stdout via NSFileHandle with line-buffered parser (accumulate until newline, then parse JSON). Log parsed events to console. Verify events arrive in real time (not burst).
+6. **NSTask + NSPipe integration** — Launch glass-slipper via NSTask with argument array (no shell). Read stdout via NSFileHandle with line-buffered parser (accumulate until newline, then parse JSON). Log parsed events to console. Verify events arrive in real time (not burst).
 7. **Custom table cell + NSTableView** — DiagnosticStepCell with title/summary/detail/status indicator. Populate from parsed JSON events. Wire up data source. Step-keyed dictionary for row lookup.
 8. **Polish and demo prep** — Window sizing, font choices, status indicator colors/sizing, test full flow, record.
 
 Checkpoints:
-1. `cinderella -p --format json --playbook network-debug` produces well-formed JSON-lines with step_start/step_complete events against the demo target
+1. `glass-slipper -p --format json --playbook network-debug` produces well-formed JSON-lines with step_start/step_complete events against the demo target
 2. ObjC app compiles with `make`, shows a window with URL input and button
-3. Clicking Diagnose launches cinderella via NSTask and rows populate in real time (not burst)
+3. Clicking Diagnose launches glass-slipper via NSTask and rows populate in real time (not burst)
 4. Full demo flow is recordable: launch app → enter URL → click Diagnose → watch rows populate → see diagnosis with green/red indicators
 
 ### Implementation Results
@@ -512,7 +512,7 @@ Checkpoints:
 - `glass-slipper/Info.plist` — minimal app plist
 - `glass-slipper/AppDelegate.h` — header with NSTableView data source/delegate
 - `glass-slipper/DiagnosticStepCell.h` / `.m` — custom NSTableCellView, 88pt chunky rows, title/summary/detail/status indicator (checkmark/exclamation/spinner)
-- `glass-slipper/main.m` — AppDelegate impl, NSTask+NSPipe integration, line-buffered JSON parser, NSTableView wiring, Diagnose/Stop toggle, stderr pipe, cinderella binary discovery
+- `glass-slipper/main.m` — AppDelegate impl, NSTask+NSPipe integration, line-buffered JSON parser, NSTableView wiring, Diagnose/Stop toggle, stderr pipe, glass-slipper binary discovery
 
 **Tests:** 44 total (10 new StepTracker + 34 existing), all passing.
 
@@ -524,7 +524,7 @@ Checkpoints:
 2. **stdout flush on every line** — without this, the demo silently fails (shows burst not stream)
 3. **NSPipe line buffering** — accumulate until newline in the ObjC reader
 4. **Chunky table cell visual quality** — this is what the camera sees
-5. **End-to-end demo flow** — app → cinderella → diagnosis → structured results
+5. **End-to-end demo flow** — app → glass-slipper → diagnosis → structured results
 6. **Polish** — fonts, spacing, indicator sizing, window proportions
 
 ## Gauntlette Review Report
