@@ -59,7 +59,7 @@ So you start by configuring and launching llama-server. So we're back to failing
 
 It took me about an hour to get to a point where I was able to make changes to pi's configuration with pi using Qwen 9B oblit.
 
-In my opinion, this kind of configuration being required, in particular the need to figure out how to run llama-server (which has a lot of footguns depending on the specific hardware) is a hard blocker. Pi ain't it for the Cinderella use case.
+In my opinion, this kind of configuration being required, in particular the need to figure out how to run llama-server (which has a lot of footguns depending on the specific hardware) is a hard blocker. Pi ain't it for the Glass Slipper use case.
 
 ## crush
 charmbraclet/crush on github.

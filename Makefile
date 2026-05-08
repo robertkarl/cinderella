@@ -18,11 +18,11 @@ edit_pi_configs:
 pi-read-only:
 	pi --tools read,grep,find,ls
 
-# Run cinderella against an already-running llama-server on port 8081 (no server startup)
+# Run glass-slipper against an already-running llama-server on port 8081 (no server startup)
 cindy-no-start-llama:
 	cargo run -- --api-url http://localhost:8081 .
 
-# Run cinderella against the homelab 35B MoE (llama-swap on VM 220)
+# Run glass-slipper against the homelab 35B MoE (llama-swap on VM 220)
 cindy-remote:
 	cargo run -- --api-url http://192.168.50.4:11434 --model-name "qwen3.5:35b-a3b-coding" .
 
@@ -33,9 +33,9 @@ test:
 	cargo test
 
 deploy:
-	@echo "No deploy target configured. Cinderella is a local CLI tool."
+	@echo "No deploy target configured. Glass Slipper is a local CLI tool."
 
 smoke-test:
-	@echo "No smoke test configured. Cinderella is a local CLI tool."
+	@echo "No smoke test configured. Glass Slipper is a local CLI tool."
 
 .PHONY: stop_all_llama_server startllama pidev cindy-no-start-llama cindy-remote remote-query-models test deploy smoke-test

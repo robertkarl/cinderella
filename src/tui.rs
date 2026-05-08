@@ -118,7 +118,7 @@ fn redraw_input_line(input: &str, cursor: usize) {
 /// Handle Ctrl-Z suspend and resume.
 fn handle_suspend(input: &str, cursor: usize) {
     let _ = disable_raw_mode();
-    println!("\nCinderella is receiving SIGTSTP now. Depending on your shell, use bg to continue in the background or fg to resume.");
+    println!("\nGlass Slipper is receiving SIGTSTP now. Depending on your shell, use bg to continue in the background or fg to resume.");
     let _ = signal::kill(Pid::this(), Signal::SIGTSTP);
     let _ = enable_raw_mode();
     redraw_input_line(input, cursor);

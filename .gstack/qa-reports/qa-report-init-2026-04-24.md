@@ -1,4 +1,4 @@
-# QA Report -- cinderella, branch init
+# QA Report -- glass-slipper, branch init
 
 Date: 2026-04-24
 Target: CLI/TUI application (no browser surface)

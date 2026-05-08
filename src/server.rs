@@ -43,8 +43,8 @@ impl ServerManager {
         // Check if the port is already in use
         if std::net::TcpListener::bind(("127.0.0.1", self.config.port)).is_err() {
             anyhow::bail!(
-                "Port {} is already in use. Another instance of cinderella or another service \
-                 may be running. Try: cinderella --port {} <project>",
+                "Port {} is already in use. Another instance of glass-slipper or another service \
+                 may be running. Try: glass-slipper --port {} <project>",
                 self.config.port,
                 self.config.port + 1
             );

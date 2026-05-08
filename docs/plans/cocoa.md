@@ -1,13 +1,13 @@
 ---
 status: SHIPPED
 planning_mode: BUILDER
-design_doc: /Users/robertkarl/.gauntlette/designs/cinderella/cocoa-design-20260430-122556.md
+design_doc: /Users/robertkarl/.gauntlette/designs/glass-slipper/cocoa-design-20260430-122556.md
 ---
 # Cocoa — Native macOS Network Diagnostic Agent Demo
 
 Created by /gauntlette-start on 2026-04-30
-Branch: master (feature name: cocoa) | Repo: cinderella
-Design doc: /Users/robertkarl/.gauntlette/designs/cinderella/cocoa-design-20260430-122556.md
+Branch: master (feature name: cocoa) | Repo: glass-slipper
+Design doc: /Users/robertkarl/.gauntlette/designs/glass-slipper/cocoa-design-20260430-122556.md
 
 ## Problem Statement
 
@@ -29,7 +29,7 @@ BUILDER — This is a 3-day sprint to a YC demo recording. The interview focused
 
 **Phase 1: Agent reliability (days 1-2)**
 
-The user runs `cinderella <project-dir> --api-url http://localhost:8787` (or homelab URL) and gives it a network debugging task. The system prompt is a step-by-step diagnostic runbook:
+The user runs `glass-slipper <project-dir> --api-url http://localhost:8787` (or homelab URL) and gives it a network debugging task. The system prompt is a step-by-step diagnostic runbook:
 
 1. Parse the target (URL, IP, hostname)
 2. DNS resolution (dig, nslookup)
@@ -45,12 +45,12 @@ A Docker container runs a deliberately flaky service (e.g., Flask app that retur
 
 **Phase 2: Native macOS app (day 3)**
 
-Implement `-p` mode in the Rust CLI (per TODO-prompt-mode.md): `cinderella <project-dir> -p "debug connectivity to http://localhost:5000"` — sends one prompt, streams output to stdout, exits.
+Implement `-p` mode in the Rust CLI (per TODO-prompt-mode.md): `glass-slipper <project-dir> -p "debug connectivity to http://localhost:5000"` — sends one prompt, streams output to stdout, exits.
 
 Objective-C AppKit app (programmatic, no XIBs):
 - Main window with a simple form: URL text field, service type popup (web service, local container, local server, other), "Diagnose" button.
-- Output view: NSTextView showing streamed stdout from `cinderella -p "..."` launched via NSTask.
-- The form assembles a structured prompt from the user's inputs and passes it to cinderella.
+- Output view: NSTextView showing streamed stdout from `glass-slipper -p "..."` launched via NSTask.
+- The form assembles a structured prompt from the user's inputs and passes it to glass-slipper.
 
 ## Scope
 
@@ -62,7 +62,7 @@ Objective-C AppKit app (programmatic, no XIBs):
 | yah-core configurable safety profiles | ACCEPTED | S | Network-debug playbook needs a "network-read" profile that allows curl/nmap/dig/traceroute/ping. Without this, the agent can't run any diagnostic commands. |
 | Orchestrator refactor (DRY) | ACCEPTED | S | Extract shared agent-launch pattern before adding -p mode. Prevents 3 copies of the dispatch loop. |
 | `-p` (non-interactive prompt) mode in Rust CLI | ACCEPTED | S | Required for NSTask integration. Plan exists in TODO-prompt-mode.md. |
-| AppKit app (ObjC, programmatic) | ACCEPTED | M | Native Mac window for demo. NSTask shells out to cinderella. |
+| AppKit app (ObjC, programmatic) | ACCEPTED | M | Native Mac window for demo. NSTask shells out to glass-slipper. |
 | GBNF grammar-constrained decoding | ACCEPTED (stretch) | S | Forces model to emit valid tool-call JSON. Eliminates "explains instead of acts" failure mode. Can defer if prompt alone hits 3/5 success rate. |
 | Intake form (URL, service type, go button) | ACCEPTED | S | Minimal structured input. |
 | Multiple playbooks (disk, SSL, DNS, etc.) | DEFERRED | L | v2. Demo has one playbook. |
@@ -76,7 +76,7 @@ Objective-C AppKit app (programmatic, no XIBs):
 |----------|-----|----------|
 | Two-phase approach: prove agent works first, then wrap in native app | Agent reliability is the existential risk. No point building a pretty shell around a broken agent. | Build both in parallel |
 | ObjC + AppKit, programmatic layout | User knows ObjC, dislikes SwiftUI. No XIBs (not agent/merge friendly). | SwiftUI, XIBs |
-| NSTask shells out to Rust CLI | Cleanest separation. Cinderella and Mac app develop completely in parallel. Defers hard bridging decisions. | uniffi-rs, cbindgen FFI, pure ObjC rewrite |
+| NSTask shells out to Rust CLI | Cleanest separation. Glass Slipper and Mac app develop completely in parallel. Defers hard bridging decisions. | uniffi-rs, cbindgen FFI, pure ObjC rewrite |
 | Hardcoded network-debug playbook | 3-day sprint. One playbook, done well. | Playbook framework, multiple playbooks |
 | Approach A (minimal viable demo) | Most time on the hard part. ObjC app is simple. | Polished native demo (too risky), CLI-only (not impressive enough) |
 | Qwen 9B local on MacBook for demo | No network dependency during recording. Proves the harder thesis. 35B is a free upgrade if needed. | 35B via homelab (network dependency is ironic for a network debugging demo) |
@@ -116,7 +116,7 @@ STATUS: HEALTHY
 
 ## Relevant Design History
 
-- `init` design: `/Users/robertkarl/.gauntlette/designs/cinderella/init-design-20260422-170500.md` — full v0.1.0 design. Covers agent architecture, tool calling reliability, SSE streaming, context management. All implemented. This design builds on that foundation.
+- `init` design: `/Users/robertkarl/.gauntlette/designs/glass-slipper/init-design-20260422-170500.md` — full v0.1.0 design. Covers agent architecture, tool calling reliability, SSE streaming, context management. All implemented. This design builds on that foundation.
 - `-p` mode plan: `TODO-prompt-mode.md` in repo — detailed plan for non-interactive prompt mode. Not yet implemented. Required for Phase 2.
 
 ## Open Wounds
@@ -161,12 +161,12 @@ flowchart TD
         FORM[Intake Form: URL + service type]
         OUT[NSTextView: streamed output]
         FORM --> APP
-        APP -->|"NSTask: cinderella -p '...'"| CLI
+        APP -->|"NSTask: glass-slipper -p '...'"| CLI
         CLI -->|stdout pipe| OUT
     end
 
     subgraph "Phase 1: Agent Core - Rust"
-        CLI[cinderella binary]
+        CLI[glass-slipper binary]
         ORCH[orchestrator.rs]
         CLI --> ORCH
         ORCH -->|"interactive"| TUI[tui.rs - stdin/stdout loop]
@@ -260,10 +260,10 @@ sequenceDiagram
 │  └───────────────────┘  │ > curl -v :5000         │ │
 │         │ NSTask        │ Diagnosis: 503 every    │ │
 │         ▼               │ 3rd request...          │ │
-│  cinderella -p "..."    └─────────────────────────┘ │
+│  glass-slipper -p "..."    └─────────────────────────┘ │
 │  stdout piped to NSTextView                         │
 ├─────────────────────────────────────────────────────┤
-│  cinderella (Rust)                                  │
+│  glass-slipper (Rust)                                  │
 │                                                     │
 │  main.rs ─► orchestrator.rs                         │
 │              ├─ -p mode: run_prompt() ──► agent.rs  │
@@ -322,7 +322,7 @@ AppKit app               │     □      │     □      │     □      │ 
 ### Approach A: Minimal viable demo (CHOSEN)
 2 days agent reliability + prompt engineering. 1 day bare-bones AppKit app. NSTask shells out to CLI.
 - Effort: M | Risk: Low | Completeness: 7/10
-- Reuses: entire existing Cinderella agent, llama-server integration, tool infrastructure
+- Reuses: entire existing Glass Slipper agent, llama-server integration, tool infrastructure
 
 ### Approach B: Polished native demo
 Same + richer AppKit UI (sidebar, checkmarks, styled output).
@@ -367,8 +367,8 @@ Implementation order:
 Checkpoints:
 0. POC gate passes: Qwen 9B follows at least 2/5 diagnostic runs in interactive CLI before any implementation begins
 1. Qwen 9B follows the diagnostic runbook and correctly identifies the flaky service problem (via interactive CLI, with network-debug profile)
-2. `-p` mode works: `cinderella . -p "debug connectivity to localhost:5000"` streams output and exits
-3. AppKit app launches cinderella, shows live output, and the demo is recordable
+2. `-p` mode works: `glass-slipper . -p "debug connectivity to localhost:5000"` streams output and exits
+3. AppKit app launches glass-slipper, shows live output, and the demo is recordable
 
 Critical reliability note: Qwen 9B's canonical failure mode is emitting free text instead of tool calls — it "explains" what it would do instead of doing it. Two mitigations, use both:
 

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# notarize-macos.sh — Submit, staple, and verify the Cinderella DMG.
+# notarize-macos.sh — Submit, staple, and verify the Glass Slipper DMG.
 #
 # Requirements:
 #   DEVELOPER_ID      — Developer ID Application identity (must match package-macos.sh)
 #   NOTARY_PROFILE    — Stored notary credential profile name (from `xcrun notarytool store-credentials`)
 #
 # Before first use:
-#   xcrun notarytool store-credentials "cinderella-notary" \
+#   xcrun notarytool store-credentials "glass-slipper-notary" \
 #       --apple-id "you@example.com" \
 #       --team-id "YOURTEAMID" \
 #       --password "@keychain:AC_PASSWORD"
@@ -17,11 +17,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUILD_DIR="$REPO_ROOT/build"
-APP_NAME="Cinderella"
+APP_NAME="Glass Slipper"
 DMG_PATH="$BUILD_DIR/$APP_NAME.dmg"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 
-NOTARY_PROFILE="${NOTARY_PROFILE:-cinderella-notary}"
+NOTARY_PROFILE="${NOTARY_PROFILE:-glass-slipper-notary}"
 
 echo "=== notarize-macos.sh ==="
 echo "DMG:     $DMG_PATH"
