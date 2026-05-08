@@ -264,12 +264,12 @@ enum EventRowFactory {
             return ConnectingRowView()
         case .modelDownload:
             return ModelDownloadRowView()
-        case .memoryWarning:
-            return NSView() // placeholder — replaced in Task 4
-        case .modelSwap:
-            return NSView() // placeholder — replaced in Task 5
-        case .promotionAvailable:
-            return NSView() // placeholder — replaced in Task 6
+        case .memoryWarning(let pageoutRate, let swapUsedMB, let tokPerSec):
+            return WarningBannerView(pageoutRate: pageoutRate, swapUsedMB: swapUsedMB, tokPerSec: tokPerSec, switchToModel: "smaller model")
+        case .modelSwap(let fromModel, let toModel, let reason):
+            return ModelSwapBannerView(fromModel: fromModel, toModel: toModel, reason: reason)
+        case .promotionAvailable(let toModel):
+            return PromotionBannerView(toModel: toModel)
         }
     }
 }
