@@ -180,6 +180,9 @@ enum Event {
     case hwInfo(chip: String, ramUsed: Double, ramTotal: Double, gpu: String)
     case connecting
     case modelDownload
+    case memoryWarning(pageoutRate: UInt64, swapUsedMB: Double, tokPerSec: Double?)
+    case modelSwap(fromModel: String, toModel: String, reason: String)
+    case promotionAvailable(toModel: String)
 }
 
 // MARK: - StatusPillView (reusable token-composed view)
@@ -261,6 +264,12 @@ enum EventRowFactory {
             return ConnectingRowView()
         case .modelDownload:
             return ModelDownloadRowView()
+        case .memoryWarning:
+            return NSView() // placeholder — replaced in Task 4
+        case .modelSwap:
+            return NSView() // placeholder — replaced in Task 5
+        case .promotionAvailable:
+            return NSView() // placeholder — replaced in Task 6
         }
     }
 }
@@ -931,6 +940,13 @@ final class SpineViewController: NSViewController {
             return String(format: "%@ · RAM: %.1f/%.0f GB · GPU: %@", chip, ramUsed, ramTotal, gpu)
         case .connecting: return ""
         case .modelDownload: return ""
+        case .memoryWarning(let pageoutRate, let swapUsedMB, let tokPerSec):
+            let rate = tokPerSec.map { String(format: "%.1f tok/s", $0) } ?? "—"
+            return "Memory warning: page-outs \(pageoutRate)/s, swap \(String(format: "%.0f", swapUsedMB)) MB, \(rate)"
+        case .modelSwap(let fromModel, let toModel, let reason):
+            return "Switched from \(fromModel) to \(toModel): \(reason)"
+        case .promotionAvailable(let toModel):
+            return "Promotion available: switch to \(toModel)"
         }
     }
 
@@ -948,7 +964,8 @@ final class SpineViewController: NSViewController {
     /// separation; don't add a hairline above them.
     private func shouldShowDividerAbove(_ event: Event) -> Bool {
         switch event {
-        case .diagnosis, .userPrompt, .hwInfo, .connecting, .modelDownload: return false
+        case .diagnosis, .userPrompt, .hwInfo, .connecting, .modelDownload,
+             .memoryWarning, .modelSwap, .promotionAvailable: return false
         default: return true
         }
     }
