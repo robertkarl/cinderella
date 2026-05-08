@@ -2,6 +2,22 @@
   "version": 1,
   "models": [
     {
+      "id": "qwen3.5-4b-q4",
+      "name": "Qwen 3.5 4B",
+      "filename": "Qwen3.5-4B-Q4_K_M.gguf",
+      "quant": "Q4_K_M",
+      "size_bytes": 2740000000,
+      "sha256": "TODO-4b-sha256",
+      "url": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf",
+      "min_ram_gb": 8,
+      "min_macos": "15.0",
+      "arch": "arm64",
+      "ctx_size": 32768,
+      "n_gpu_layers": -1,
+      "app_support_subdir": "GlassSlipper/Models",
+      "tier": "small"
+    },
+    {
       "id": "qwen3.5-9b-q5",
       "name": "Qwen 3.5 9B",
       "filename": "Qwen3.5-9B-Q5_K_M.gguf",
@@ -14,7 +30,24 @@
       "arch": "arm64",
       "ctx_size": 32768,
       "n_gpu_layers": -1,
-      "app_support_subdir": "Cinderella/Models"
+      "app_support_subdir": "GlassSlipper/Models",
+      "tier": "default"
+    },
+    {
+      "id": "qwen3.5-35b-moe-q5",
+      "name": "Qwen 3.5 35B MoE",
+      "filename": "Qwen3.5-35B-MoE-Q5_K_M.gguf",
+      "quant": "Q5_K_M",
+      "size_bytes": 20000000000,
+      "sha256": "TODO-35b-sha256",
+      "url": "https://huggingface.co/unsloth/Qwen3.5-35B-MoE-GGUF/resolve/main/Qwen3.5-35B-MoE-Q5_K_M.gguf",
+      "min_ram_gb": 64,
+      "min_macos": "15.0",
+      "arch": "arm64",
+      "ctx_size": 32768,
+      "n_gpu_layers": -1,
+      "app_support_subdir": "GlassSlipper/Models",
+      "tier": "large"
     }
   ],
   "default_model": "qwen3.5-9b-q5"
