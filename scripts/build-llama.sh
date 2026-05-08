@@ -15,7 +15,7 @@ BUILD_DIR="$REPO_ROOT/build/llama-build"
 OUTPUT_DIR="$REPO_ROOT/build"
 
 # Pinned llama.cpp release tag — update deliberately, not automatically.
-LLAMA_CPP_TAG="b5270"
+LLAMA_CPP_TAG="b8190"
 LLAMA_CPP_REPO="https://github.com/ggml-org/llama.cpp.git"
 
 # Target architecture
@@ -62,6 +62,7 @@ cmake -B "$CMAKE_BUILD" \
     -DGGML_ACCELERATE=ON \
     -DGGML_BLAS=OFF \
     -DLLAMA_CURL=OFF \
+    -DLLAMA_OPENSSL=OFF \
     -DLLAMA_BUILD_TESTS=OFF \
     -DLLAMA_BUILD_EXAMPLES=OFF \
     -DLLAMA_BUILD_SERVER=ON \
