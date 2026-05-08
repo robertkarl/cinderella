@@ -423,7 +423,9 @@ pub fn json_event(event: AgentEvent) -> bool {
                 "output": output,
             })
         }
-        AgentEvent::TokenRate { .. } => return false,
+        AgentEvent::TokenRate { tok_per_sec } => {
+            serde_json::json!({"event": "token_rate", "tok_per_sec": tok_per_sec})
+        }
         AgentEvent::ContextUsage { .. } => return false,
         AgentEvent::Warning(msg) => {
             serde_json::json!({"event": "warning", "message": msg})
