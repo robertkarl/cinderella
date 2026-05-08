@@ -15,6 +15,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var urlField: NSTextField!
     private var diagnoseButton: NSButton!
     private var spineVC: SpineViewController!
+    private var statusBar: StatusBarView!
+    /// Currently active model name, updated on hw_info and model_swap events.
+    private var currentModelName: String = ""
+    /// When non-nil, suppress warning banners until this date.
+    private var warningDismissedUntil: Date?
+    /// When non-nil, suppress promotion banners until this date.
+    private var promotionDismissedUntil: Date?
+    /// Structured app-side log (glass-slipper-app.log).
+    private var appLogHandle: FileHandle?
 
     private var process: Process?
     private var stdoutPipe: Pipe?
@@ -158,6 +167,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         diagnoseButton.isEnabled = false
         contentView.addSubview(diagnoseButton)
 
+        // Status bar
+        statusBar = StatusBarView()
+        contentView.addSubview(statusBar)
+
         // Spine view controller
         spineVC = SpineViewController()
         spineVC.view.translatesAutoresizingMaskIntoConstraints = false
@@ -174,8 +187,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             diagnoseButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -Spacing.lg),
             diagnoseButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 100),
 
-            // Spine — fills remaining space below top bar
-            spineVC.view.topAnchor.constraint(equalTo: urlField.bottomAnchor, constant: Spacing.lg),
+            // Status bar — below URL field
+            statusBar.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            statusBar.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            statusBar.topAnchor.constraint(equalTo: urlField.bottomAnchor, constant: Spacing.sm),
+
+            // Spine — below status bar
+            spineVC.view.topAnchor.constraint(equalTo: statusBar.bottomAnchor),
             spineVC.view.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             spineVC.view.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             spineVC.view.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
@@ -206,12 +224,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         spineVC.view.translatesAutoresizingMaskIntoConstraints = false
         if let contentView = window.contentView {
             // Remove old spine
-            for sub in contentView.subviews where sub !== urlField && sub !== diagnoseButton {
+            for sub in contentView.subviews where sub !== urlField && sub !== diagnoseButton && sub !== statusBar {
                 sub.removeFromSuperview()
             }
             contentView.addSubview(spineVC.view)
             NSLayoutConstraint.activate([
-                spineVC.view.topAnchor.constraint(equalTo: urlField.bottomAnchor, constant: Spacing.lg),
+                spineVC.view.topAnchor.constraint(equalTo: statusBar.bottomAnchor),
                 spineVC.view.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
                 spineVC.view.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
                 spineVC.view.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
@@ -237,6 +255,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let prompt = "Diagnose this URL: \(url)"
         let modelPath = modelFilePath()
+
+        // Set status bar model name from filename
+        let modelFileName = (modelPath as NSString).lastPathComponent
+        let friendlyName: String
+        if modelFileName.contains("4B") {
+            friendlyName = "Qwen 4B"
+        } else if modelFileName.contains("35B") {
+            friendlyName = "Qwen 35B"
+        } else {
+            friendlyName = "Qwen 9B"
+        }
+        currentModelName = friendlyName
+        statusBar.setModelName(friendlyName)
 
         // Build arguments
         var args = [".", "-p", prompt, "--playbook", "network-debug", "--format", "json", "--model", modelPath]
@@ -304,6 +335,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         logFileHandle = FileHandle(forWritingAtPath: logPath)
         logFileHandle?.truncateFile(atOffset: 0)
         NSLog("Glass Slipper log: %@", logPath)
+
+        // App-side structured log
+        let appLogPath = NSTemporaryDirectory() + "glass-slipper-app.log"
+        FileManager.default.createFile(atPath: appLogPath, contents: nil)
+        appLogHandle = FileHandle(forWritingAtPath: appLogPath)
+        appLogHandle?.truncateFile(atOffset: 0)
+        NSLog("Glass Slipper app log: %@", appLogPath)
     }
 
     // MARK: - Stop diagnosis
@@ -507,6 +545,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let ramTotal = event["ram_total_gb"] as? Double ?? 0
             let gpu = event["gpu_layers"] as? String ?? "—"
             spineVC.append(.hwInfo(chip: chip, ramUsed: ramUsed, ramTotal: ramTotal, gpu: gpu))
+            statusBar.setHealthState(.normal)
 
         case "user_prompt":
             let text = event["text"] as? String ?? ""
@@ -550,6 +589,53 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             isRunning = false
             diagnoseButton.title = "Diagnose"
 
+        case "token_rate":
+            let rate = event["tok_per_sec"] as? Double ?? 0
+            statusBar.setTokPerSec(rate)
+
+        case "memory_warning":
+            if let until = warningDismissedUntil, Date() < until { break }
+            let pageoutRate = event["pageout_rate"] as? UInt64
+                ?? (event["pageout_rate"] as? Int).map(UInt64.init) ?? 0
+            let swapUsedMB = event["swap_used_mb"] as? Double ?? 0
+            let tokPerSec = event["tok_per_sec"] as? Double
+            statusBar.setHealthState(.warning)
+            spineVC.append(.memoryWarning(pageoutRate: pageoutRate, swapUsedMB: swapUsedMB, tokPerSec: tokPerSec))
+            if let banner = spineVC.lastAddedView as? WarningBannerView {
+                banner.delegate = self
+            }
+            logAppEvent("warning_shown", details: ["pageout_rate": pageoutRate, "swap_used_mb": swapUsedMB])
+
+        case "model_swap":
+            let fromModel = event["from_model"] as? String ?? ""
+            let toModel = event["to_model"] as? String ?? ""
+            let reason = event["reason"] as? String ?? ""
+            let friendlyTo: String
+            if toModel.contains("4B") || toModel.contains("4b") {
+                friendlyTo = "Qwen 4B"
+            } else if toModel.contains("35B") || toModel.contains("35b") {
+                friendlyTo = "Qwen 35B"
+            } else {
+                friendlyTo = "Qwen 9B"
+            }
+            currentModelName = friendlyTo
+            statusBar.setModelName(friendlyTo)
+            statusBar.setHealthState(.critical)
+            spineVC.append(.modelSwap(fromModel: fromModel, toModel: toModel, reason: reason))
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                self?.statusBar.setHealthState(.normal)
+            }
+            logAppEvent("model_swap", details: ["from": fromModel, "to": toModel, "reason": reason])
+
+        case "promotion_available":
+            if let until = promotionDismissedUntil, Date() < until { break }
+            let toModel = event["to_model"] as? String ?? ""
+            spineVC.append(.promotionAvailable(toModel: toModel))
+            if let banner = spineVC.lastAddedView as? PromotionBannerView {
+                banner.delegate = self
+            }
+            logAppEvent("promotion_shown", details: ["to_model": toModel])
+
         case "warning":
             NSLog("Glass Slipper warning: %@", event["message"] as? String ?? "")
 
@@ -569,6 +655,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case "service_check": return "Service Check"
         case "synthesis": return "Diagnosis"
         default: return step
+        }
+    }
+
+    /// Write a structured JSONL entry to the app log.
+    private func logAppEvent(_ eventName: String, details: [String: Any]) {
+        guard let handle = appLogHandle else { return }
+        var entry: [String: Any] = [
+            "timestamp": ISO8601DateFormatter().string(from: Date()),
+            "event": eventName,
+        ]
+        for (key, value) in details {
+            entry[key] = value
+        }
+        guard let data = try? JSONSerialization.data(withJSONObject: entry),
+              let line = String(data: data, encoding: .utf8) else { return }
+        if let lineData = (line + "\n").data(using: .utf8) {
+            handle.write(lineData)
+            handle.synchronizeFile()
         }
     }
 
@@ -594,6 +698,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         logFileHandle?.closeFile()
         logFileHandle = nil
+
+        appLogHandle?.closeFile()
+        appLogHandle = nil
     }
 }
 
@@ -638,5 +745,30 @@ extension SpineViewController {
               !text.isEmpty else { return }
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
+    }
+}
+
+// MARK: - MemoryBannerDelegate
+
+extension AppDelegate: MemoryBannerDelegate {
+    func warningBannerDidRequestSwap() {
+        logAppEvent("warning_swap_requested", details: [:])
+        NSLog("Glass Slipper: user requested model swap from warning banner")
+    }
+
+    func warningBannerDidDismiss() {
+        warningDismissedUntil = Date().addingTimeInterval(5 * 60)
+        statusBar.setHealthState(.normal)
+        logAppEvent("warning_dismissed", details: [:])
+    }
+
+    func promotionBannerDidAccept() {
+        logAppEvent("promotion_accepted", details: [:])
+        NSLog("Glass Slipper: user accepted promotion")
+    }
+
+    func promotionBannerDidDismiss() {
+        promotionDismissedUntil = Date().addingTimeInterval(15 * 60)
+        logAppEvent("promotion_dismissed", details: [:])
     }
 }

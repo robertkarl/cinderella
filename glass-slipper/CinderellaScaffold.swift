@@ -864,6 +864,8 @@ final class SpineViewController: NSViewController {
     private(set) var events: [Event] = []
     /// Copy text associated with each row view (used by click-to-copy).
     var copyTextByView: [ObjectIdentifier: String] = [:]
+    /// The last view added to the stack (for setting delegates on banner views).
+    private(set) var lastAddedView: NSView?
 
     override func loadView() {
         let root = NSView(frame: NSRect(x: 0, y: 0, width: 720, height: 720))
@@ -918,6 +920,7 @@ final class SpineViewController: NSViewController {
         let row = EventRowFactory.makeRow(for: event)
         row.translatesAutoresizingMaskIntoConstraints = false
         stackView.addArrangedSubview(row)
+        lastAddedView = row
         row.widthAnchor.constraint(equalTo: stackView.widthAnchor).isActive = true
 
         // Click-to-copy
