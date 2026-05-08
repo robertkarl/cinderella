@@ -54,6 +54,22 @@ pub enum AgentEvent {
         summary: String,
         detail: String,
     },
+    /// Memory pressure warning — suggest downgrade.
+    MemoryWarning {
+        pageout_rate: u64,
+        swap_used_mb: f64,
+        tok_per_sec: Option<f64>,
+    },
+    /// Model swap completed (post-facto notification).
+    ModelSwap {
+        from_model: String,
+        to_model: String,
+        reason: String,
+    },
+    /// Promotion available — running smaller model but pressure has eased.
+    PromotionAvailable {
+        to_model: String,
+    },
 }
 
 /// Status of a completed diagnostic step.
