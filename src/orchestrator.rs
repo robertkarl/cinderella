@@ -2,6 +2,7 @@
 
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use crate::agent::Agent;
 use crate::config::{self, SafetyProfile};
@@ -9,7 +10,7 @@ use crate::model_manifest::ModelDef;
 use crate::hw;
 use crate::server::ServerManager;
 use crate::tui::{self, StatusBar, TuiCommand};
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 
 pub struct OrchestratorConfig {
     pub project_dir: PathBuf,
@@ -126,20 +127,134 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
             .unwrap_or_else(|| "\u{2014}".to_string()),
     };
 
+    // Wrap server in Arc<Mutex> for shared access between health handler and main
+    let api_url_str = server.api_url();
+    let server = Arc::new(Mutex::new(server));
+
+    // Create watch channels for memory monitor
+    let (health_tx, health_rx) = tokio::sync::watch::channel(None::<crate::memory_monitor::HealthEvent>);
+    let (tok_tx, tok_rx) = tokio::sync::watch::channel(None::<f64>);
+
+    // Start the FFI pressure listener
+    let pressure_rx = crate::memory_ffi::start_pressure_listener();
+
+    // Determine if we're on a smaller model than the machine can handle
+    let best_model = manifest.model_for_ram(hw.total_ram_gb as u32);
+    let on_smaller_model = best_model.map(|m| m.tier != active_model.tier).unwrap_or(false);
+
+    // Spawn the memory monitor
+    tokio::spawn(crate::memory_monitor::run(health_tx, tok_rx, pressure_rx, on_smaller_model));
+
     let agent_handle = spawn_agent_loop(
-        &server.api_url(),
+        &api_url_str,
         cfg.project_dir.clone(),
         active_model.ctx_size,
         cfg.model_name.clone(),
         cfg.safety_profile,
-        agent_tx,
+        agent_tx.clone(),
         cmd_rx,
+        Some(tok_tx),
     );
+
+    // Health event handler — reacts to MemoryMonitor state transitions
+    let health_agent_tx = agent_tx.clone();
+    let health_server = server.clone();
+    let health_manifest = manifest.clone();
+    let health_model_id = active_model.id.clone();
+    let health_total_ram = hw.total_ram_gb;
+    let health_port = cfg.port;
+
+    let health_handle = tokio::spawn(async move {
+        let mut health_rx = health_rx;
+        let mut current_model_id = health_model_id;
+        while health_rx.changed().await.is_ok() {
+            let event = health_rx.borrow().clone();
+            if let Some(health_event) = event {
+                match health_event.health {
+                    crate::memory_monitor::SystemHealth::Warning => {
+                        let _ = health_agent_tx.send(crate::agent::AgentEvent::MemoryWarning {
+                            pageout_rate: health_event.metrics.pageout_delta,
+                            swap_used_mb: health_event.metrics.swap_used_mb,
+                            tok_per_sec: health_event.metrics.last_tok_per_sec,
+                        }).await;
+                    }
+                    crate::memory_monitor::SystemHealth::Critical => {
+                        // Find current model and downgrade target
+                        let current = health_manifest.models.iter()
+                            .find(|m| m.id == current_model_id);
+                        let target = current.and_then(|c| health_manifest.one_tier_down(c));
+
+                        if let (Some(current_m), Some(target_m)) = (current, target) {
+                            let target_path = find_model_file(target_m);
+                            match target_path {
+                                Ok(path) => {
+                                    let new_config = config::ServerConfig::from_model_def(
+                                        path, health_port, target_m,
+                                    );
+                                    let mut srv = health_server.lock().await;
+                                    match srv.swap_model(new_config).await {
+                                        Ok(()) => {
+                                            let from = current_m.name.clone();
+                                            let to = target_m.name.clone();
+                                            current_model_id = target_m.id.clone();
+                                            let _ = health_agent_tx.send(
+                                                crate::agent::AgentEvent::ModelSwap {
+                                                    from_model: from,
+                                                    to_model: to,
+                                                    reason: format!(
+                                                        "System was thrashing (page-outs: {}/5s)",
+                                                        health_event.metrics.pageout_delta
+                                                    ),
+                                                }
+                                            ).await;
+                                        }
+                                        Err(e) => {
+                                            let _ = health_agent_tx.send(
+                                                crate::agent::AgentEvent::Warning(
+                                                    format!("Model downgrade failed: {}", e)
+                                                )
+                                            ).await;
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    let _ = health_agent_tx.send(
+                                        crate::agent::AgentEvent::Warning(
+                                            format!("Downgrade model not found: {}", e)
+                                        )
+                                    ).await;
+                                }
+                            }
+                        } else {
+                            let _ = health_agent_tx.send(
+                                crate::agent::AgentEvent::Warning(
+                                    "Already on smallest model — cannot downgrade".to_string()
+                                )
+                            ).await;
+                        }
+                    }
+                    crate::memory_monitor::SystemHealth::PromotionAvailable => {
+                        if let Some(best) = health_manifest.model_for_ram(health_total_ram as u32) {
+                            if best.id != current_model_id {
+                                let _ = health_agent_tx.send(
+                                    crate::agent::AgentEvent::PromotionAvailable {
+                                        to_model: best.name.clone(),
+                                    }
+                                ).await;
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    });
 
     tui::run(agent_rx, cmd_tx, &project_name, initial_status).await?;
 
     agent_handle.abort();
-    server.stop().await;
+    health_handle.abort();
+    server.lock().await.stop().await;
 
     Ok(())
 }
@@ -197,6 +312,7 @@ async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
         cfg.safety_profile,
         agent_tx,
         cmd_rx,
+        None,
     );
 
     tui::run(agent_rx, cmd_tx, &project_name, initial_status).await?;
@@ -217,7 +333,7 @@ async fn run_prompt(
     format_json: bool,
     ctx_size: u32,
 ) -> Result<()> {
-    let mut agent = Agent::new(api_url, project_dir, ctx_size, model_name, safety_profile, format_json);
+    let mut agent = Agent::new(api_url, project_dir, ctx_size, model_name, safety_profile, format_json, None);
 
     if format_json {
         // Emit hardware info before agent starts
@@ -256,10 +372,11 @@ fn spawn_agent_loop(
     safety_profile: SafetyProfile,
     agent_tx: mpsc::Sender<crate::agent::AgentEvent>,
     mut cmd_rx: mpsc::Receiver<TuiCommand>,
+    tok_per_sec_tx: Option<tokio::sync::watch::Sender<Option<f64>>>,
 ) -> tokio::task::JoinHandle<()> {
     let api_url = api_url.to_string();
     tokio::spawn(async move {
-        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name, safety_profile, false);
+        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name, safety_profile, false, tok_per_sec_tx);
 
         while let Some(cmd) = cmd_rx.recv().await {
             match cmd {

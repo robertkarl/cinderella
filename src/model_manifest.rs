@@ -23,7 +23,7 @@ fn default_tier() -> ModelTier {
 }
 
 /// Top-level manifest structure (matches model-manifest.json).
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Manifest {
     pub version: u32,
     pub models: Vec<ModelDef>,
@@ -31,7 +31,7 @@ pub struct Manifest {
 }
 
 /// A single model definition from the manifest.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ModelDef {
     pub id: String,
     pub name: String,
