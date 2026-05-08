@@ -25,3 +25,7 @@ build/
 
 mutants.out/diff/
 mutants.out/log/
+
+# Claude Code / Superpowers local state
+.claude/
+.superpowers/

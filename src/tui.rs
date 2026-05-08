@@ -289,6 +289,22 @@ pub fn print_event(event: AgentEvent, state: &mut OutputState) -> bool {
         AgentEvent::ServerRestarted { attempt } => {
             print_warn(&format!("llama-server restarted ({}/3). Retrying...", attempt));
         }
+        AgentEvent::MemoryWarning { pageout_rate, swap_used_mb, tok_per_sec } => {
+            let rate_info = match tok_per_sec {
+                Some(tps) => format!(" tok/s: {:.1}", tps),
+                None => String::new(),
+            };
+            print_warn(&format!(
+                "Memory pressure: pageout_rate={}/s, swap={:.0} MB{}",
+                pageout_rate, swap_used_mb, rate_info
+            ));
+        }
+        AgentEvent::ModelSwap { from_model, to_model, reason } => {
+            println!("Switched {} \u{2192} {} \u{2014} {}", from_model, to_model, reason);
+        }
+        AgentEvent::PromotionAvailable { to_model } => {
+            println!("System pressure has eased. You can switch back to {}.", to_model);
+        }
         _ => {} // TokenRate, ContextUsage, StepStart, StepComplete, UserPrompt, Plan, Diagnosis
     }
     false
@@ -420,6 +436,28 @@ pub fn json_event(event: AgentEvent) -> bool {
         }
         AgentEvent::Diagnosis(text) => {
             serde_json::json!({"event": "diagnosis", "text": text})
+        }
+        AgentEvent::MemoryWarning { pageout_rate, swap_used_mb, tok_per_sec } => {
+            serde_json::json!({
+                "event": "memory_warning",
+                "pageout_rate": pageout_rate,
+                "swap_used_mb": swap_used_mb,
+                "tok_per_sec": tok_per_sec,
+            })
+        }
+        AgentEvent::ModelSwap { from_model, to_model, reason } => {
+            serde_json::json!({
+                "event": "model_swap",
+                "from_model": from_model,
+                "to_model": to_model,
+                "reason": reason,
+            })
+        }
+        AgentEvent::PromotionAvailable { to_model } => {
+            serde_json::json!({
+                "event": "promotion_available",
+                "to_model": to_model,
+            })
         }
         AgentEvent::TurnComplete => {
             let line = serde_json::json!({"event": "done", "status": "complete"});

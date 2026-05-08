@@ -2,13 +2,15 @@
 
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use crate::agent::Agent;
-use crate::config::{self, SafetyProfile, BUNDLED_MODEL};
-use crate::hw::{self, HardwareInfo};
+use crate::config::{self, SafetyProfile};
+use crate::model_manifest::ModelDef;
+use crate::hw;
 use crate::server::ServerManager;
 use crate::tui::{self, StatusBar, TuiCommand};
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 
 pub struct OrchestratorConfig {
     pub project_dir: PathBuf,
@@ -30,6 +32,9 @@ pub struct OrchestratorConfig {
 
 /// Run the full orchestration flow.
 pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
+    let _ = crate::logging::init(&crate::logging::log_dir());
+    crate::logging::info("orchestrator", "Glass Slipper starting", None);
+
     // Remote mode: skip local server entirely
     if let Some(ref api_url) = cfg.api_url {
         println!("Connecting to remote API: {}", api_url);
@@ -40,7 +45,13 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
     let hw = hw::detect().context("Hardware detection failed")?;
     println!("Hardware: {}", hw);
 
-    // Step 2: Find model
+    // Step 2: Load manifest and select model for this machine's RAM
+    let manifest = crate::model_manifest::find_manifest()
+        .context("Failed to load model manifest")?;
+    let active_model = manifest.model_for_ram(hw.total_ram_gb as u32)
+        .context("No model fits this machine's RAM")?;
+
+    // Step 3: Find model file
     let model_path = match cfg.model_path {
         Some(p) => {
             if !p.exists() {
@@ -50,17 +61,18 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
             p
         }
         None => {
-            let path = find_or_extract_bundled_model(&hw)?;
+            let path = find_model_file(active_model)?;
+            let size_gb = active_model.size_bytes as f64 / (1024.0 * 1024.0 * 1024.0);
             println!(
                 "Model: {} {} ({:.1} GiB) \u{2713}",
-                BUNDLED_MODEL.name, BUNDLED_MODEL.quant, BUNDLED_MODEL.size_gb
+                active_model.name, active_model.quant, size_gb
             );
             path
         }
     };
 
-    // Step 3: Start llama-server
-    let server_config = config::ServerConfig::from_model(model_path, cfg.port, &BUNDLED_MODEL);
+    // Step 4: Start llama-server
+    let server_config = config::ServerConfig::from_model_def(model_path, cfg.port, active_model);
     let mut server = ServerManager::new(server_config, cfg.llama_server_path);
 
     println!("Starting llama-server...");
@@ -71,7 +83,7 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
         println!("\u{2713} GPU layers: {}/{}", loaded, total);
     }
 
-    // Step 4: Prompt mode or interactive TUI
+    // Step 5: Prompt mode or interactive TUI
     if let Some(ref prompt) = cfg.prompt {
         let result = run_prompt(
             &server.api_url(),
@@ -80,6 +92,7 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
             cfg.safety_profile,
             prompt,
             cfg.format_json,
+            active_model.ctx_size,
         )
         .await;
         server.stop().await;
@@ -98,13 +111,13 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
         .to_string();
 
     let initial_status = StatusBar {
-        model_name: BUNDLED_MODEL.name.to_string(),
-        quant: BUNDLED_MODEL.quant.to_string(),
+        model_name: active_model.name.clone(),
+        quant: active_model.quant.clone(),
         tok_per_sec: None,
         ram_used_gb: hw.total_ram_gb - hw.available_ram_gb,
         ram_total_gb: hw.total_ram_gb,
         ctx_used: 0,
-        ctx_max: BUNDLED_MODEL.ctx_size as usize,
+        ctx_max: active_model.ctx_size as usize,
         gpu_layers: server
             .gpu_layers_loaded
             .map(|l| {
@@ -117,26 +130,147 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
             .unwrap_or_else(|| "\u{2014}".to_string()),
     };
 
+    // Wrap server in Arc<Mutex> for shared access between health handler and main
+    let api_url_str = server.api_url();
+    let server = Arc::new(Mutex::new(server));
+
+    // Create watch channels for memory monitor
+    let (health_tx, health_rx) = tokio::sync::watch::channel(None::<crate::memory_monitor::HealthEvent>);
+    let (tok_tx, tok_rx) = tokio::sync::watch::channel(None::<f64>);
+
+    // Start the FFI pressure listener
+    let pressure_rx = crate::memory_ffi::start_pressure_listener();
+
+    // Determine if we're on a smaller model than the machine can handle
+    let best_model = manifest.model_for_ram(hw.total_ram_gb as u32);
+    let on_smaller_model = best_model.map(|m| m.tier != active_model.tier).unwrap_or(false);
+
+    // Spawn the memory monitor
+    tokio::spawn(crate::memory_monitor::run(health_tx, tok_rx, pressure_rx, on_smaller_model));
+
     let agent_handle = spawn_agent_loop(
-        &server.api_url(),
+        &api_url_str,
         cfg.project_dir.clone(),
-        BUNDLED_MODEL.ctx_size,
+        active_model.ctx_size,
         cfg.model_name.clone(),
         cfg.safety_profile,
-        agent_tx,
+        agent_tx.clone(),
         cmd_rx,
+        Some(tok_tx),
     );
+
+    // Health event handler — reacts to MemoryMonitor state transitions
+    let health_agent_tx = agent_tx.clone();
+    let health_server = server.clone();
+    let health_manifest = manifest.clone();
+    let health_model_id = active_model.id.clone();
+    let health_total_ram = hw.total_ram_gb;
+    let health_port = cfg.port;
+
+    let health_handle = tokio::spawn(async move {
+        let mut health_rx = health_rx;
+        let mut current_model_id = health_model_id;
+        while health_rx.changed().await.is_ok() {
+            let event = health_rx.borrow().clone();
+            if let Some(health_event) = event {
+                match health_event.health {
+                    crate::memory_monitor::SystemHealth::Warning => {
+                        let _ = health_agent_tx.send(crate::agent::AgentEvent::MemoryWarning {
+                            pageout_rate: health_event.metrics.pageout_delta,
+                            swap_used_mb: health_event.metrics.swap_used_mb,
+                            tok_per_sec: health_event.metrics.last_tok_per_sec,
+                        }).await;
+                    }
+                    crate::memory_monitor::SystemHealth::Critical => {
+                        // Find current model and downgrade target
+                        let current = health_manifest.models.iter()
+                            .find(|m| m.id == current_model_id);
+                        let target = current.and_then(|c| health_manifest.one_tier_down(c));
+
+                        if let (Some(current_m), Some(target_m)) = (current, target) {
+                            let target_path = find_model_file(target_m);
+                            match target_path {
+                                Ok(path) => {
+                                    let new_config = config::ServerConfig::from_model_def(
+                                        path, health_port, target_m,
+                                    );
+                                    let mut srv = health_server.lock().await;
+                                    match srv.swap_model(new_config).await {
+                                        Ok(()) => {
+                                            let from = current_m.name.clone();
+                                            let to = target_m.name.clone();
+                                            current_model_id = target_m.id.clone();
+                                            let _ = health_agent_tx.send(
+                                                crate::agent::AgentEvent::ModelSwap {
+                                                    from_model: from,
+                                                    to_model: to,
+                                                    reason: format!(
+                                                        "System was thrashing (page-outs: {}/5s)",
+                                                        health_event.metrics.pageout_delta
+                                                    ),
+                                                }
+                                            ).await;
+                                        }
+                                        Err(e) => {
+                                            let _ = health_agent_tx.send(
+                                                crate::agent::AgentEvent::Warning(
+                                                    format!("Model downgrade failed: {}", e)
+                                                )
+                                            ).await;
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    let _ = health_agent_tx.send(
+                                        crate::agent::AgentEvent::Warning(
+                                            format!("Downgrade model not found: {}", e)
+                                        )
+                                    ).await;
+                                }
+                            }
+                        } else {
+                            let _ = health_agent_tx.send(
+                                crate::agent::AgentEvent::Warning(
+                                    "Already on smallest model — cannot downgrade".to_string()
+                                )
+                            ).await;
+                        }
+                    }
+                    crate::memory_monitor::SystemHealth::PromotionAvailable => {
+                        if let Some(best) = health_manifest.model_for_ram(health_total_ram as u32) {
+                            if best.id != current_model_id {
+                                let _ = health_agent_tx.send(
+                                    crate::agent::AgentEvent::PromotionAvailable {
+                                        to_model: best.name.clone(),
+                                    }
+                                ).await;
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    });
 
     tui::run(agent_rx, cmd_tx, &project_name, initial_status).await?;
 
     agent_handle.abort();
-    server.stop().await;
+    health_handle.abort();
+    server.lock().await.stop().await;
 
     Ok(())
 }
 
 /// Run with a remote API — no local server.
 async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
+    // Load manifest to get ctx_size even in remote mode
+    let manifest = crate::model_manifest::find_manifest()
+        .context("Failed to load model manifest")?;
+    let default_model = manifest.default_model()
+        .context("No default model in manifest")?;
+    let ctx_size = default_model.ctx_size;
+
     // Prompt mode
     if let Some(ref prompt) = cfg.prompt {
         return run_prompt(
@@ -146,6 +280,7 @@ async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
             cfg.safety_profile,
             prompt,
             cfg.format_json,
+            ctx_size,
         )
         .await;
     }
@@ -168,18 +303,19 @@ async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
         ram_used_gb: 0.0,
         ram_total_gb: 0.0,
         ctx_used: 0,
-        ctx_max: BUNDLED_MODEL.ctx_size as usize,
+        ctx_max: ctx_size as usize,
         gpu_layers: "remote".to_string(),
     };
 
     let agent_handle = spawn_agent_loop(
         api_url,
         cfg.project_dir.clone(),
-        BUNDLED_MODEL.ctx_size,
+        ctx_size,
         cfg.model_name.clone(),
         cfg.safety_profile,
         agent_tx,
         cmd_rx,
+        None,
     );
 
     tui::run(agent_rx, cmd_tx, &project_name, initial_status).await?;
@@ -198,8 +334,9 @@ async fn run_prompt(
     safety_profile: SafetyProfile,
     prompt: &str,
     format_json: bool,
+    ctx_size: u32,
 ) -> Result<()> {
-    let mut agent = Agent::new(api_url, project_dir, BUNDLED_MODEL.ctx_size, model_name, safety_profile, format_json);
+    let mut agent = Agent::new(api_url, project_dir, ctx_size, model_name, safety_profile, format_json, None);
 
     if format_json {
         // Emit hardware info before agent starts
@@ -238,10 +375,11 @@ fn spawn_agent_loop(
     safety_profile: SafetyProfile,
     agent_tx: mpsc::Sender<crate::agent::AgentEvent>,
     mut cmd_rx: mpsc::Receiver<TuiCommand>,
+    tok_per_sec_tx: Option<tokio::sync::watch::Sender<Option<f64>>>,
 ) -> tokio::task::JoinHandle<()> {
     let api_url = api_url.to_string();
     tokio::spawn(async move {
-        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name, safety_profile, false);
+        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name, safety_profile, false, tok_per_sec_tx);
 
         while let Some(cmd) = cmd_rx.recv().await {
             match cmd {
@@ -273,25 +411,12 @@ fn spawn_agent_loop(
     })
 }
 
-/// Find the model in ~/Library/Application Support/Glass Slipper/Models/.
-/// In the v1 release, the model is downloaded on first run by the Swift app.
-/// The Rust helper expects it to already be present and verified.
-fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
-    // Check RAM — use total RAM, not available. macOS unified memory will reclaim
-    // inactive/purgeable pages under pressure, so "available" is misleadingly low.
-    if hw.total_ram_gb < BUNDLED_MODEL.total_ram_required_gb {
-        anyhow::bail!(
-            "Cannot fit bundled model ({} needs ~{:.0} GiB).\n\
-             Your Mac has {:.0} GB total.\n\
-             Try: glass-slipper --model /path/to/smaller-model.gguf <project>",
-            BUNDLED_MODEL.name,
-            BUNDLED_MODEL.total_ram_required_gb,
-            hw.total_ram_gb
-        );
-    }
-
+/// Find the model file on disk.
+/// Checks the manifest-defined path (Application Support) first,
+/// then falls back to ~/models/ for development convenience.
+fn find_model_file(model: &ModelDef) -> Result<PathBuf> {
     // Primary location: Application Support (where the GUI downloader puts it)
-    let app_support_path = config::models_dir().join(BUNDLED_MODEL.filename);
+    let app_support_path = model.model_path();
     if app_support_path.exists() {
         return Ok(app_support_path);
     }
@@ -299,7 +424,7 @@ fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
     // Development fallback: ~/models/ (legacy location)
     if !is_release_bundle() {
         let home = std::env::var("HOME").unwrap_or_default();
-        let legacy_path = PathBuf::from(&home).join("models").join(BUNDLED_MODEL.filename);
+        let legacy_path = PathBuf::from(&home).join("models").join(&model.filename);
         if legacy_path.exists() {
             return Ok(legacy_path);
         }
@@ -308,9 +433,10 @@ fn find_or_extract_bundled_model(hw: &HardwareInfo) -> Result<PathBuf> {
     anyhow::bail!(
         "Model not found at {}.\n\
          The Glass Slipper app downloads the model on first launch.\n\
-         For development: download {} and place it in ~/Library/Application Support/Glass Slipper/Models/",
+         For development: download {} and place it in ~/Library/Application Support/{}/",
         app_support_path.display(),
-        BUNDLED_MODEL.filename
+        model.filename,
+        model.app_support_subdir
     );
 }
 

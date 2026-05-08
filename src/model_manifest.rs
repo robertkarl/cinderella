@@ -8,8 +8,22 @@ use anyhow::{Context, Result};
 use serde::Deserialize;
 use std::path::PathBuf;
 
+/// Model size tier for adaptive model sizing.
+/// Ordered from smallest to largest so derive(Ord) gives the right ordering.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ModelTier {
+    Small,
+    Default,
+    Large,
+}
+
+fn default_tier() -> ModelTier {
+    ModelTier::Default
+}
+
 /// Top-level manifest structure (matches model-manifest.json).
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Manifest {
     pub version: u32,
     pub models: Vec<ModelDef>,
@@ -17,7 +31,7 @@ pub struct Manifest {
 }
 
 /// A single model definition from the manifest.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ModelDef {
     pub id: String,
     pub name: String,
@@ -34,6 +48,8 @@ pub struct ModelDef {
     pub ctx_size: u32,
     pub n_gpu_layers: i32,
     pub app_support_subdir: String,
+    #[serde(default = "default_tier")]
+    pub tier: ModelTier,
 }
 
 fn default_min_macos() -> String {
@@ -63,6 +79,32 @@ impl Manifest {
             .iter()
             .find(|m| m.id == self.default_model)
             .with_context(|| format!("Default model '{}' not found in manifest", self.default_model))
+    }
+
+    /// Return the largest model whose `min_ram_gb` fits within `total_ram_gb`.
+    /// Models are checked from largest tier to smallest.
+    /// Returns None if no model fits (system has less RAM than even the smallest model needs).
+    pub fn model_for_ram(&self, total_ram_gb: u32) -> Option<&ModelDef> {
+        let mut candidates: Vec<&ModelDef> = self
+            .models
+            .iter()
+            .filter(|m| m.min_ram_gb <= total_ram_gb)
+            .collect();
+        // Sort by tier descending — pick the largest that fits
+        candidates.sort_by(|a, b| b.tier.cmp(&a.tier));
+        candidates.into_iter().next()
+    }
+
+    /// Given a model, return the model one tier below it.
+    /// Returns None if the model is already the smallest tier or if no
+    /// model exists at the tier below.
+    pub fn one_tier_down(&self, current: &ModelDef) -> Option<&ModelDef> {
+        let lower_tier = match current.tier {
+            ModelTier::Large => ModelTier::Default,
+            ModelTier::Default => ModelTier::Small,
+            ModelTier::Small => return None,
+        };
+        self.models.iter().find(|m| m.tier == lower_tier)
     }
 }
 
@@ -258,5 +300,130 @@ mod tests {
         let model = manifest.default_model().unwrap();
         let state = model.quick_check();
         assert!(matches!(state, ModelState::Missing | ModelState::Partial));
+    }
+
+    // --- Tier and adaptive sizing tests ---
+
+    const TIERED_MANIFEST: &str = r#"{
+        "version": 1,
+        "models": [
+            {
+                "id": "qwen3.5-4b-q4",
+                "name": "Qwen 3.5 4B",
+                "filename": "Qwen3.5-4B-Q4_K_M.gguf",
+                "quant": "Q4_K_M",
+                "size_bytes": 2740000000,
+                "sha256": "TODO-4b-sha256",
+                "url": "https://example.com/4b.gguf",
+                "min_ram_gb": 8,
+                "ctx_size": 32768,
+                "n_gpu_layers": -1,
+                "app_support_subdir": "GlassSlipper/Models",
+                "tier": "small"
+            },
+            {
+                "id": "qwen3.5-9b-q5",
+                "name": "Qwen 3.5 9B",
+                "filename": "Qwen3.5-9B-Q5_K_M.gguf",
+                "quant": "Q5_K_M",
+                "size_bytes": 6577841376,
+                "sha256": "dc2a39aef291f91a9116ad214058da0d86eb648743a124bd8c333787c4b9c91c",
+                "url": "https://example.com/9b.gguf",
+                "min_ram_gb": 16,
+                "ctx_size": 32768,
+                "n_gpu_layers": -1,
+                "app_support_subdir": "GlassSlipper/Models",
+                "tier": "default"
+            },
+            {
+                "id": "qwen3.5-35b-moe-q5",
+                "name": "Qwen 3.5 35B MoE",
+                "filename": "Qwen3.5-35B-MoE-Q5_K_M.gguf",
+                "quant": "Q5_K_M",
+                "size_bytes": 20000000000,
+                "sha256": "TODO-35b-sha256",
+                "url": "https://example.com/35b.gguf",
+                "min_ram_gb": 64,
+                "ctx_size": 32768,
+                "n_gpu_layers": -1,
+                "app_support_subdir": "GlassSlipper/Models",
+                "tier": "large"
+            }
+        ],
+        "default_model": "qwen3.5-9b-q5"
+    }"#;
+
+    #[test]
+    fn test_backward_compat_no_tier_field() {
+        // TEST_MANIFEST has no "tier" field — should default to Default
+        let manifest = Manifest::from_str(TEST_MANIFEST).unwrap();
+        let model = manifest.default_model().unwrap();
+        assert_eq!(model.tier, ModelTier::Default);
+    }
+
+    #[test]
+    fn test_parse_manifest_with_tiers() {
+        let manifest = Manifest::from_str(TIERED_MANIFEST).unwrap();
+        assert_eq!(manifest.models.len(), 3);
+
+        let small = manifest.models.iter().find(|m| m.id == "qwen3.5-4b-q4").unwrap();
+        assert_eq!(small.tier, ModelTier::Small);
+
+        let default = manifest.models.iter().find(|m| m.id == "qwen3.5-9b-q5").unwrap();
+        assert_eq!(default.tier, ModelTier::Default);
+
+        let large = manifest.models.iter().find(|m| m.id == "qwen3.5-35b-moe-q5").unwrap();
+        assert_eq!(large.tier, ModelTier::Large);
+    }
+
+    #[test]
+    fn test_model_for_ram_picks_largest_fitting() {
+        let manifest = Manifest::from_str(TIERED_MANIFEST).unwrap();
+
+        // 128 GB — should pick Large (min_ram 64)
+        let model = manifest.model_for_ram(128).unwrap();
+        assert_eq!(model.id, "qwen3.5-35b-moe-q5");
+        assert_eq!(model.tier, ModelTier::Large);
+
+        // 64 GB — exactly meets Large threshold
+        let model = manifest.model_for_ram(64).unwrap();
+        assert_eq!(model.id, "qwen3.5-35b-moe-q5");
+
+        // 32 GB — too small for Large, picks Default (min_ram 16)
+        let model = manifest.model_for_ram(32).unwrap();
+        assert_eq!(model.id, "qwen3.5-9b-q5");
+        assert_eq!(model.tier, ModelTier::Default);
+
+        // 16 GB — exactly meets Default threshold
+        let model = manifest.model_for_ram(16).unwrap();
+        assert_eq!(model.id, "qwen3.5-9b-q5");
+
+        // 8 GB — only Small fits
+        let model = manifest.model_for_ram(8).unwrap();
+        assert_eq!(model.id, "qwen3.5-4b-q4");
+        assert_eq!(model.tier, ModelTier::Small);
+
+        // 4 GB — nothing fits
+        let result = manifest.model_for_ram(4);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_one_tier_down() {
+        let manifest = Manifest::from_str(TIERED_MANIFEST).unwrap();
+
+        let large = manifest.models.iter().find(|m| m.tier == ModelTier::Large).unwrap();
+        let down = manifest.one_tier_down(large).unwrap();
+        assert_eq!(down.tier, ModelTier::Default);
+        assert_eq!(down.id, "qwen3.5-9b-q5");
+
+        let default = manifest.models.iter().find(|m| m.tier == ModelTier::Default).unwrap();
+        let down = manifest.one_tier_down(default).unwrap();
+        assert_eq!(down.tier, ModelTier::Small);
+        assert_eq!(down.id, "qwen3.5-4b-q4");
+
+        let small = manifest.models.iter().find(|m| m.tier == ModelTier::Small).unwrap();
+        let down = manifest.one_tier_down(small);
+        assert!(down.is_none());
     }
 }

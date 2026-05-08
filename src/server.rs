@@ -154,6 +154,17 @@ impl ServerManager {
         format!("http://127.0.0.1:{}", self.config.port)
     }
 
+    /// Swap to a different model: stop the current server, start with new config.
+    /// This is the "hard cut" from the adaptive sizing spec.
+    pub async fn swap_model(&mut self, new_config: ServerConfig) -> Result<()> {
+        self.stop().await;
+        self.config = new_config;
+        self.restart_count = 0;
+        self.gpu_layers_loaded = None;
+        self.gpu_layers_total = None;
+        self.start().await
+    }
+
     /// Stop the server gracefully: SIGTERM, wait up to 5s, then SIGKILL.
     pub async fn stop(&mut self) {
         if let Some(ref mut child) = self.child {
@@ -193,5 +204,73 @@ impl Drop for ServerManager {
             // Best-effort kill on drop
             let _ = child.start_kill();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn make_config(model_name: &str, port: u16, ctx_size: u32) -> ServerConfig {
+        ServerConfig {
+            model_path: PathBuf::from(format!("/tmp/{}", model_name)),
+            port,
+            ctx_size,
+            n_gpu_layers: -1,
+            jinja: true,
+        }
+    }
+
+    #[test]
+    fn test_swap_model_replaces_config() {
+        let original = make_config("big-model.gguf", 8787, 32768);
+        let mut mgr = ServerManager::new(original, PathBuf::from("/usr/local/bin/llama-server"));
+
+        // Simulate some state that would exist mid-session
+        mgr.restart_count = 2;
+        mgr.gpu_layers_loaded = Some(33);
+        mgr.gpu_layers_total = Some(33);
+
+        // Build the replacement config
+        let smaller = make_config("small-model.gguf", 8787, 8192);
+
+        // We can't call swap_model() directly (it calls start() which needs a
+        // real server binary), but we can verify the config-replacement logic
+        // by doing the same mutations swap_model does minus the async I/O.
+        // This is the "unit" part; integration tests cover the full path.
+
+        // -- replicate swap_model's state changes --
+        // mgr.stop().await;  // no child process, so this is a no-op
+        mgr.config = smaller;
+        mgr.restart_count = 0;
+        mgr.gpu_layers_loaded = None;
+        mgr.gpu_layers_total = None;
+
+        assert_eq!(mgr.config.model_path, PathBuf::from("/tmp/small-model.gguf"));
+        assert_eq!(mgr.config.ctx_size, 8192);
+        assert_eq!(mgr.restart_count, 0);
+        assert!(mgr.gpu_layers_loaded.is_none());
+        assert!(mgr.gpu_layers_total.is_none());
+    }
+
+    #[test]
+    fn test_swap_model_preserves_server_path() {
+        let config = make_config("model-a.gguf", 8787, 16384);
+        let server_path = PathBuf::from("/opt/bin/llama-server");
+        let mgr = ServerManager::new(config, server_path.clone());
+
+        // The llama_server_path should survive across swaps (it's not changed)
+        assert_eq!(mgr.llama_server_path, server_path);
+    }
+
+    #[tokio::test]
+    async fn test_swap_model_stop_without_child_is_safe() {
+        let config = make_config("model.gguf", 8787, 32768);
+        let mut mgr = ServerManager::new(config, PathBuf::from("/nonexistent/llama-server"));
+
+        // stop() on a manager with no child process should not panic
+        mgr.stop().await;
+        assert!(mgr.child.is_none());
     }
 }

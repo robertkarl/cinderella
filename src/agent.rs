@@ -54,6 +54,22 @@ pub enum AgentEvent {
         summary: String,
         detail: String,
     },
+    /// Memory pressure warning — suggest downgrade.
+    MemoryWarning {
+        pageout_rate: u64,
+        swap_used_mb: f64,
+        tok_per_sec: Option<f64>,
+    },
+    /// Model swap completed (post-facto notification).
+    ModelSwap {
+        from_model: String,
+        to_model: String,
+        reason: String,
+    },
+    /// Promotion available — running smaller model but pressure has eased.
+    PromotionAvailable {
+        to_model: String,
+    },
 }
 
 /// Status of a completed diagnostic step.
@@ -296,6 +312,7 @@ pub struct Agent {
     turn_count: usize,
     safety_profile: SafetyProfile,
     step_tracker: StepTracker,
+    tok_per_sec_tx: Option<tokio::sync::watch::Sender<Option<f64>>>,
 }
 
 impl Agent {
@@ -306,6 +323,7 @@ impl Agent {
         model_name: &str,
         safety_profile: SafetyProfile,
         step_tracking: bool,
+        tok_per_sec_tx: Option<tokio::sync::watch::Sender<Option<f64>>>,
     ) -> Self {
         let client = LlmClient::new(api_url, model_name);
 
@@ -324,6 +342,7 @@ impl Agent {
             turn_count: 0,
             safety_profile,
             step_tracker: StepTracker::new(step_tracking),
+            tok_per_sec_tx,
         }
     }
 
@@ -422,6 +441,9 @@ impl Agent {
                     if elapsed_ms > 0 {
                         let tok_s = tokens as f64 / (elapsed_ms as f64 / 1000.0);
                         on_event(AgentEvent::TokenRate { tok_per_sec: tok_s });
+                        if let Some(ref tx) = self.tok_per_sec_tx {
+                            let _ = tx.send(Some(tok_s));
+                        }
                     }
                 }
                 StreamEvent::Done => {}
