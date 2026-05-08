@@ -3,6 +3,7 @@ mod config;
 mod hw;
 mod llm;
 mod memory_ffi;
+mod memory_monitor;
 mod model_manifest;
 mod orchestrator;
 mod server;
