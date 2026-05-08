@@ -32,6 +32,9 @@ pub struct OrchestratorConfig {
 
 /// Run the full orchestration flow.
 pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
+    let _ = crate::logging::init(&crate::logging::log_dir());
+    crate::logging::info("orchestrator", "Glass Slipper starting", None);
+
     // Remote mode: skip local server entirely
     if let Some(ref api_url) = cfg.api_url {
         println!("Connecting to remote API: {}", api_url);

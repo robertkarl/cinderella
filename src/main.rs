@@ -2,6 +2,7 @@ mod agent;
 mod config;
 mod hw;
 mod llm;
+mod logging;
 mod memory_ffi;
 mod memory_monitor;
 mod model_manifest;

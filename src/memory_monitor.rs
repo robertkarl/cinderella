@@ -319,8 +319,29 @@ pub async fn run(
                     pressure_event: None,
                 };
 
-                if let Some(event) = machine.update(metrics) {
-                    let _ = health_tx.send(Some(event));
+                crate::logging::info(
+                    "memory_monitor",
+                    "poll cycle",
+                    Some(serde_json::json!({
+                        "pageout_delta": metrics.pageout_delta,
+                        "swap_used_mb": metrics.swap_used_mb,
+                        "swap_total_mb": metrics.swap_total_mb,
+                        "tok_per_sec": metrics.last_tok_per_sec,
+                    })),
+                );
+
+                if let Some(ref event) = machine.update(metrics) {
+                    let transition_msg = format!("state transition → {:?}", event.health);
+                    crate::logging::warn(
+                        "memory_monitor",
+                        &transition_msg,
+                        Some(serde_json::json!({
+                            "health": format!("{:?}", event.health),
+                            "pageout_delta": event.metrics.pageout_delta,
+                            "swap_used_mb": event.metrics.swap_used_mb,
+                        })),
+                    );
+                    let _ = health_tx.send(Some(event.clone()));
                 }
             }
 
@@ -334,8 +355,17 @@ pub async fn run(
                     pressure_event: Some(pressure),
                 };
 
-                if let Some(event) = machine.update(metrics) {
-                    let _ = health_tx.send(Some(event));
+                if let Some(ref event) = machine.update(metrics) {
+                    let transition_msg = format!("pressure event → {:?}", event.health);
+                    crate::logging::warn(
+                        "memory_monitor",
+                        &transition_msg,
+                        Some(serde_json::json!({
+                            "health": format!("{:?}", event.health),
+                            "pressure": format!("{:?}", pressure),
+                        })),
+                    );
+                    let _ = health_tx.send(Some(event.clone()));
                 }
             }
         }
