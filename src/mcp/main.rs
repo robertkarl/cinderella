@@ -1,3 +1,4 @@
+mod handlers;
 mod llm_client;
 mod logger;
 mod prompts;
