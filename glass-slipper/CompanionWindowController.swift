@@ -275,7 +275,8 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
         let container = NSView()
         container.translatesAutoresizingMaskIntoConstraints = false
 
-        let toolLabel = NSTextField(labelWithString: entry.tool)
+        let displayName = Self.toolDisplayName(tool: entry.tool, detail: entry.detail)
+        let toolLabel = NSTextField(labelWithString: displayName)
         toolLabel.font = .detailText
         toolLabel.textColor = .textPrimary
         toolLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -306,6 +307,25 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
         ])
 
         return container
+    }
+
+    /// "local_summarize" + "noisy-build.sh" → "Summarize — noisy-build.sh"
+    private static func toolDisplayName(tool: String, detail: String) -> String {
+        let verb: String
+        switch tool {
+        case "local_summarize": verb = "Summarize"
+        case "local_explain":   verb = "Explain"
+        case "local_ask":       verb = "Ask"
+        case "local_web_fetch": verb = "Fetch"
+        case "local_review":    verb = "Review"
+        case "local_draft":     verb = "Draft"
+        case "local_status":    verb = "Status"
+        default:                verb = tool
+        }
+        if detail.isEmpty {
+            return verb
+        }
+        return "\(verb) — \(detail)"
     }
 }
 

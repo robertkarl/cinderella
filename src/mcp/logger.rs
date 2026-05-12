@@ -9,6 +9,7 @@ use std::time::Instant;
 pub struct ActivityEntry {
     pub ts: String,
     pub tool: String,
+    pub detail: String,
     pub input_tokens: u64,
     pub output_tokens: u64,
     pub latency_ms: u64,
@@ -37,13 +38,14 @@ impl ActivityLogger {
     }
 
     /// Log a tool call. Creates parent directories if needed.
-    pub fn log(&self, tool: &str, input_tokens: u64, output_tokens: u64, start: Instant, model: &str) {
+    pub fn log(&self, tool: &str, detail: &str, input_tokens: u64, output_tokens: u64, start: Instant, model: &str) {
         let latency_ms = start.elapsed().as_millis() as u64;
         let estimated_cost = input_tokens as f64 * OPUS_INPUT_PRICE_PER_TOKEN;
 
         let entry = ActivityEntry {
             ts: now_unix_secs(),
             tool: tool.to_string(),
+            detail: detail.to_string(),
             input_tokens,
             output_tokens,
             latency_ms,
@@ -83,8 +85,8 @@ mod tests {
         let logger = ActivityLogger::with_path(path.clone());
 
         let start = Instant::now();
-        logger.log("local_summarize", 3200, 18, start, "qwen3.5-9b-q5_k_m");
-        logger.log("local_explain", 500, 120, start, "qwen3.5-9b-q5_k_m");
+        logger.log("local_summarize", "cargo build", 3200, 18, start, "qwen3.5-9b-q5_k_m");
+        logger.log("local_explain", "server.rs:swap_model", 500, 120, start, "qwen3.5-9b-q5_k_m");
 
         let contents = std::fs::read_to_string(&path).unwrap();
         let lines: Vec<&str> = contents.lines().collect();

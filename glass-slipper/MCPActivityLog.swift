@@ -12,6 +12,7 @@ import Foundation
 struct MCPActivityEntry {
     let timestamp: String
     let tool: String
+    let detail: String
     let inputTokens: Int
     let outputTokens: Int
     let latencyMs: Int
@@ -78,6 +79,7 @@ final class MCPActivityLog {
             let entry = MCPActivityEntry(
                 timestamp: json["ts"] as? String ?? "",
                 tool: json["tool"] as? String ?? "",
+                detail: json["detail"] as? String ?? "",
                 inputTokens: json["input_tokens"] as? Int ?? 0,
                 outputTokens: json["output_tokens"] as? Int ?? 0,
                 latencyMs: json["latency_ms"] as? Int ?? 0,
