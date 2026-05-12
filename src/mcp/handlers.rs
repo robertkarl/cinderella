@@ -13,6 +13,7 @@ pub async fn handle_summarize(
     client: &McpLlmClient,
     logger: &ActivityLogger,
     command: &str,
+    context_tokens: u64,
 ) -> ToolResult {
     let start = Instant::now();
     let detail = slug_command(command);
@@ -21,16 +22,17 @@ pub async fn handle_summarize(
         Err(e) => return ToolResult::error(format!("Failed to run command: {}", e)),
     };
     if output.is_empty() {
-        logger.log("local_summarize", &detail, 0, 0, start, client.model_name());
+        logger.log("local_summarize", &detail, 0, 0, start, client.model_name(), context_tokens);
         return ToolResult::text("Command produced no output.");
     }
-    complete_and_log(client, logger, "local_summarize", &detail, prompts::SUMMARIZE, &output, SHORT_MAX_TOKENS, start).await
+    complete_and_log(client, logger, "local_summarize", &detail, prompts::SUMMARIZE, &output, SHORT_MAX_TOKENS, start, context_tokens).await
 }
 
 pub async fn handle_pass_fail(
     client: &McpLlmClient,
     logger: &ActivityLogger,
     command: &str,
+    context_tokens: u64,
 ) -> ToolResult {
     let start = Instant::now();
     let detail = slug_command(command);
@@ -39,20 +41,21 @@ pub async fn handle_pass_fail(
         Err(e) => return ToolResult::error(format!("Failed to run command: {}", e)),
     };
     if output.is_empty() {
-        logger.log("local_pass_fail", &detail, 0, 0, start, client.model_name());
+        logger.log("local_pass_fail", &detail, 0, 0, start, client.model_name(), context_tokens);
         return ToolResult::text("Command produced no output.");
     }
-    complete_and_log(client, logger, "local_pass_fail", &detail, prompts::PASS_FAIL, &output, SHORT_MAX_TOKENS, start).await
+    complete_and_log(client, logger, "local_pass_fail", &detail, prompts::PASS_FAIL, &output, SHORT_MAX_TOKENS, start, context_tokens).await
 }
 
 pub async fn handle_explain(
     client: &McpLlmClient,
     logger: &ActivityLogger,
     code: &str,
+    context_tokens: u64,
 ) -> ToolResult {
     let start = Instant::now();
     let detail = slug_first_line(code, 60);
-    complete_and_log(client, logger, "local_explain", &detail, prompts::EXPLAIN, code, SHORT_MAX_TOKENS, start).await
+    complete_and_log(client, logger, "local_explain", &detail, prompts::EXPLAIN, code, SHORT_MAX_TOKENS, start, context_tokens).await
 }
 
 pub async fn handle_ask(
@@ -60,6 +63,7 @@ pub async fn handle_ask(
     logger: &ActivityLogger,
     question: &str,
     context: Option<&str>,
+    context_tokens: u64,
 ) -> ToolResult {
     let start = Instant::now();
     let detail = truncate(question, 60);
@@ -67,7 +71,7 @@ pub async fn handle_ask(
         Some(ctx) => format!("Context:\n{}\n\nQuestion: {}", ctx, question),
         None => question.to_string(),
     };
-    complete_and_log(client, logger, "local_ask", &detail, prompts::ASK, &user_content, SHORT_MAX_TOKENS, start).await
+    complete_and_log(client, logger, "local_ask", &detail, prompts::ASK, &user_content, SHORT_MAX_TOKENS, start, context_tokens).await
 }
 
 pub async fn handle_web_fetch(
@@ -75,6 +79,7 @@ pub async fn handle_web_fetch(
     logger: &ActivityLogger,
     url: &str,
     question: &str,
+    context_tokens: u64,
 ) -> ToolResult {
     let start = Instant::now();
     let detail = slug_url(url);
@@ -97,17 +102,18 @@ pub async fn handle_web_fetch(
     let text = strip_html_tags(&body);
     let truncated_text = if text.len() > 16000 { &text[..16000] } else { &text };
     let user_content = format!("Page content:\n{}\n\nQuestion: {}", truncated_text, question);
-    complete_and_log(client, logger, "local_web_fetch", &detail, prompts::WEB_FETCH, &user_content, SHORT_MAX_TOKENS, start).await
+    complete_and_log(client, logger, "local_web_fetch", &detail, prompts::WEB_FETCH, &user_content, SHORT_MAX_TOKENS, start, context_tokens).await
 }
 
 pub async fn handle_review(
     client: &McpLlmClient,
     logger: &ActivityLogger,
     diff: &str,
+    context_tokens: u64,
 ) -> ToolResult {
     let start = Instant::now();
     let detail = slug_diff(diff);
-    complete_and_log(client, logger, "local_review", &detail, prompts::REVIEW, diff, SHORT_MAX_TOKENS, start).await
+    complete_and_log(client, logger, "local_review", &detail, prompts::REVIEW, diff, SHORT_MAX_TOKENS, start, context_tokens).await
 }
 
 pub async fn handle_draft(
@@ -115,6 +121,7 @@ pub async fn handle_draft(
     logger: &ActivityLogger,
     task: &str,
     context: Option<&str>,
+    context_tokens: u64,
 ) -> ToolResult {
     let start = Instant::now();
     let detail = truncate(task, 60);
@@ -122,7 +129,7 @@ pub async fn handle_draft(
         Some(ctx) => format!("Context:\n{}\n\nTask: {}", ctx, task),
         None => task.to_string(),
     };
-    complete_and_log(client, logger, "local_draft", &detail, prompts::DRAFT, &user_content, LONG_MAX_TOKENS, start).await
+    complete_and_log(client, logger, "local_draft", &detail, prompts::DRAFT, &user_content, LONG_MAX_TOKENS, start, context_tokens).await
 }
 
 pub async fn handle_status(client: &McpLlmClient) -> ToolResult {
@@ -174,10 +181,11 @@ async fn complete_and_log(
     user_content: &str,
     max_tokens: u32,
     start: Instant,
+    context_tokens: u64,
 ) -> ToolResult {
     match client.complete(system_prompt, user_content, max_tokens).await {
         Ok(result) => {
-            logger.log(tool_name, detail, result.input_tokens, result.output_tokens, start, client.model_name());
+            logger.log(tool_name, detail, result.input_tokens, result.output_tokens, start, client.model_name(), context_tokens);
             ToolResult::text(result.text)
         }
         Err(e) => ToolResult::error(format!("LLM call failed: {}", e)),
