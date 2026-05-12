@@ -23,16 +23,7 @@ pub async fn handle_summarize(
         logger.log("local_summarize", 0, 0, start, client.model_name());
         return ToolResult::text("Command produced no output.");
     }
-    // Truncate to avoid exceeding local model's context window.
-    // Keep first 6000 chars + last 2000 chars so we see the start and the final result.
-    let truncated = if output.len() > 10000 {
-        let head = &output[..6000];
-        let tail = &output[output.len() - 2000..];
-        format!("{}\n\n[... {} chars truncated ...]\n\n{}", head, output.len() - 8000, tail)
-    } else {
-        output
-    };
-    complete_and_log(client, logger, "local_summarize", prompts::SUMMARIZE, &truncated, SHORT_MAX_TOKENS, start).await
+    complete_and_log(client, logger, "local_summarize", prompts::SUMMARIZE, &output, SHORT_MAX_TOKENS, start).await
 }
 
 pub async fn handle_explain(
