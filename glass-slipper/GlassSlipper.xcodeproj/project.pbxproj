@@ -16,6 +16,7 @@
 		BB000001 /* MemoryBannerViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000002 /* MemoryBannerViews.swift */; };
 		CC000001 /* MCPInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000002 /* MCPInstaller.swift */; };
 		CC000003 /* MCPActivityLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000004 /* MCPActivityLog.swift */; };
+		CC000005 /* CompanionWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000006 /* CompanionWindowController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 		BB000002 /* MemoryBannerViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryBannerViews.swift; sourceTree = "<group>"; };
 		CC000002 /* MCPInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPInstaller.swift; sourceTree = "<group>"; };
 		CC000004 /* MCPActivityLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPActivityLog.swift; sourceTree = "<group>"; };
+		CC000006 /* CompanionWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionWindowController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +66,7 @@
 				BB000002 /* MemoryBannerViews.swift */,
 				CC000002 /* MCPInstaller.swift */,
 				CC000004 /* MCPActivityLog.swift */,
+				CC000006 /* CompanionWindowController.swift */,
 				A2000006 /* Info.plist */,
 			);
 			path = .;
@@ -178,6 +181,7 @@
 				BB000001 /* MemoryBannerViews.swift in Sources */,
 				CC000001 /* MCPInstaller.swift in Sources */,
 				CC000003 /* MCPActivityLog.swift in Sources */,
+				CC000005 /* CompanionWindowController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

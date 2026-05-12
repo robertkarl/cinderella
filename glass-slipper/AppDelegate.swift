@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var worstStatus: EventStatus = .ok
     private var downloadManager: ModelDownloadManager?
     private var downloadRowView: ModelDownloadRowView?
+    private var companionWindowController: CompanionWindowController?
 
     // MARK: - Application lifecycle
 
@@ -50,6 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             NSApp.activate(ignoringOtherApps: true)
         }
+
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -131,7 +133,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editMenuItem.submenu = editMenu
 
+        // Window menu — companion window
+        let windowMenuItem = NSMenuItem()
+        menubar.addItem(windowMenuItem)
+        let windowMenu = NSMenu(title: "Window")
+        windowMenu.addItem(withTitle: "Claude Companion", action: #selector(showCompanionWindow), keyEquivalent: "2")
+        windowMenuItem.submenu = windowMenu
+
         NSApp.mainMenu = menubar
+    }
+
+    @objc private func showCompanionWindow() {
+        if companionWindowController == nil {
+            companionWindowController = CompanionWindowController()
+        }
+        companionWindowController?.showWindow(nil)
+        companionWindowController?.window?.makeKeyAndOrderFront(nil)
     }
 
     // MARK: - Window setup
