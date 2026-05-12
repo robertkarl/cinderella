@@ -9,6 +9,7 @@ pub fn system_prompt(tool: &str) -> &'static str {
         "local_web_fetch" => WEB_FETCH,
         "local_review" => REVIEW,
         "local_draft" => DRAFT,
+        "local_pass_fail" => PASS_FAIL,
         _ => PREAMBLE,
     }
 }
@@ -19,6 +20,15 @@ Be concise. No preamble, no disclaimers, no follow-up questions. \
 If you are unsure, say so in one sentence — do not hallucinate.";
 
 pub const SUMMARIZE: &str = "You are a local offload model running on the user's machine. \
+A frontier AI assistant (Claude) has delegated this task to you to save tokens and cost. \
+Be concise. No preamble, no disclaimers, no follow-up questions. \
+If you are unsure, say so in one sentence — do not hallucinate.\n\n\
+Your task: summarize the output of a shell command.\n\
+Describe what the output contains and any key information in 2-5 sentences.\n\
+Note errors or failures if present, but do not assume a pass/fail framing.\n\
+Do not reproduce the raw output.";
+
+pub const PASS_FAIL: &str = "You are a local offload model running on the user's machine. \
 A frontier AI assistant (Claude) has delegated this task to you to save tokens and cost. \
 Be concise. No preamble, no disclaimers, no follow-up questions. \
 If you are unsure, say so in one sentence — do not hallucinate.\n\n\
@@ -85,12 +95,13 @@ mod tests {
 
     #[test]
     fn test_prompts_contain_task_instructions() {
-        assert!(SUMMARIZE.contains("Pass or fail"));
+        assert!(SUMMARIZE.contains("summarize the output"));
         assert!(EXPLAIN.contains("plain English"));
         assert!(ASK.contains("answer the question"));
         assert!(WEB_FETCH.contains("web page"));
         assert!(REVIEW.contains("code diff"));
         assert!(DRAFT.contains("generate code"));
+        assert!(PASS_FAIL.contains("Pass or fail"));
     }
 
     #[test]
@@ -98,5 +109,12 @@ mod tests {
         assert_eq!(system_prompt("local_summarize"), SUMMARIZE);
         assert_eq!(system_prompt("local_explain"), EXPLAIN);
         assert_eq!(system_prompt("unknown_tool"), PREAMBLE);
+    }
+
+    #[test]
+    fn test_pass_fail_prompt() {
+        assert!(PASS_FAIL.starts_with("You are a local offload model"));
+        assert!(PASS_FAIL.contains("Pass or fail"));
+        assert_eq!(system_prompt("local_pass_fail"), PASS_FAIL);
     }
 }
