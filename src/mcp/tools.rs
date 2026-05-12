@@ -167,9 +167,13 @@ pub async fn dispatch(
     client: &McpLlmClient,
     logger: &ActivityLogger,
 ) -> ToolResult {
-    let context_tokens = arguments.get("context_tokens")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(0);
+    let context_tokens = match tool_name {
+        "local_status" => 0,
+        _ => match arguments.get("context_tokens").and_then(|v| v.as_u64()) {
+            Some(ct) => ct,
+            None => return ToolResult::error("Missing required parameter: context_tokens".to_string()),
+        },
+    };
 
     match tool_name {
         "local_summarize" => {
