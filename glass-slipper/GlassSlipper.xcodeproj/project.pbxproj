@@ -149,7 +149,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Symlink the cargo-built glass-slipper binary next to the .app\n# so findGlassSlipper can resolve it via the adjacent-to-bundle check.\nCINDY=\"${SRCROOT}/../target/release/glass-slipper\"\nDEST=\"${BUILT_PRODUCTS_DIR}/glass-slipper\"\nif [ -x \"$CINDY\" ]; then\n    ln -sf \"$CINDY\" \"$DEST\"\n    echo \"Linked glass-slipper -> $CINDY\"\nelse\n    echo \"warning: glass-slipper not found at $CINDY — run: cargo build --release\"\nfi\n";
+			shellScript = "# Symlink the cargo-built glass-slipper binary next to the .app\n# so findGlassSlipper can resolve it via the adjacent-to-bundle check.\nCINDY=\"${SRCROOT}/../target/release/glass-slipper\"\nDEST=\"${BUILT_PRODUCTS_DIR}/glass-slipper\"\nif [ -x \"$CINDY\" ]; then\n    ln -sf \"$CINDY\" \"$DEST\"\n    echo \"Linked glass-slipper -> $CINDY\"\nelse\n    echo \"warning: glass-slipper not found at $CINDY — run: cargo build --release\"\nfi\n\n# Copy glass-slipper-mcp into the app bundle\nMCP=\"${SRCROOT}/../target/release/glass-slipper-mcp\"\nMCP_DEST=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/Contents/MacOS/glass-slipper-mcp\"\nif [ -x \"$MCP\" ]; then\n    cp -f \"$MCP\" \"$MCP_DEST\"\n    echo \"Copied glass-slipper-mcp into app bundle\"\nelse\n    echo \"warning: glass-slipper-mcp not found at $MCP — run: cargo build --release\"\nfi\n";
 		};
 		A3000004 /* Build Glass Slipper */ = {
 			isa = PBXShellScriptBuildPhase;
