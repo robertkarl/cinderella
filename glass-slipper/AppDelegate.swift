@@ -62,6 +62,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        // Stop managed server first (clean SIGTERM on known PID)
+        companionWindowController?.llamaServerManager.stop()
+
+        // Fallback: kill any llama-server on port 8787 we didn't manage
         let killedServer = killLlamaServer()
 
         var killedProcess = false
