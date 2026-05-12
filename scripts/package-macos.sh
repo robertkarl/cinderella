@@ -90,17 +90,20 @@ echo "=== Step 4: Assemble app bundle ==="
 rm -rf "$APP_BUNDLE"
 cp -R "$XCODE_APP" "$APP_BUNDLE"
 
-# Rename the executable to match CFBundleExecutable
 MACOS_DIR="$APP_BUNDLE/Contents/MacOS"
-if [ -f "$MACOS_DIR/GlassSlipper" ] && [ ! -f "$MACOS_DIR/Glass Slipper" ]; then
-    mv "$MACOS_DIR/GlassSlipper" "$MACOS_DIR/Glass Slipper"
-fi
 
 # Embed helpers
 # Note: Rust helper is named "glass-slipper-agent" to avoid case-insensitive collision
 # with the Swift "Glass Slipper" executable on macOS (HFS+/APFS default).
 cp "$RUST_BINARY" "$MACOS_DIR/glass-slipper-agent"
 cp "$LLAMA_BINARY" "$MACOS_DIR/llama-server"
+
+# Embed MCP server
+MCP_BINARY="$REPO_ROOT/target/aarch64-apple-darwin/release/glass-slipper-mcp"
+if [ ! -f "$MCP_BINARY" ]; then
+    MCP_BINARY="$REPO_ROOT/target/release/glass-slipper-mcp"
+fi
+cp "$MCP_BINARY" "$MACOS_DIR/glass-slipper-mcp"
 
 # Copy model manifest to Resources
 RESOURCES_DIR="$APP_BUNDLE/Contents/Resources"
@@ -117,7 +120,7 @@ echo ""
 # --- Step 5: Verify otool -L (hard gate) ---
 echo "=== Step 5: Dependency verification (hard gate) ==="
 GATE_PASS=true
-for binary in "$MACOS_DIR/Glass Slipper" "$MACOS_DIR/glass-slipper-agent" "$MACOS_DIR/llama-server"; do
+for binary in "$MACOS_DIR/GlassSlipper" "$MACOS_DIR/glass-slipper-agent" "$MACOS_DIR/glass-slipper-mcp" "$MACOS_DIR/llama-server"; do
     if [ ! -f "$binary" ]; then
         echo "FAIL: Missing binary: $binary"
         GATE_PASS=false
@@ -145,6 +148,7 @@ echo "=== Step 6: Code signing ==="
 # Sign nested helpers first (inside-out order required by Apple)
 codesign --force --options runtime --timestamp --sign "$IDENTITY" "$MACOS_DIR/glass-slipper-agent"
 codesign --force --options runtime --timestamp --sign "$IDENTITY" "$MACOS_DIR/llama-server"
+codesign --force --options runtime --timestamp --sign "$IDENTITY" "$MACOS_DIR/glass-slipper-mcp"
 
 # Sign Frameworks if present
 if [ -d "$APP_BUNDLE/Contents/Frameworks" ]; then

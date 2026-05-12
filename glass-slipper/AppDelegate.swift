@@ -42,26 +42,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupMenuBar()
-        setupWindow()
-        setupUI()
-        checkModelOnLaunch()
-        window.makeKeyAndOrderFront(nil)
+        setupCompanionWindow()
         if #available(macOS 14.0, *) {
             NSApp.activate()
         } else {
             NSApp.activate(ignoringOtherApps: true)
         }
-
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        true
+        return false
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            showCompanionWindow()
+        }
+        return true
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        let killedServer = killLlamaServer()
+
+        var killedProcess = false
+        if let proc = process, proc.isRunning {
+            proc.terminate()
+            killedProcess = true
+        }
+
+        if killedServer || killedProcess {
+            // 2s hard deadline — exit regardless of child process state
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                NSApp.reply(toApplicationShouldTerminate: true)
+            }
+            return .terminateLater
+        }
+
+        return .terminateNow
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        if let proc = process, proc.isRunning {
-            proc.terminate()
-        }
         downloadManager?.cancelDownload()
     }
 
@@ -133,11 +153,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editMenuItem.submenu = editMenu
 
-        // Window menu — companion window
+        // Window menu
         let windowMenuItem = NSMenuItem()
         menubar.addItem(windowMenuItem)
         let windowMenu = NSMenu(title: "Window")
-        windowMenu.addItem(withTitle: "Claude Companion", action: #selector(showCompanionWindow), keyEquivalent: "2")
+        windowMenu.addItem(withTitle: "Claude Companion", action: #selector(showCompanionWindow), keyEquivalent: "1")
+        windowMenu.addItem(withTitle: "Network Debug", action: #selector(showNetworkDebugWindow), keyEquivalent: "2")
         windowMenuItem.submenu = windowMenu
 
         NSApp.mainMenu = menubar
@@ -151,13 +172,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         companionWindowController?.window?.makeKeyAndOrderFront(nil)
     }
 
+    @objc private func showNetworkDebugWindow() {
+        if window == nil {
+            setupNetworkDebugWindow()
+            setupUI()
+            checkModelOnLaunch()
+        }
+        window.makeKeyAndOrderFront(nil)
+    }
+
     // MARK: - Window setup
 
-    private func setupWindow() {
+    /// Launch the Claude Companion window as the primary window on startup.
+    private func setupCompanionWindow() {
+        companionWindowController = CompanionWindowController()
+        companionWindowController?.showWindow(nil)
+        companionWindowController?.window?.makeKeyAndOrderFront(nil)
+    }
+
+    /// Create the network debug window (on-demand via Cmd+2).
+    private func setupNetworkDebugWindow() {
         let frame = NSRect(x: 200, y: 200, width: 720, height: 580)
         let style: NSWindow.StyleMask = [.titled, .closable, .miniaturizable, .resizable]
         window = NSWindow(contentRect: frame, styleMask: style, backing: .buffered, defer: false)
-        window.title = "Glass Slipper"
+        window.title = "Glass Slipper — Network Debug"
         window.minSize = NSSize(width: 480, height: 360)
         window.center()
     }
@@ -380,7 +418,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Whether we are running from inside an app bundle (release mode).
     private var isReleaseBuild: Bool {
-        // In a proper app bundle, the executable is at .app/Contents/MacOS/Glass Slipper
+        // In a proper app bundle, the executable is at .app/Contents/MacOS/GlassSlipper
         let exe = Bundle.main.executablePath ?? ""
         return exe.contains(".app/Contents/MacOS/")
     }
@@ -463,6 +501,52 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         return nil
+    }
+
+    // MARK: - Kill llama-server on quit
+
+    /// Find and kill any llama-server process listening on port 8787.
+    @discardableResult
+    private func killLlamaServer() -> Bool {
+        let lsof = Process()
+        lsof.executableURL = URL(fileURLWithPath: "/usr/sbin/lsof")
+        lsof.arguments = ["-ti", ":8787"]
+        let pipe = Pipe()
+        lsof.standardOutput = pipe
+        lsof.standardError = Pipe()
+        do {
+            try lsof.run()
+            lsof.waitUntilExit()
+        } catch { return false }
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        guard let output = String(data: data, encoding: .utf8) else { return false }
+
+        var killed = false
+        for pidStr in output.split(separator: "\n") {
+            if let pid = Int32(pidStr.trimmingCharacters(in: .whitespaces)) {
+                // Safety: verify the process is actually llama-server before killing
+                let ps = Process()
+                ps.executableURL = URL(fileURLWithPath: "/bin/ps")
+                ps.arguments = ["-p", "\(pid)", "-o", "comm="]
+                let psPipe = Pipe()
+                ps.standardOutput = psPipe
+                ps.standardError = Pipe()
+                if let _ = try? ps.run() {
+                    ps.waitUntilExit()
+                    let psData = psPipe.fileHandleForReading.readDataToEndOfFile()
+                    let comm = String(data: psData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    guard comm.contains("llama") else {
+                        NSLog("Glass Slipper: pid %d on port 8787 is '%@', not llama-server — skipping", pid, comm)
+                        continue
+                    }
+                }
+                NSLog("Glass Slipper: sending SIGTERM to llama-server pid %d", pid)
+                kill(pid, SIGTERM)
+                killed = true
+            }
+        }
+        return killed
     }
 
     // MARK: - Model path
