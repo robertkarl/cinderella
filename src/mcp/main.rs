@@ -16,7 +16,7 @@ use logger::ActivityLogger;
 use llm_client::McpLlmClient;
 use std::io::{self, BufRead, Write};
 
-const LLAMA_SERVER_URL: &str = "http://127.0.0.1:8080";
+const LLAMA_SERVER_URL: &str = "http://127.0.0.1:8787";
 const MODEL_NAME: &str = "local";
 
 #[tokio::main]

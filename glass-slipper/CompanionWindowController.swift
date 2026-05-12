@@ -37,7 +37,7 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
     private var isServerRunning: Bool {
         let semaphore = DispatchSemaphore(value: 0)
         var healthy = false
-        guard let url = URL(string: "http://127.0.0.1:8080/health") else { return false }
+        guard let url = URL(string: "http://127.0.0.1:8787/health") else { return false }
         URLSession.shared.dataTask(with: url) { _, response, _ in
             if let http = response as? HTTPURLResponse, http.statusCode == 200 {
                 healthy = true
@@ -84,7 +84,7 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
         serverRow = SetupRow(
             step: "2",
             title: "Server",
-            detail: "llama-server · Port 8080",
+            detail: "llama-server · Port 8787",
             actionTitle: "Start",
             action: { [weak self] in self?.handleServerStart() }
         )
