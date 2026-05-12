@@ -98,6 +98,16 @@ extension NSColor {
     static let statusERRFg       = NSColor(hex: 0xB91C1C)               // red-700
     static let statusWARNFg      = NSColor(hex: 0x854D0E)               // yellow-800
     static let statusINFOFg      = NSColor(hex: 0x1D4ED8)               // blue-700
+
+    // MCP Companion — savings
+    static let savingsGreen       = NSColor(hex: 0x4ADE80)               // green-400 (big $ number)
+    static let savingsGreenMuted  = NSColor(hex: 0xBBF7D0)               // green-200 (savings bg)
+    static let companionBlue      = NSColor(hex: 0x60A5FA)               // blue-400 (delegated count)
+    static let companionPurple    = NSColor(hex: 0xC084FC)               // purple-400 (tokens count)
+    static let setupStepBg        = NSColor(hex: 0xF8FAFC)               // slate-50 (setup row bg)
+    static let setupCheckmark     = NSColor(hex: 0x22C55E)               // green-500 (done checkmark)
+    static let setupActionBg      = NSColor(hex: 0x3B82F6)               // blue-500 (Install button bg)
+    static let setupActionFg      = NSColor(hex: 0xFFFFFF)               // white (Install button text)
 }
 
 // MARK: - Typography tokens
