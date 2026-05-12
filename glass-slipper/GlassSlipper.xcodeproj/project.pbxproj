@@ -18,6 +18,8 @@
 		CC000003 /* MCPActivityLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000004 /* MCPActivityLog.swift */; };
 		CC000005 /* CompanionWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000006 /* CompanionWindowController.swift */; };
 		DD000001 /* GlassSlipperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000002 /* GlassSlipperTests.swift */; };
+		EE000001 /* LlamaServerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000002 /* LlamaServerManager.swift */; };
+		EE000003 /* LlamaServerManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000004 /* LlamaServerManagerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +47,8 @@
 		CC000006 /* CompanionWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionWindowController.swift; sourceTree = "<group>"; };
 		DD000002 /* GlassSlipperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassSlipperTests.swift; sourceTree = "<group>"; };
 		DD000005 /* GlassSlipperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlassSlipperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE000002 /* LlamaServerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaServerManager.swift; sourceTree = "<group>"; };
+		EE000004 /* LlamaServerManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaServerManagerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,6 +92,7 @@
 				CC000002 /* MCPInstaller.swift */,
 				CC000004 /* MCPActivityLog.swift */,
 				CC000006 /* CompanionWindowController.swift */,
+				EE000002 /* LlamaServerManager.swift */,
 				A2000006 /* Info.plist */,
 			);
 			path = .;
@@ -114,6 +119,7 @@
 			isa = PBXGroup;
 			children = (
 				DD000002 /* GlassSlipperTests.swift */,
+				EE000004 /* LlamaServerManagerTests.swift */,
 			);
 			path = GlassSlipperTests;
 			sourceTree = "<group>";
@@ -230,6 +236,7 @@
 				CC000001 /* MCPInstaller.swift in Sources */,
 				CC000003 /* MCPActivityLog.swift in Sources */,
 				CC000005 /* CompanionWindowController.swift in Sources */,
+				EE000001 /* LlamaServerManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -238,6 +245,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DD000001 /* GlassSlipperTests.swift in Sources */,
+				EE000003 /* LlamaServerManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
