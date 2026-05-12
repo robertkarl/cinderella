@@ -1,0 +1,6 @@
+mod protocol;
+
+fn main() {
+    eprintln!("glass-slipper-mcp: not yet implemented");
+    std::process::exit(1);
+}

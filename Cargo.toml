@@ -9,6 +9,10 @@ license = "MIT"
 name = "glass-slipper"
 path = "src/main.rs"
 
+[[bin]]
+name = "glass-slipper-mcp"
+path = "src/mcp/main.rs"
+
 [dependencies]
 crossterm = "0.28"
 reqwest = { version = "0.12", features = ["json", "stream"] }
