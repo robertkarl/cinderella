@@ -18,9 +18,13 @@ pub fn tool_definitions() -> serde_json::Value {
                         "command": {
                             "type": "string",
                             "description": "The shell command to run"
+                        },
+                        "context_tokens": {
+                            "type": "integer",
+                            "description": "Current conversation context size in tokens. Used for savings estimation."
                         }
                     },
-                    "required": ["command"]
+                    "required": ["command", "context_tokens"]
                 }
             },
             {
@@ -32,9 +36,13 @@ pub fn tool_definitions() -> serde_json::Value {
                         "command": {
                             "type": "string",
                             "description": "The shell command to run"
+                        },
+                        "context_tokens": {
+                            "type": "integer",
+                            "description": "Current conversation context size in tokens. Used for savings estimation."
                         }
                     },
-                    "required": ["command"]
+                    "required": ["command", "context_tokens"]
                 }
             },
             {
@@ -46,9 +54,13 @@ pub fn tool_definitions() -> serde_json::Value {
                         "code": {
                             "type": "string",
                             "description": "The code to explain"
+                        },
+                        "context_tokens": {
+                            "type": "integer",
+                            "description": "Current conversation context size in tokens. Used for savings estimation."
                         }
                     },
-                    "required": ["code"]
+                    "required": ["code", "context_tokens"]
                 }
             },
             {
@@ -64,9 +76,13 @@ pub fn tool_definitions() -> serde_json::Value {
                         "context": {
                             "type": "string",
                             "description": "Optional context to inform the answer"
+                        },
+                        "context_tokens": {
+                            "type": "integer",
+                            "description": "Current conversation context size in tokens. Used for savings estimation."
                         }
                     },
-                    "required": ["question"]
+                    "required": ["question", "context_tokens"]
                 }
             },
             {
@@ -82,9 +98,13 @@ pub fn tool_definitions() -> serde_json::Value {
                         "question": {
                             "type": "string",
                             "description": "What to extract from the page"
+                        },
+                        "context_tokens": {
+                            "type": "integer",
+                            "description": "Current conversation context size in tokens. Used for savings estimation."
                         }
                     },
-                    "required": ["url", "question"]
+                    "required": ["url", "question", "context_tokens"]
                 }
             },
             {
@@ -96,9 +116,13 @@ pub fn tool_definitions() -> serde_json::Value {
                         "diff": {
                             "type": "string",
                             "description": "The diff to summarize"
+                        },
+                        "context_tokens": {
+                            "type": "integer",
+                            "description": "Current conversation context size in tokens. Used for savings estimation."
                         }
                     },
-                    "required": ["diff"]
+                    "required": ["diff", "context_tokens"]
                 }
             },
             {
@@ -114,9 +138,13 @@ pub fn tool_definitions() -> serde_json::Value {
                         "context": {
                             "type": "string",
                             "description": "Optional context (existing code, requirements, etc.)"
+                        },
+                        "context_tokens": {
+                            "type": "integer",
+                            "description": "Current conversation context size in tokens. Used for savings estimation."
                         }
                     },
-                    "required": ["task"]
+                    "required": ["task", "context_tokens"]
                 }
             },
             {
@@ -139,37 +167,41 @@ pub async fn dispatch(
     client: &McpLlmClient,
     logger: &ActivityLogger,
 ) -> ToolResult {
+    let context_tokens = arguments.get("context_tokens")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
+
     match tool_name {
         "local_summarize" => {
             let command = arguments.get("command").and_then(|v| v.as_str()).unwrap_or("");
-            handlers::handle_summarize(client, logger, command).await
+            handlers::handle_summarize(client, logger, command, context_tokens).await
         }
         "local_pass_fail" => {
             let command = arguments.get("command").and_then(|v| v.as_str()).unwrap_or("");
-            handlers::handle_pass_fail(client, logger, command).await
+            handlers::handle_pass_fail(client, logger, command, context_tokens).await
         }
         "local_explain" => {
             let code = arguments.get("code").and_then(|v| v.as_str()).unwrap_or("");
-            handlers::handle_explain(client, logger, code).await
+            handlers::handle_explain(client, logger, code, context_tokens).await
         }
         "local_ask" => {
             let question = arguments.get("question").and_then(|v| v.as_str()).unwrap_or("");
             let context = arguments.get("context").and_then(|v| v.as_str());
-            handlers::handle_ask(client, logger, question, context).await
+            handlers::handle_ask(client, logger, question, context, context_tokens).await
         }
         "local_web_fetch" => {
             let url = arguments.get("url").and_then(|v| v.as_str()).unwrap_or("");
             let question = arguments.get("question").and_then(|v| v.as_str()).unwrap_or("");
-            handlers::handle_web_fetch(client, logger, url, question).await
+            handlers::handle_web_fetch(client, logger, url, question, context_tokens).await
         }
         "local_review" => {
             let diff = arguments.get("diff").and_then(|v| v.as_str()).unwrap_or("");
-            handlers::handle_review(client, logger, diff).await
+            handlers::handle_review(client, logger, diff, context_tokens).await
         }
         "local_draft" => {
             let task = arguments.get("task").and_then(|v| v.as_str()).unwrap_or("");
             let context = arguments.get("context").and_then(|v| v.as_str());
-            handlers::handle_draft(client, logger, task, context).await
+            handlers::handle_draft(client, logger, task, context, context_tokens).await
         }
         "local_status" => {
             handlers::handle_status(client).await
@@ -221,6 +253,41 @@ mod tests {
         let defs = tool_definitions();
         for tool in defs["tools"].as_array().unwrap() {
             assert!(tool.get("inputSchema").is_some(), "Tool {} missing inputSchema", tool["name"]);
+        }
+    }
+
+    #[test]
+    fn test_all_tools_except_status_require_context_tokens() {
+        let defs = tool_definitions();
+        for tool in defs["tools"].as_array().unwrap() {
+            let name = tool["name"].as_str().unwrap();
+            let required = tool["inputSchema"]["required"].as_array().unwrap();
+            let required_strs: Vec<&str> = required.iter().filter_map(|v| v.as_str()).collect();
+            if name == "local_status" {
+                assert!(!required_strs.contains(&"context_tokens"),
+                    "local_status should NOT require context_tokens");
+            } else {
+                assert!(required_strs.contains(&"context_tokens"),
+                    "Tool {} should require context_tokens", name);
+            }
+        }
+    }
+
+    #[test]
+    fn test_all_tools_except_status_have_context_tokens_property() {
+        let defs = tool_definitions();
+        for tool in defs["tools"].as_array().unwrap() {
+            let name = tool["name"].as_str().unwrap();
+            let props = tool["inputSchema"]["properties"].as_object().unwrap();
+            if name == "local_status" {
+                assert!(!props.contains_key("context_tokens"),
+                    "local_status should NOT have context_tokens property");
+            } else {
+                assert!(props.contains_key("context_tokens"),
+                    "Tool {} should have context_tokens property", name);
+                assert_eq!(props["context_tokens"]["type"], "integer",
+                    "Tool {} context_tokens should be integer", name);
+            }
         }
     }
 }
