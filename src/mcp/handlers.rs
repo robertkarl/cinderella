@@ -306,4 +306,33 @@ mod tests {
         let output = run_command("echo err >&2").await.unwrap();
         assert!(output.contains("err"));
     }
+
+    #[test]
+    fn test_slug_command_empty() {
+        assert_eq!(slug_command(""), "(empty)");
+        assert_eq!(slug_command("   "), "(empty)");
+    }
+
+    #[test]
+    fn test_slug_url_no_protocol() {
+        // No "//" means the fallback returns the full input unchanged
+        assert_eq!(slug_url("localhost:8787/health"), "localhost:8787/health");
+    }
+
+    #[test]
+    fn test_truncate_exact_boundary() {
+        assert_eq!(truncate("12345", 5), "12345");
+        assert_eq!(truncate("123456", 5), "12...");
+    }
+
+    #[test]
+    fn test_strip_html_tags_empty() {
+        assert_eq!(strip_html_tags(""), "");
+        assert_eq!(strip_html_tags("<>"), "");
+    }
+
+    #[test]
+    fn test_slug_diff_no_diff_prefix() {
+        assert_eq!(slug_diff("+++ b/foo.rs\n--- a/foo.rs\n+added line"), "diff");
+    }
 }

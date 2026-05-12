@@ -273,4 +273,21 @@ mod tests {
         mgr.stop().await;
         assert!(mgr.child.is_none());
     }
+
+    #[tokio::test]
+    async fn test_start_fails_on_occupied_port() {
+        // Bind a port to simulate it being in use
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+
+        let config = make_config("model.gguf", port, 4096);
+        let mut mgr = ServerManager::new(config, PathBuf::from("/nonexistent/llama-server"));
+
+        let result = mgr.start().await;
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("already in use"), "Expected 'already in use' error, got: {}", err);
+
+        drop(listener);
+    }
 }
