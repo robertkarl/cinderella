@@ -416,89 +416,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Find binaries
 
-    /// Whether we are running from inside an app bundle (release mode).
-    private var isReleaseBuild: Bool {
-        // In a proper app bundle, the executable is at .app/Contents/MacOS/GlassSlipper
-        let exe = Bundle.main.executablePath ?? ""
-        return exe.contains(".app/Contents/MacOS/")
-    }
-
     private func findGlassSlipper() -> String? {
-        // Primary: bundled helper inside app bundle (named glass-slipper-agent to avoid
-        // case-insensitive collision with the Swift "Glass Slipper" executable)
         let bundled = Bundle.main.bundlePath + "/Contents/MacOS/glass-slipper-agent"
         if FileManager.default.isExecutableFile(atPath: bundled) {
             return bundled
         }
-
-        // Release mode: fail closed — don't fall back to PATH or Cargo outputs
-        if isReleaseBuild {
-            return nil
-        }
-
-        // --- Development-only fallbacks ---
-        let appDir = Bundle.main.bundlePath
-        let parentDir = (appDir as NSString).deletingLastPathComponent
-
-        // Adjacent to app
-        let adjacent = (parentDir as NSString).appendingPathComponent("glass-slipper")
-        if FileManager.default.isExecutableFile(atPath: adjacent) {
-            return adjacent
-        }
-
-        // Cargo debug build
-        let cargoDebug = ((parentDir as NSString).appendingPathComponent("../target/debug/glass-slipper") as NSString).standardizingPath
-        if FileManager.default.isExecutableFile(atPath: cargoDebug) {
-            return cargoDebug
-        }
-
-        // Cargo release build
-        let cargoRelease = ((parentDir as NSString).appendingPathComponent("../target/release/glass-slipper") as NSString).standardizingPath
-        if FileManager.default.isExecutableFile(atPath: cargoRelease) {
-            return cargoRelease
-        }
-
-        // Check PATH via which
-        let which = Process()
-        which.executableURL = URL(fileURLWithPath: "/usr/bin/which")
-        which.arguments = ["glass-slipper"]
-        let whichPipe = Pipe()
-        which.standardOutput = whichPipe
-        which.standardError = Pipe()
-        do {
-            try which.run()
-            which.waitUntilExit()
-            let data = whichPipe.fileHandleForReading.readDataToEndOfFile()
-            let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            if !path.isEmpty && FileManager.default.isExecutableFile(atPath: path) {
-                return path
-            }
-        } catch {}
-
         return nil
     }
 
     private func findLlamaServer() -> String? {
-        // Primary: bundled helper inside app bundle
         let bundled = Bundle.main.bundlePath + "/Contents/MacOS/llama-server"
         if FileManager.default.isExecutableFile(atPath: bundled) {
             return bundled
-        }
-
-        // Release mode: fail closed — no Homebrew fallback
-        if isReleaseBuild {
-            return nil
-        }
-
-        // --- Development-only fallbacks ---
-        let candidates = [
-            "/opt/homebrew/bin/llama-server",
-            "/usr/local/bin/llama-server",
-        ]
-        for path in candidates {
-            if FileManager.default.isExecutableFile(atPath: path) {
-                return path
-            }
         }
         return nil
     }
@@ -551,22 +480,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Model path
 
-    /// Model file path: ~/Library/Application Support/Glass Slipper/Models/Qwen3.5-9B-Q5_K_M.gguf
-    /// In development, falls back to ~/models/ if Application Support copy doesn't exist.
     private func modelFilePath() -> String {
         let home = NSHomeDirectory()
         let appSupportPath = home + "/Library/Application Support/Glass Slipper/Models/Qwen3.5-9B-Q5_K_M.gguf"
         if FileManager.default.fileExists(atPath: appSupportPath) {
             return appSupportPath
         }
-        // Development fallback (not used in release builds)
-        if !isReleaseBuild {
-            let legacyPath = home + "/models/Qwen3.5-9B-Q5_K_M.gguf"
-            if FileManager.default.fileExists(atPath: legacyPath) {
-                return legacyPath
-            }
+        // Legacy path for development machines with models in ~/models/
+        let legacyPath = home + "/models/Qwen3.5-9B-Q5_K_M.gguf"
+        if FileManager.default.fileExists(atPath: legacyPath) {
+            return legacyPath
         }
-        // Return the canonical path even if missing — the Rust helper will report the error
         return appSupportPath
     }
 
