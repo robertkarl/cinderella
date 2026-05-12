@@ -320,6 +320,7 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
         case "local_review":    verb = "Review"
         case "local_draft":     verb = "Draft"
         case "local_status":    verb = "Status"
+        case "local_pass_fail": verb = "Pass/Fail"
         default:                verb = tool
         }
         if detail.isEmpty {

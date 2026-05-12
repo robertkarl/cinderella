@@ -15,8 +15,10 @@ struct MCPActivityEntry {
     let detail: String
     let inputTokens: Int
     let outputTokens: Int
+    let contextTokens: Int
     let latencyMs: Int
     let estimatedCloudCostUSD: Double
+    let cacheHit: Bool
     let model: String
 }
 
@@ -82,15 +84,17 @@ final class MCPActivityLog {
                 detail: json["detail"] as? String ?? "",
                 inputTokens: json["input_tokens"] as? Int ?? 0,
                 outputTokens: json["output_tokens"] as? Int ?? 0,
+                contextTokens: json["context_tokens"] as? Int ?? 0,
                 latencyMs: json["latency_ms"] as? Int ?? 0,
                 estimatedCloudCostUSD: json["estimated_cloud_cost_usd"] as? Double ?? 0,
+                cacheHit: json["cache_hit"] as? Bool ?? false,
                 model: json["model"] as? String ?? ""
             )
 
             newEntries.append(entry)
             summary.totalCostSaved += entry.estimatedCloudCostUSD
             summary.totalTasksDelegated += 1
-            summary.totalTokensSaved += entry.inputTokens
+            summary.totalTokensSaved += entry.contextTokens
         }
 
         if !newEntries.isEmpty {
