@@ -38,4 +38,12 @@ deploy:
 smoke-test:
 	@echo "No smoke test configured. Glass Slipper is a local CLI tool."
 
-.PHONY: stop_all_llama_server startllama pidev cindy-no-start-llama cindy-remote remote-query-models test deploy smoke-test
+build_dmg:
+	./scripts/package-macos.sh
+
+open_from_dmg:
+	hdiutil detach /Volumes/Glass\ Slipper 2>/dev/null || true
+	hdiutil attach build/Glass\ Slipper.dmg
+	open /Volumes/Glass\ Slipper/Glass\ Slipper.app
+
+.PHONY: stop_all_llama_server startllama pidev cindy-no-start-llama cindy-remote remote-query-models test deploy smoke-test build_dmg open_from_dmg

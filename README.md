@@ -40,6 +40,47 @@ The implication here is that MoE models may be more capable than dense models if
 ![ngl-sweep-plot.png](ngl-sweep-plot.png)
 
 
+# Building
+
+```bash
+cargo build --release          # Rust agent + MCP server
+```
+
+### Release DMG
+
+```bash
+# 1. Set signing identity
+export DEVELOPER_ID="Developer ID Application: Your Name (TEAMID)"
+
+# 2. Build, bundle, sign, and create DMG
+./scripts/package-macos.sh
+
+# 3. Notarize and staple
+./scripts/notarize-macos.sh
+
+# 4. Copy DMG to the website repo and deploy
+cp build/Glass\ Slipper.dmg ../glass-slipper/site/
+cd ../glass-slipper/site && ./deploy.sh
+```
+
+The site lives at [glass-slipper.cc](https://glass-slipper.cc) — source is in the `glass-slipper` repo. `deploy.sh` builds a Docker image and pushes it to the server.
+
+Notarization requires a stored credential profile (one-time setup):
+```bash
+xcrun notarytool store-credentials "glass-slipper-notary" \
+    --apple-id "you@example.com" \
+    --team-id "YOURTEAMID" \
+    --password "@keychain:AC_PASSWORD"
+```
+
+### Tests
+
+```bash
+cargo test                                          # Unit tests (116+)
+cargo test --features integration -- --test-threads=1  # Integration tests (requires llama-server + model)
+xcodebuild test -project glass-slipper/GlassSlipper.xcodeproj -scheme GlassSlipper  # Swift tests
+```
+
 # Glass Slipper
 
 Glass Slipper is a native macOS diagnostic app built with AppKit. It drives the agent core through a structured JSON protocol and renders each runbook step as a chunky Transmission-style table row — title, summary, detail, and a big green checkmark or red exclamation mark.

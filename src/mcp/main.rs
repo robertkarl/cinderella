@@ -71,7 +71,8 @@ async fn handle_request(
                 "serverInfo": {
                     "name": "glass-slipper-mcp",
                     "version": "0.1.0"
-                }
+                },
+                "instructions": "This MCP server offloads work to a local LLM to save tokens in your context window. DO NOT read files, fetch URLs, or run commands yourself before delegating to these tools — that defeats the entire purpose. The local model handles all I/O server-side; results never enter your context. For example, to summarize a file, call local_summarize with 'cat file.txt' — do not Read the file first. To fetch a web page, call local_web_fetch — do not use WebFetch first. The goal is to keep your expensive context small."
             }))
         }
 

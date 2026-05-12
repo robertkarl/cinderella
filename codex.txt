@@ -1,0 +1,754 @@
+Last login: Mon May 11 21:13:29 on ttys005
+You have new mail.
+c%
+robertkarl@rk-mbp cinderella % codex
+╭─────────────────────────────────────────────╮
+│ >_ OpenAI Codex (v0.125.0)                  │
+│                                             │
+│ model:     gpt-5.5 xhigh   /model to change │
+│ directory: ~/Code/cinderella                │
+╰─────────────────────────────────────────────╯
+
+  Tip: GPT-5.5 is now available in Codex. It's our strongest agentic coding model yet, built to reason through large codebases, check assumptions with tools, and keep going until the work is done.
+
+  Learn more: https://openai.com/index/introducing-gpt-5-5/
+
+⚠ Skipped loading 12 skill(s) due to invalid SKILL.md files.
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/cso-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-help/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-eng-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/implement/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-ceo-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/fresh-eyes/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-design-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/code-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/human-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/ship-it/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/survey-and-plan/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/quality-check/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ Skipped loading 12 skill(s) due to invalid SKILL.md files.
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/cso-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-help/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-eng-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/implement/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-ceo-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/fresh-eyes/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-design-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/code-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/human-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/ship-it/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/survey-and-plan/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/quality-check/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ Skipped loading 12 skill(s) due to invalid SKILL.md files.
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/cso-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-help/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-eng-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/implement/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-ceo-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/fresh-eyes/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-design-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/code-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/human-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/ship-it/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/survey-and-plan/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/quality-check/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ Skipped loading 12 skill(s) due to invalid SKILL.md files.
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/cso-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-help/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-eng-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/implement/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-ceo-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/fresh-eyes/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/gauntlette-design-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/code-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/human-review/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/ship-it/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/survey-and-plan/SKILL.md: missing YAML frontmatter delimited by ---
+
+⚠ /Users/robertkarl/Code/gauntlette/skills/quality-check/SKILL.md: missing YAML frontmatter delimited by ---
+
+
+› perform a thorough code review of the rust and swift source code. prioritize findings that compromise 1) security and 2) maintainability. it should be safe/secure to run, and should be easy to modify. use subagents if you need to to keep context clean and review on multiple dimensions.
+
+
+• I’ll review this as a code review, with findings first and concrete file/line evidence. I’m going to split Rust and Swift analysis into parallel read-only passes, then reconcile the highest-confidence issues locally.
+
+• Updated Plan
+  └ □ Inventory Rust/Swift source and app layout
+    □ Parallel Rust and Swift security/maintainability review
+    □ Validate high-risk findings against code paths
+    □ Deliver prioritized review with residual risks
+
+• Spawned Planck [explorer] (gpt-5.5 high)
+  └ Read-only code review task for /Users/robertkarl/Code/cinderella. Focus only on Rust source. The repo instruction is: Glass Slipper builds, packages, and dis...
+
+• Spawned Halley [explorer] (gpt-5.5 high)
+  └ Read-only code review task for /Users/robertkarl/Code/cinderella. Focus only on Swift source. The repo instruction is: Glass Slipper builds, packages, and di...
+
+• Ran pwd
+  └ /Users/robertkarl/Code/cinderella
+
+• Ran git status --short
+  └ ?? AGENTS.md
+    ?? docs/token-introspection.md
+
+• Waited for background terminal · find .. -name AGENTS.md -print
+
+• Waited for background terminal
+
+• Explored
+  └ List rg --files -g '*.rs' -g '*.swift' -g Cargo.toml -g Package.swift -g project.pbxproj -g Info.plist -g AGENTS.md
+    Search AGENTS.md in ..
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• The repo has a small Rust CLI/server surface plus a Swift macOS app. I also see AGENTS.md is untracked, so I’ll treat it as user-owned workspace state and keep this review read-only.
+
+• Explored
+  └ Read Cargo.toml, AGENTS.md
+    Search (TODO|FIXME|HACK|unwrap\(|expect\(|panic!|force unwrap|try!|fatalError|as!) in src
+    Search (Command|Process|shell|bash|sh -c|llama|server|http|localhost|127\.0\.0\.1|0\.0\.0\.0|download|URLSession|FileManager|copyItem|createFile|write\(|unsafe|unwrap\(|expect\(|panic!|todo!|unimplemented!|chmod|Authorization|sandbox|NSAppTransportSecurity|UserDefaults|temporaryDirectory|
+NSTask|
+           Process\() in src
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• The first pass is already surfacing two review themes: the app has explicit “bundled llama-server” requirements, but some code/tests still allow or expect system binaries; and model integrity checks have TODO bypasses that may be live, not just test scaffolding. I’m reading those paths next so
+  the final review only includes confirmed issues.
+
+• Explored
+  └ Read orchestrator.rs, model_manifest.rs, ModelDownloadManager.swift, bash.rs, main.rs, read.rs, config.rs, server.rs, write.rs, edit.rs, ls.rs, mod.rs, agent.rs, llm.rs, handlers.rs, logger.rs, tools.rs, llm_client.rs, MCPInstaller.swift, AppDelegate.swift, Info.plist, GlassSlipperTests.swift
+    Search verify_sha256|quick_check|isModelPresent|modelFilePath\(|default_model|n_gpu_layers|ctx_size|min_ram|ModelDefinition in src
+    List rg --files -g model-manifest.json -g '*manifest*' -g 'scripts/**' -g '*.sh' -g Makefile -g 'README*' -g 'docs/**'
+    Read model-manifest.json
+    Search llama-server|glass-slipper-agent|model-manifest|Homebrew|brew|/usr/local|/opt/homebrew|codesign|xattr|curl|sha256|shasum in .
+
+─ Worked for 1m 18s ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• The Swift subagent confirmed the bundled-binary and model-trust concerns with concrete paths. I’m still waiting on the Rust pass, and meanwhile I’m checking MCP and tool execution paths because those are the highest-risk surfaces for “safe to run.”
+
+• Updated Plan
+  └ ✔ Inventory Rust/Swift source and app layout
+    □ Parallel Rust and Swift security/maintainability review
+    □ Validate high-risk findings against code paths
+    □ Deliver prioritized review with residual risks
+
+• Waiting for Planck [explorer]
+
+• Finished waiting
+  └ No agents completed yet
+
+• Explored
+  └ Read MCPActivityLog.swift, CompanionWindowController.swift, CinderellaScaffold.swift, mcp_integration.rs, memory_monitor.rs, memory_ffi.rs, hw.rs, main.swift
+
+─ Worked for 1m 45s ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• Both subagents have finished, and their top findings align with the local pass: command execution through MCP and external llama-server discovery are the most serious security and policy issues. I’m consolidating duplicate Swift/Rust findings into one prioritized review so the final list is
+  actionable rather than repetitive.
+
+• Updated Plan
+  └ ✔ Inventory Rust/Swift source and app layout
+    ✔ Parallel Rust and Swift security/maintainability review
+    ✔ Validate high-risk findings against code paths
+    □ Deliver prioritized review with residual risks
+
+• Closed Planck [explorer]
+
+• Closed Halley [explorer]
+
+• Updated Plan
+  └ ✔ Inventory Rust/Swift source and app layout
+    ✔ Parallel Rust and Swift security/maintainability review
+    ✔ Validate high-risk findings against code paths
+    ✔ Deliver prioritized review with residual risks
+
+• Findings
+
+  High: MCP command tools are arbitrary shell execution with no safety layer. src/mcp/handlers.rs:150 runs caller-provided strings through sh -c, reached from src/mcp/tools.rs:179. This bypasses the app’s bash classifier, cwd restriction, timeout, process-group cleanup, and output limits. A
+  malicious or mistaken MCP call can read secrets, delete files outside the repo, pipe remote code to a shell, or hang the MCP server with unbounded output.
+
+  High: llama-server can still come from outside the app bundle. Rust exposes --llama-server in src/main.rs:41, then falls back to ~/.glass-slipper/bin and PATH in src/orchestrator.rs:478. Swift also has development Homebrew fallbacks in glass-slipper/AppDelegate.swift:443, and tests hard-code
+  Homebrew paths in glass-slipper/GlassSlipperTests/GlassSlipperTests.swift:14. This violates AGENTS.md and creates a path-hijack/supply-chain risk.
+
+  Medium: Managed model files are trusted without startup SHA verification. Swift accepts an existing model by size only in glass-slipper/ModelDownloadManager.swift:73, the companion accepts mere existence in glass-slipper/CompanionWindowController.swift:30, and Rust launches models found by path
+  in src/orchestrator.rs:417 without using src/model_manifest.rs:149. A same-size corrupted or replaced GGUF would be passed into llama-server.
+
+  Medium: local_web_fetch is an SSRF and DoS surface. src/mcp/handlers.rs:92 fetches arbitrary URLs, src/mcp/handlers.rs:97 reads the whole response before limiting, and src/mcp/handlers.rs:103 slices a UTF-8 string by byte index, which can panic. Restrict schemes/hosts, stream with a hard byte
+  cap, and truncate on char boundaries.
+
+  Medium: MCP install state can report a stale or malicious config as installed. glass-slipper/MCPInstaller.swift:24 only checks that a glass-slipper entry exists, not that command equals the current bundled glass-slipper-mcp and is executable. The write path in glass-slipper/MCPInstaller.swift:65
+  also rewrites ~/.claude.json non-atomically, risking config loss during concurrent edits or crashes.
+
+  Medium: Swift model selection is hardcoded despite the manifest/adaptive model design. glass-slipper/AppDelegate.swift:470 always chooses the 9B filename, while Rust selects models from the manifest by RAM. This makes adaptive sizing brittle and leaves small/large model download and SHA
+  placeholders in model-manifest.json:10 and model-manifest.json:42 easy to miss.
+
+  Low: Server health is not tied to the spawned child. src/server.rs:43 checks the port, drops the listener, starts the process at src/server.rs:55, then trusts any 127.0.0.1:<port>/health success in src/server.rs:80. A local race could route chat traffic to the wrong process.
+
+  Low: Process/UI/log buffers are unbounded. Examples: stdout line buffering in glass-slipper/AppDelegate.swift:497, event row accumulation in glass-slipper/CinderellaScaffold.swift:921, and activity entry retention in glass-slipper/MCPActivityLog.swift:76.
+
+  Test Gaps
+
+  I did not run tests; this was a read-only review. The main missing coverage is release-bundle completeness, bundled-only llama-server, startup SHA verification, safe MCP command execution, atomic MCP config writes, web-fetch limits, and malformed/huge process output handling.
+
+
+› these are great finds. write them all to disk in codex-code-review-5-11.md or similar.
+
+
+• I’ll create a repo-local review note with the full findings, keeping it as a standalone markdown artifact so it can be shared or turned into issues later.
+
+• Ran test -e codex-code-review-5-11.md
+  └ (no output)
+
+• Ran git status --short
+  └ ?? AGENTS.md
+    ?? docs/token-introspection.md
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• The filename is available. I’m writing the review in a structured format with severity, evidence, impact, and recommended remediation for each issue.
+
+• Added codex-code-review-5-11.md (+203 -0)
+      1 +# Codex Code Review - 2026-05-11
+      2 +
+      3 +Scope: read-only review of Rust and Swift source in this repository, prioritizing security and maintainability. The review included `src/`, `tests/`, and `glass-slipper/`.
+      4 +
+      5 +Repository instruction considered: Glass Slipper builds, packages, and distributes its own `llama-server` binary inside the app bundle. Do not use Homebrew or system `llama-server`.
+      6 +
+      7 +Tests were not run for this review.
+      8 +
+      9 +## Summary
+     10 +
+     11 +The highest-risk issues are:
+     12 +
+     13 +1. MCP shell tools run arbitrary commands without the main app's safety layer.
+     14 +2. `llama-server` discovery still permits binaries outside the app bundle.
+     15 +3. Existing model files are trusted without startup SHA verification.
+     16 +4. MCP web fetch can reach arbitrary hosts and can exhaust memory or panic.
+     17 +
+     18 +## Findings
+     19 +
+     20 +### High: MCP command tools bypass safety controls
+     21 +
+     22 +Evidence:
+     23 +
+     24 +- `src/mcp/tools.rs:13` and `src/mcp/tools.rs:31` advertise `local_summarize` and `local_pass_fail` as shell command runners.
+     25 +- `src/mcp/tools.rs:179` dispatches command strings directly to handlers.
+     26 +- `src/mcp/handlers.rs:150` executes caller-provided strings through `sh -c`.
+     27 +
+     28 +Why it matters:
+     29 +
+     30 +This bypasses the main app's bash classifier, project cwd boundary, timeout, process-group cleanup, and output caps. An MCP caller can run commands like `cat ~/.ssh/id_ed25519`, `rm -rf ~/Documents`, or `curl ... | sh`. Commands like `yes` or `cat /dev/zero` can also hang or exhaust memor
+         y because output is captured without an enforced size limit.
+     31 +
+     32 +Recommended fix:
+     33 +
+     34 +Route MCP command execution through the existing `src/tools/bash.rs` safety path or a shared command-execution module. Require an explicit working directory, classify commands, deny dangerous capabilities, enforce a timeout, cap stdout/stderr bytes, and kill the process group on timeout.
+     35 +
+     36 +### High: `llama-server` can still come from outside the app bundle
+     37 +
+     38 +Evidence:
+     39 +
+     40 +- `src/main.rs:41` exposes `--llama-server`.
+     41 +- `src/orchestrator.rs:478` falls back to `~/.glass-slipper/bin/llama-server`.
+     42 +- `src/orchestrator.rs:484` falls back to `PATH` via `which`.
+     43 +- `src/orchestrator.rs:489` recommends `brew install llama.cpp`.
+     44 +- `glass-slipper/AppDelegate.swift:443` has development Homebrew fallbacks.
+     45 +- `glass-slipper/GlassSlipperTests/GlassSlipperTests.swift:14` tests Homebrew/system paths.
+     46 +- `tests/mcp_integration.rs:88` also hard-codes Homebrew paths.
+     47 +
+     48 +Why it matters:
+     49 +
+     50 +This violates the repo instruction and weakens the packaging guarantee. A malicious or mismatched `llama-server` in `PATH`, Homebrew, or a user-writable fallback location could receive local prompt/model traffic or behave differently from the bundled binary.
+     51 +
+     52 +Recommended fix:
+     53 +
+     54 +Make bundled `Contents/MacOS/llama-server` the only accepted binary for normal app and release flows. If a developer override remains, gate it behind an explicit dev-only flag or build setting and keep tests from passing because Homebrew happens to be installed. Update error text and test
+         s so they enforce bundled-binary completeness.
+     55 +
+     56 +### Medium: Managed model files are trusted without startup SHA verification
+     57 +
+     58 +Evidence:
+     59 +
+     60 +- `glass-slipper/ModelDownloadManager.swift:73` accepts an existing model by file size only.
+     61 +- `glass-slipper/AppDelegate.swift:81` enables diagnosis when that size check passes.
+     62 +- `glass-slipper/CompanionWindowController.swift:30` marks the model downloaded by path existence only.
+     63 +- `src/orchestrator.rs:55` accepts user-provided model paths by existence.
+     64 +- `src/orchestrator.rs:417` finds managed model paths by existence.
+     65 +- `src/model_manifest.rs:149` implements `verify_sha256()`, but startup does not use it.
+     66 +- `model-manifest.json:10` and `model-manifest.json:42` still contain placeholder hashes for non-default models.
+     67 +
+     68 +Why it matters:
+     69 +
+     70 +Downloads are verified after completion, but later launches trust files already on disk. A corrupted or replaced GGUF with the expected size can be passed into `llama-server`, causing crashes or worse if the native model parser has a file-format vulnerability.
+     71 +
+     72 +Recommended fix:
+     73 +
+     74 +Use manifest SHA verification before launching managed models, and store verification state carefully if full hashing on every launch is too expensive. At minimum, verify when size, mtime, inode, manifest version, or app version changes. Do not allow placeholder hashes in release manifest
+         s.
+     75 +
+     76 +### Medium: `local_web_fetch` is an SSRF and DoS surface
+     77 +
+     78 +Evidence:
+     79 +
+     80 +- `src/mcp/handlers.rs:92` fetches arbitrary URLs.
+     81 +- `src/mcp/handlers.rs:97` reads the entire response body before limiting.
+     82 +- `src/mcp/handlers.rs:103` slices the string at byte offset `16000`, which can panic on a UTF-8 boundary.
+     83 +
+     84 +Why it matters:
+     85 +
+     86 +An MCP caller can fetch localhost or private-network services, retrieve very large responses into memory, or crash the MCP server with multibyte UTF-8 near the truncation boundary.
+     87 +
+     88 +Recommended fix:
+     89 +
+     90 +Restrict allowed schemes and optionally block loopback, link-local, and private network targets unless explicitly enabled. Stream with a hard byte cap, enforce content-type and size limits, and truncate on character boundaries.
+     91 +
+     92 +### Medium: MCP install status can report stale or malicious config as installed
+     93 +
+     94 +Evidence:
+     95 +
+     96 +- `glass-slipper/MCPInstaller.swift:24` only checks whether `mcpServers["glass-slipper"]` exists.
+     97 +- `glass-slipper/MCPInstaller.swift:36` writes the expected command path, but `isInstalled` does not validate it.
+     98 +
+     99 +Why it matters:
+    100 +
+    101 +If `~/.claude.json` contains a `glass-slipper` entry pointing at `/tmp/evil` or an old deleted app path, the companion window can report MCP as configured even though Claude Code will run the wrong binary or fail.
+    102 +
+    103 +Recommended fix:
+    104 +
+    105 +Validate that `command` equals the current bundled `glass-slipper-mcp` path and that the file is executable. Surface stale or mismatched configs as repairable, not installed.
+    106 +
+    107 +### Medium: `~/.claude.json` is rewritten non-atomically
+    108 +
+    109 +Evidence:
+    110 +
+    111 +- `glass-slipper/MCPInstaller.swift:65` rewrites the entire config through `data.write(to:)`.
+    112 +
+    113 +Why it matters:
+    114 +
+    115 +A crash, disk-full condition, or concurrent Claude Code edit can corrupt or lose config. The installer also normalizes the whole file with pretty-printed sorted JSON, which increases churn and makes unrelated config changes harder to review.
+    116 +
+    117 +Recommended fix:
+    118 +
+    119 +Write to a temp file in the same directory, fsync if practical, then atomically replace. Consider creating a backup before first write. Re-read before replace or use a compare-and-swap style guard to avoid silently clobbering concurrent edits.
+    120 +
+    121 +### Medium: Swift model selection is hardcoded while Rust is manifest-driven
+    122 +
+    123 +Evidence:
+    124 +
+    125 +- `glass-slipper/AppDelegate.swift:470` hardcodes the 9B model filename and Application Support path.
+    126 +- Rust selects a model from `model-manifest.json` by RAM in `src/orchestrator.rs:49`.
+    127 +
+    128 +Why it matters:
+    129 +
+    130 +The app has an adaptive model design, but Swift launch logic can still force the 9B model path. This makes small/large model support fragile and creates multiple sources of truth for model identity.
+    131 +
+    132 +Recommended fix:
+    133 +
+    134 +Make Swift use the manifest for model path, display name, size, and selected tier. Avoid filename parsing for friendly names; carry the selected `ModelDefinition` through launch.
+    135 +
+    136 +### Low: Server health is not tied to the spawned child process
+    137 +
+    138 +Evidence:
+    139 +
+    140 +- `src/server.rs:43` checks whether the port is free.
+    141 +- `src/server.rs:55` spawns `llama-server` after that listener is dropped.
+    142 +- `src/server.rs:80` accepts any successful `127.0.0.1:<port>/health` response.
+    143 +- Later chat traffic goes through `src/llm.rs:114`.
+    144 +
+    145 +Why it matters:
+    146 +
+    147 +A local process could win the port race or an existing compatible service could answer health checks, causing prompt traffic to route to the wrong process.
+    148 +
+    149 +Recommended fix:
+    150 +
+    151 +Prefer binding in a way that avoids the time-of-check/time-of-use gap if possible, or verify the spawned process is still running and that the health endpoint exposes an expected server identity. Use a random free port when the caller did not specify one.
+    152 +
+    153 +### Low: Process, UI, and log buffers are unbounded
+    154 +
+    155 +Evidence:
+    156 +
+    157 +- `glass-slipper/AppDelegate.swift:497` appends stdout data until a newline.
+    158 +- `glass-slipper/CinderellaScaffold.swift:921` accumulates event rows without pruning.
+    159 +- `glass-slipper/MCPActivityLog.swift:76` parses and retains activity entries indefinitely.
+    160 +
+    161 +Why it matters:
+    162 +
+    163 +A helper bug emitting a huge unterminated line, a long diagnosis session, or a long-lived MCP activity log can stall the UI or exhaust memory.
+    164 +
+    165 +Recommended fix:
+    166 +
+    167 +Cap line-buffer size, cap row count or virtualize rows, and retain only a bounded activity window plus persisted summary totals.
+    168 +
+    169 +### Low: Final stdout can be dropped at termination
+    170 +
+    171 +Evidence:
+    172 +
+    173 +- `glass-slipper/AppDelegate.swift:698` removes file-handle observers in `taskDidTerminate`.
+    174 +- The nearby comment acknowledges a race with final stdout delivery.
+    175 +
+    176 +Why it matters:
+    177 +
+    178 +If the helper writes the final `diagnosis` or `done` JSON and exits quickly, the UI can show an incomplete run or an error despite successful output.
+    179 +
+    180 +Recommended fix:
+    181 +
+    182 +Drain stdout/stderr in the termination path before removing observers and finalizing UI state.
+    183 +
+    184 +## Test And Verification Gaps
+    185 +
+    186 +- No release-bundle test verifies that `glass-slipper-agent`, `glass-slipper-mcp`, `llama-server`, and `model-manifest.json` are all present and executable/readable in the app bundle.
+    187 +- No test enforces bundled-only `llama-server` behavior.
+    188 +- No startup test verifies managed model SHA checking.
+    189 +- MCP command tests do not exercise safety policy, timeout behavior, process cleanup, output caps, or working directory restrictions.
+    190 +- MCP web fetch tests do not cover private-network blocking, large bodies, invalid UTF-8 boundaries, or streaming limits.
+    191 +- MCP installer tests do not verify stale command detection, atomic writes, backups, or concurrent-edit behavior.
+    192 +- Swift tests still encode Homebrew/system `llama-server` expectations.
+    193 +- Rust MCP tests appear stale: unit tests expect eight tools, while integration tests reportedly expect seven and omit required `context_tokens` in some calls.
+    194 +
+    195 +## Suggested Remediation Order
+    196 +
+    197 +1. Disable or safety-wrap MCP shell execution.
+    198 +2. Remove non-bundled `llama-server` paths from release/default flows and update tests.
+    199 +3. Enforce model SHA verification for managed models and eliminate placeholder hashes from release manifests.
+    200 +4. Harden `local_web_fetch`.
+    201 +5. Repair MCP installer validation and atomic writes.
+    202 +6. Unify Swift model selection with the manifest.
+    203 +7. Add buffer caps and final stdout draining.
+
+• Ran wc -l codex-code-review-5-11.md
+  └      203 codex-code-review-5-11.md
+
+• Ran git status --short
+  └ ?? AGENTS.md
+    ?? codex-code-review-5-11.md
+    ?? docs/token-introspection.md
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• Wrote the full review to codex-code-review-5-11.md.
+
+  It includes all findings, evidence, impact, recommended fixes, test gaps, and a suggested remediation order.
+
+
+› realistically how do people deal with mcp and security vulnerabilities. search online ,github, hn, blogs, etc.
+
+
+• Searching the web
+
+• Searched Model Context Protocol MCP security vulnerabilities tools prompt injection blog 2025 GitHub Hacker News
+
+• Searching the web
+
+• Searched Hacker News Model Context Protocol MCP security prompt injection GitHub MCP exploit
+
+• Searching the web
+
+• Searched Model Context Protocol specification security best practices authorization user consent tool security official
+
+• Searching the web
+
+• Searched Invariant Labs GitHub MCP exploited accessing private repositories via MCP prompt injection
+
+• Searching the web
+
+• Searched https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices
+
+• Searching the web
+
+• Searched https://github.com/modelcontextprotocol/servers/security
+
+• Searching the web
+
+• Searched OX Security MCP stdio remote code execution vulnerability 2026 official blog
+
+• Searching the web
+
+• Searched https://news.ycombinator.com/item?id=43631557
+
+• Searching the web
+
+• Searched https://simonwillison.net/2025/Apr/9/mcp-prompt-injection/
+
+• Searching the web
+
+• Searched https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-critical-systemic-vulnerability-at-the-core-of-the-mcp/
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• I searched current MCP security discussions across official docs, GitHub advisories, HN, and security blogs. Realistically: people do not “solve” MCP security. They reduce blast radius and treat MCP like a plugin/RCE surface.
+
+  The Practical Consensus
+
+  1. Treat MCP servers as installed software, not harmless API metadata.
+     The official MCP docs explicitly warn that local MCP servers can have direct access to the user’s machine and should be sandboxed, consented, and restricted. GitHub’s modelcontextprotocol/servers security page also says the reference servers are educational examples, not production-ready
+     implementations.
+  2. Do not expose generic shell tools unless you are comfortable with arbitrary code execution.
+     OX Security’s 2026 disclosure argues the STDIO/config execution model has caused real RCE issues across MCP-enabled products. Whether you call it “by design” or a vulnerability, the practical control is the same: never let untrusted input influence a command, and do not run broad shell tools
+     outside a sandbox.
+  3. Least privilege is the main defense.
+     HN discussions around the GitHub MCP exploit repeatedly converge on this: if the agent can read private repos and write to public repos in one session, prompt injection can bridge those worlds. Invariant’s GitHub MCP writeup recommends policies like “one repo per session” and runtime dataflow
+     controls.
+  4. Human approval helps, but “Always Allow” defeats most of it.
+     Simon Willison points out that MCP clients should show exposed tools, show invocations clearly, and prompt before actions. His practical position is to treat those “SHOULD” recommendations as “MUST.” But approval dialogs only work if the UI shows the real risk and users do not blanket-
+     approve.
+  5. Tool descriptions are part of the attack surface.
+     Invariant’s tool-poisoning research shows malicious or changed tool descriptions can influence calls to other trusted tools. The mitigations people use are tool/version pinning, displaying AI-visible instructions, hashing tool descriptions, and warning on changes.
+  6. Use proxies/scanners/guardrails, but do not rely on them alone.
+     Tools like Invariant MCP-Scan and Trail of Bits mcp-context-protector add scanning, pinning, quarantines, ANSI sanitization, and runtime monitoring. Useful, but they are compensating controls, not a substitute for sandboxing and least privilege.
+  7. For enterprises, MCP becomes an inventory and governance problem.
+     The realistic enterprise posture is: approved server registry, signed/pinned versions, scoped OAuth tokens, no long-lived secrets, audit logs, egress controls, sandboxed execution, and security review before adding new MCP servers.
+
+  Applied To Glass Slipper
+  For this repo, I would not ship the current MCP shell-command tools as-is. The realistic secure path is:
+
+  - remove generic shell execution, or route it through the existing classifier/sandbox/timeout/output caps;
+  - make tools purpose-specific, like summarize_build_output, not run arbitrary command;
+  - run the MCP server with minimal filesystem and network access;
+  - pin bundled binaries and validate installed MCP config paths;
+  - block SSRF/private-network fetches by default;
+  - log every tool call with arguments and result size;
+  - never rely on model alignment to enforce security boundaries.
+
+  Useful sources: official MCP security docs, especially local server compromise and SSRF guidance; GitHub MCP server advisories; Invariant’s GitHub MCP and tool-poisoning research; Simon Willison’s MCP prompt-injection post; Trail of Bits’ MCP security wrapper; and the HN threads on GitHub MCP
+  exploitation and “The S in MCP Stands for Security.”
+
+
+› save this to disk too; including links to resouces you used to compile this. citing them inline is fine.
+
+
+• I’ll save this as a second repo-local note, with the practical takeaways plus inline links to the sources from the search.
+
+• Ran test -e codex-mcp-security-notes-5-11.md
+  └ (no output)
+
+• Ran git status --short
+  └ ?? AGENTS.md
+    ?? codex-code-review-5-11.md
+    ?? docs/token-introspection.md
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• The note filename is available. I’m adding a concise “realistic posture” document rather than duplicating every search result verbatim.
+
+• Added codex-mcp-security-notes-5-11.md (+147 -0)
+      1 +# MCP Security In Practice - 2026-05-11
+      2 +
+      3 +Scope: practical notes from a web review of current MCP security discussion across official docs, GitHub advisories, Hacker News, and security blogs. This is meant to inform Glass Slipper's MCP design choices.
+      4 +
+      5 +## Bottom Line
+      6 +
+      7 +People do not really "solve" MCP security today. They reduce blast radius.
+      8 +
+      9 +The practical industry posture is to treat MCP servers like plugins that can become local code-execution and data-exfiltration surfaces. The safer systems combine least privilege, human-visible approvals, sandboxing, server/tool pinning, narrow tool design, audit logs, and runtime monitor
+         ing. Model alignment and prompt wording are not considered sufficient security boundaries.
+     10 +
+     11 +## What People Actually Do
+     12 +
+     13 +### Treat MCP servers as installed software, not harmless API metadata
+     14 +
+     15 +The official MCP security best-practices doc describes local MCP servers as binaries running on the user's machine with potential direct system access, and recommends consent, command visibility, sandboxing, restricted filesystem/network access, and use of stdio or authenticated IPC for l
+         ocal servers:
+     16 +
+     17 +- https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices
+     18 +
+     19 +GitHub's `modelcontextprotocol/servers` security page also says those reference servers are educational examples, not production-ready implementations:
+     20 +
+     21 +- https://github.com/modelcontextprotocol/servers/security
+     22 +
+     23 +Practical implication: a Glass Slipper MCP server should be treated like a privileged local helper, not a passive model tool catalog.
+     24 +
+     25 +### Avoid generic shell tools unless arbitrary code execution is acceptable
+     26 +
+     27 +OX Security's 2026 MCP disclosure argues that STDIO/config-driven execution has propagated into RCE issues across MCP-enabled products, with many CVEs issued across the ecosystem:
+     28 +
+     29 +- https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-critical-systemic-vulnerability-at-the-core-of-the-mcp/
+     30 +- https://www.ox.security/blog/mcp-supply-chain-advisory-rce-vulnerabilities-across-the-ai-ecosystem/
+     31 +
+     32 +VentureBeat's coverage summarizes the practical recommendation: treat every MCP STDIO configuration as an untrusted execution surface and do not give servers full disk or shell privileges:
+     33 +
+     34 +- https://venturebeat.com/security/mcp-stdio-flaw-200000-ai-agent-servers-exposed-ox-security-audit
+     35 +
+     36 +Practical implication: Glass Slipper's MCP command tools should not execute arbitrary shell strings. If command execution remains, route through the existing classifier, apply timeouts and output caps, run in a bounded cwd, and kill process groups on timeout.
+     37 +
+     38 +### Least privilege is the core mitigation
+     39 +
+     40 +The official MCP authorization guidance recommends authorization for servers that access user-specific data, perform write operations, or touch enterprise/internal systems:
+     41 +
+     42 +- https://modelcontextprotocol.io/docs/tutorials/security/authorization
+     43 +
+     44 +The MCP security docs also recommend scope minimization, progressive privilege elevation, and avoiding catch-all scopes:
+     45 +
+     46 +- https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices
+     47 +
+     48 +Invariant's GitHub MCP exploit writeup shows why coarse access is dangerous: an agent reading attacker-controlled public issues can be induced to access private repos and leak information back through a public repo. Their proposed mitigation includes runtime dataflow rules such as restric
+         ting an agent to one repository per session:
+     49 +
+     50 +- https://invariantlabs.ai/blog/mcp-github-vulnerability
+     51 +
+     52 +HN discussion around that incident also converges on least privilege and on the idea that any data available to the agent can be leaked if the workflow mixes private data, untrusted instructions, and an exfiltration tool:
+     53 +
+     54 +- https://news.ycombinator.com/item?id=44097390
+     55 +
+     56 +Practical implication: avoid tools that combine broad read access with broad write/network access in the same session.
+     57 +
+     58 +### Human approval helps, but only if the UI is honest and specific
+     59 +
+     60 +Simon Willison's MCP prompt-injection post highlights the MCP trust-and-safety recommendations: clients should show exposed tools, visibly indicate tool invocations, and present confirmation prompts. His recommendation is to treat those SHOULDs as MUSTs:
+     61 +
+     62 +- https://simonwillison.net/2025/Apr/9/mcp-prompt-injection/
+     63 +
+     64 +The same post also notes the hard part: users need interfaces that make it possible to understand what is about to happen. Hidden horizontal overflow, vague descriptions, or "always allow" behavior erase much of the value of human approval.
+     65 +
+     66 +Practical implication: approvals need to show exact command, target path, target URL, repository, or other meaningful action details. "Allow local_summarize" is not enough if the hidden argument is `cat ~/.ssh/id_ed25519`.
+     67 +
+     68 +### Tool descriptions and tool updates are part of the attack surface
+     69 +
+     70 +Invariant's tool-poisoning research describes malicious tool descriptions, cross-server tool shadowing, and "rug pull" changes where a trusted server later changes its tool description:
+     71 +
+     72 +- https://invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks
+     73 +
+     74 +Simon Willison summarizes the same risk: malicious instructions can be hidden in tool descriptions that are visible to the LLM but not obvious to users:
+     75 +
+     76 +- https://simonwillison.net/2025/Apr/9/mcp-prompt-injection/
+     77 +
+     78 +Mitigations people discuss include showing AI-visible tool descriptions to users, hashing/pinning tool definitions, warning when descriptions change, and keeping separate trust boundaries between MCP servers.
+     79 +
+     80 +Practical implication: Glass Slipper should keep its MCP tool descriptions static, short, auditable, and pinned through the app bundle. The companion app can validate that Claude's configured MCP binary points at the expected bundled helper.
+     81 +
+     82 +### SSRF and network egress are first-class MCP concerns
+     83 +
+     84 +The official MCP security best-practices doc calls out SSRF risks and recommends HTTPS enforcement, blocking private/reserved IP ranges, validating redirects, avoiding manual IP validation, and using egress proxies for server deployments:
+     85 +
+     86 +- https://modelcontextprotocol.io/docs/tutorials/security/security_best_practices
+     87 +
+     88 +Practical implication: `local_web_fetch` should not fetch arbitrary URLs by default. It should enforce scheme, size, redirect, and private-network restrictions, or be removed until those controls exist.
+     89 +
+     90 +### Use scanners, proxies, and guardrails as compensating controls
+     91 +
+     92 +Invariant's MCP-Scan supports scanning MCP configs, detecting prompt injection/tool poisoning, proxy-mode monitoring, tool pinning, PII/secrets checks, and custom guardrail policies:
+     93 +
+     94 +- https://invariantlabs-ai.github.io/docs/mcp-scan/
+     95 +- https://invariantlabs.ai/blog/introducing-mcp-scan
+     96 +
+     97 +Trail of Bits' `mcp-context-protector` is a wrapper/proxy that adds trust-on-first-use pinning, tool-description validation, quarantine for suspicious responses, and ANSI control-sequence sanitization:
+     98 +
+     99 +- https://blog.trailofbits.com/2025/07/28/we-built-the-security-layer-mcp-always-needed/
+    100 +- https://www.trailofbits.com/mcp/
+    101 +
+    102 +These are useful layers, but they do not replace least privilege and sandboxing.
+    103 +
+    104 +Practical implication: Glass Slipper should be compatible with wrappers/proxies, but the product should not depend on users installing one to be safe.
+    105 +
+    106 +### Enterprises turn MCP into an inventory and governance problem
+    107 +
+    108 +OWASP's MCP Top 10 frames common risks as token/secret exposure, privilege escalation through scope creep, tool poisoning, supply-chain tampering, command injection/execution, prompt injection, and context over-sharing:
+    109 +
+    110 +- https://owasp.org/www-project-mcp-top-10/
+    111 +
+    112 +The realistic enterprise posture is:
+    113 +
+    114 +- approved server registry
+    115 +- signed or pinned versions
+    116 +- scoped, short-lived credentials
+    117 +- no long-lived secrets in configs or logs
+    118 +- audit logs for every tool call
+    119 +- egress controls
+    120 +- sandboxed execution
+    121 +- review before adding new MCP servers
+    122 +- continuous scanning and runtime monitoring
+    123 +
+    124 +Practical implication: a one-click installer should not silently mark a stale or mismatched MCP config as healthy. It should validate the exact binary path and repair drift.
+    125 +
+    126 +## Applied To Glass Slipper
+    127 +
+    128 +I would not ship the current MCP command tools as-is.
+    129 +
+    130 +Recommended changes:
+    131 +
+    132 +1. Remove generic shell execution from MCP, or route it through the existing bash classifier with explicit policy, cwd, timeout, output caps, and process-group cleanup.
+    133 +2. Prefer purpose-specific tools over command strings. For example, `summarize_build_log_file` is safer than `local_summarize(command: "...")`.
+    134 +3. Treat all MCP tool inputs as untrusted. Validate paths, URLs, sizes, and enum values.
+    135 +4. Sandbox the MCP process and any subprocesses with minimal filesystem and network access.
+    136 +5. Block localhost/private-network SSRF in web-fetch style tools unless explicitly enabled.
+    137 +6. Pin bundled MCP binaries and validate `~/.claude.json` against the current app bundle path.
+    138 +7. Log every tool call with arguments, result size, duration, and denial reason.
+    139 +8. Avoid "always allow" workflows for tools that read secrets, write files, run commands, or make network requests.
+    140 +9. Keep tool descriptions static and auditable; warn on any drift.
+    141 +10. Assume model alignment will fail under indirect prompt injection and put security controls outside the model.
+    142 +
+    143 +## Design Rule Of Thumb
+    144 +
+    145 +If a malicious README, GitHub issue, web page, email, or log line could make the model call a tool, then that tool must be safe under adversarial input.
+    146 +
+    147 +For Glass Slipper, that means command execution and arbitrary web fetch are the two MCP surfaces to fix first.
+
+• Ran wc -l codex-mcp-security-notes-5-11.md
+  └      147 codex-mcp-security-notes-5-11.md
+
+• Ran git status --short
+  └ ?? AGENTS.md
+    ?? codex-code-review-5-11.md
+    ?? codex-mcp-security-notes-5-11.md
+    ?? docs/token-introspection.md
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+• Saved it to codex-mcp-security-notes-5-11.md.
+
+  It includes the practical summary, Glass Slipper implications, and inline links to the sources used.
+
+
+
+› Write tests for @filename
+
+  gpt-5.5 xhigh · ~/Code/cinderella · Main [default]
