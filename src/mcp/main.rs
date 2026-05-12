@@ -1,3 +1,4 @@
+mod llm_client;
 mod logger;
 mod prompts;
 mod protocol;
