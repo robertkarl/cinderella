@@ -11,7 +11,21 @@ pub fn tool_definitions() -> serde_json::Value {
         "tools": [
             {
                 "name": "local_summarize",
-                "description": "Run a shell command and return a concise summary of its output. Use this instead of Bash for noisy commands (builds, test suites) where you only need pass/fail and key details. Saves tokens by keeping verbose output out of context.",
+                "description": "Run a shell command and return a concise summary of its output. Use this to keep verbose command output out of context. Saves tokens by having a local model read the output and report the key points.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "command": {
+                            "type": "string",
+                            "description": "The shell command to run"
+                        }
+                    },
+                    "required": ["command"]
+                }
+            },
+            {
+                "name": "local_pass_fail",
+                "description": "Run a shell command and report pass or fail. Use this for builds, test suites, and linters where you only need to know if it succeeded and what went wrong if it didn't.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -130,6 +144,10 @@ pub async fn dispatch(
             let command = arguments.get("command").and_then(|v| v.as_str()).unwrap_or("");
             handlers::handle_summarize(client, logger, command).await
         }
+        "local_pass_fail" => {
+            let command = arguments.get("command").and_then(|v| v.as_str()).unwrap_or("");
+            handlers::handle_pass_fail(client, logger, command).await
+        }
         "local_explain" => {
             let code = arguments.get("code").and_then(|v| v.as_str()).unwrap_or("");
             handlers::handle_explain(client, logger, code).await
@@ -165,10 +183,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_tool_definitions_has_seven_tools() {
+    fn test_tool_definitions_has_eight_tools() {
         let defs = tool_definitions();
         let tools = defs["tools"].as_array().unwrap();
-        assert_eq!(tools.len(), 7);
+        assert_eq!(tools.len(), 8);
     }
 
     #[test]
@@ -179,12 +197,23 @@ mod tests {
             .filter_map(|t| t["name"].as_str())
             .collect();
         assert!(names.contains(&"local_summarize"));
+        assert!(names.contains(&"local_pass_fail"));
         assert!(names.contains(&"local_explain"));
         assert!(names.contains(&"local_ask"));
         assert!(names.contains(&"local_web_fetch"));
         assert!(names.contains(&"local_review"));
         assert!(names.contains(&"local_draft"));
         assert!(names.contains(&"local_status"));
+    }
+
+    #[test]
+    fn test_tool_definitions_has_pass_fail() {
+        let defs = tool_definitions();
+        let names: Vec<&str> = defs["tools"].as_array().unwrap()
+            .iter()
+            .filter_map(|t| t["name"].as_str())
+            .collect();
+        assert!(names.contains(&"local_pass_fail"));
     }
 
     #[test]

@@ -27,6 +27,24 @@ pub async fn handle_summarize(
     complete_and_log(client, logger, "local_summarize", &detail, prompts::SUMMARIZE, &output, SHORT_MAX_TOKENS, start).await
 }
 
+pub async fn handle_pass_fail(
+    client: &McpLlmClient,
+    logger: &ActivityLogger,
+    command: &str,
+) -> ToolResult {
+    let start = Instant::now();
+    let detail = slug_command(command);
+    let output = match run_command(command).await {
+        Ok(out) => out,
+        Err(e) => return ToolResult::error(format!("Failed to run command: {}", e)),
+    };
+    if output.is_empty() {
+        logger.log("local_pass_fail", &detail, 0, 0, start, client.model_name());
+        return ToolResult::text("Command produced no output.");
+    }
+    complete_and_log(client, logger, "local_pass_fail", &detail, prompts::PASS_FAIL, &output, SHORT_MAX_TOKENS, start).await
+}
+
 pub async fn handle_explain(
     client: &McpLlmClient,
     logger: &ActivityLogger,
