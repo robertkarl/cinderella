@@ -28,10 +28,9 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
 
     // State
     private var isModelDownloaded: Bool {
-        guard let manifest = ModelDownloadManager.loadManifest(),
-              let model = manifest.models.first(where: { $0.id == manifest.default_model })
-        else { return false }
-        return ModelDownloadManager(model: model).isModelPresent
+        // Check directly — the manifest Codable may fail on extra fields.
+        let path = NSHomeDirectory() + "/Library/Application Support/Glass Slipper/Models/Qwen3.5-9B-Q5_K_M.gguf"
+        return FileManager.default.fileExists(atPath: path)
     }
 
     private var isServerRunning: Bool {
