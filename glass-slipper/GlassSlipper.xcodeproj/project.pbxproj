@@ -14,6 +14,7 @@
 		A1000007 /* ModelDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000C /* ModelDownloadManager.swift */; };
 		A1000008 /* StatusBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000D /* StatusBarView.swift */; };
 		BB000001 /* MemoryBannerViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000002 /* MemoryBannerViews.swift */; };
+		CC000001 /* MCPInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000002 /* MCPInstaller.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 		A200000C /* ModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloadManager.swift; sourceTree = "<group>"; };
 		A200000D /* StatusBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarView.swift; sourceTree = "<group>"; };
 		BB000002 /* MemoryBannerViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryBannerViews.swift; sourceTree = "<group>"; };
+		CC000002 /* MCPInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPInstaller.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +60,7 @@
 				A200000C /* ModelDownloadManager.swift */,
 				A200000D /* StatusBarView.swift */,
 				BB000002 /* MemoryBannerViews.swift */,
+				CC000002 /* MCPInstaller.swift */,
 				A2000006 /* Info.plist */,
 			);
 			path = .;
@@ -170,6 +173,7 @@
 				A1000007 /* ModelDownloadManager.swift in Sources */,
 				A1000008 /* StatusBarView.swift in Sources */,
 				BB000001 /* MemoryBannerViews.swift in Sources */,
+				CC000001 /* MCPInstaller.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
