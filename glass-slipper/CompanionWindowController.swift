@@ -8,9 +8,10 @@
 
 import AppKit
 
-final class CompanionWindowController: NSWindowController, MCPActivityLogDelegate {
+final class CompanionWindowController: NSWindowController, MCPActivityLogDelegate, LlamaServerManagerDelegate {
 
     private let activityLog = MCPActivityLog()
+    private let serverManager = LlamaServerManager()
 
     // Setup views
     private var setupStack: NSStackView!
@@ -34,17 +35,7 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
     }
 
     private var isServerRunning: Bool {
-        let semaphore = DispatchSemaphore(value: 0)
-        var healthy = false
-        guard let url = URL(string: "http://127.0.0.1:8787/health") else { return false }
-        URLSession.shared.dataTask(with: url) { _, response, _ in
-            if let http = response as? HTTPURLResponse, http.statusCode == 200 {
-                healthy = true
-            }
-            semaphore.signal()
-        }.resume()
-        _ = semaphore.wait(timeout: .now() + 2)
-        return healthy
+        serverManager.state == .running
     }
 
     convenience init() {
@@ -63,7 +54,14 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
         refreshState()
         activityLog.delegate = self
         activityLog.startPolling()
+        serverManager.delegate = self
+        // Auto-start if model is already downloaded
+        if isModelDownloaded {
+            serverManager.start()
+        }
     }
+
+    var llamaServerManager: LlamaServerManager { serverManager }
 
     // MARK: - UI Construction
 
@@ -209,7 +207,7 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
     }
 
     private func handleServerStart() {
-        refreshState()
+        serverManager.start()
     }
 
     private func handleMCPInstall() {
@@ -239,6 +237,25 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
         for entry in recentEntries {
             let row = makeActivityRow(entry: entry)
             activityStack.addArrangedSubview(row)
+        }
+    }
+
+    // MARK: - LlamaServerManagerDelegate
+
+    func serverStateDidChange(_ state: LlamaServerState) {
+        switch state {
+        case .starting:
+            serverRow.updateDetail("Starting…")
+        case .running:
+            serverRow.setComplete(true)
+            serverRow.updateDetail("llama-server · Port 8787")
+            refreshState()
+        case .failed(let msg):
+            serverRow.setComplete(false)
+            serverRow.updateDetail("Failed: \(msg)")
+        case .notRunning:
+            serverRow.setComplete(false)
+            serverRow.updateDetail("llama-server · Port 8787")
         }
     }
 
