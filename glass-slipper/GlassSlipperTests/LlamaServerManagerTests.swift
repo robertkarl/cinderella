@@ -21,4 +21,39 @@ class LlamaServerManagerTests: XCTestCase {
         let manager = LlamaServerManager()
         XCTAssertEqual(manager.state, .notRunning)
     }
+
+    func testStartWithMissingBinaryTransitionsToFailed() {
+        let manager = LlamaServerManager()
+        manager.start(binaryPath: "/nonexistent/llama-server", modelPath: "/tmp/model.gguf")
+        XCTAssertEqual(manager.state, .failed("llama-server not found"))
+    }
+
+    func testStartWithMissingModelTransitionsToFailed() {
+        let manager = LlamaServerManager()
+        manager.start(binaryPath: "/bin/ls", modelPath: "/nonexistent/model.gguf")
+        XCTAssertEqual(manager.state, .failed("Model not found"))
+    }
+
+    func testStopFromNotRunningIsNoOp() {
+        let manager = LlamaServerManager()
+        manager.stop()
+        XCTAssertEqual(manager.state, .notRunning)
+    }
+
+    func testDelegateCalledOnStateChange() {
+        let manager = LlamaServerManager()
+        let spy = StateSpy()
+        manager.delegate = spy
+        manager.start(binaryPath: "/nonexistent/llama-server", modelPath: "/tmp/model.gguf")
+        XCTAssertEqual(spy.states.last, .failed("llama-server not found"))
+    }
+}
+
+// MARK: - Test helpers
+
+class StateSpy: LlamaServerManagerDelegate {
+    var states: [LlamaServerState] = []
+    func serverStateDidChange(_ state: LlamaServerState) {
+        states.append(state)
+    }
 }
