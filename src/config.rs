@@ -41,6 +41,8 @@ impl ServerConfig {
         ];
         if self.jinja {
             args.push("--jinja".to_string());
+            args.push("--chat-template-kwargs".to_string());
+            args.push(r#"{"enable_thinking":false}"#.to_string());
         }
         args
     }
@@ -345,6 +347,8 @@ mod tests {
         let args = cfg.to_args();
         assert!(args.contains(&"--model".to_string()));
         assert!(args.contains(&"--jinja".to_string()));
+        assert!(args.contains(&"--chat-template-kwargs".to_string()));
+        assert!(args.contains(&r#"{"enable_thinking":false}"#.to_string()));
         assert!(args.contains(&"--port".to_string()));
         assert!(args.contains(&"8787".to_string()));
     }
