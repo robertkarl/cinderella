@@ -6,6 +6,7 @@
 set -euo pipefail
 
 MACOS_DEST="${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/Contents/MacOS"
+MISSING=0
 
 # glass-slipper-agent (the Rust CLI, renamed to avoid APFS collision)
 AGENT="${SRCROOT}/../target/release/glass-slipper"
@@ -14,6 +15,7 @@ if [ -x "$AGENT" ]; then
     echo "Copied glass-slipper-agent into app bundle"
 else
     echo "warning: glass-slipper not found at $AGENT — run: cargo build --release"
+    MISSING=$((MISSING + 1))
 fi
 
 # glass-slipper-mcp
@@ -23,6 +25,7 @@ if [ -x "$MCP" ]; then
     echo "Copied glass-slipper-mcp into app bundle"
 else
     echo "warning: glass-slipper-mcp not found at $MCP — run: cargo build --release"
+    MISSING=$((MISSING + 1))
 fi
 
 # llama-server (pre-built arm64 binary from build-llama.sh)
@@ -32,4 +35,10 @@ if [ -x "$LLAMA" ]; then
     echo "Copied llama-server into app bundle"
 else
     echo "warning: llama-server not found at $LLAMA — run: scripts/build-llama.sh"
+    MISSING=$((MISSING + 1))
+fi
+
+if [ "$MISSING" -gt 0 ]; then
+    echo "error: $MISSING helper binary(ies) missing — app bundle is incomplete"
+    exit 1
 fi

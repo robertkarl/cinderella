@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.7] - 2026-05-14
+
+### Added
+- LlamaServerManager: dedicated class for llama-server lifecycle (start, health poll, stop)
+- Companion window auto-starts llama-server when model is downloaded
+- "Start Server" button wired to LlamaServerManager
+- bench-parallel.py: benchmark tool for llama-server --parallel throughput testing
+- Graceful quit: SIGTERM managed server + lsof fallback for externally-started servers
+- Network Debug window (Cmd+2) created lazily on demand
+- copy-helpers.sh: Xcode build phase embeds all three binaries (agent, mcp, llama-server)
+- LlamaServerManagerTests: 7 unit tests for binary resolution, state transitions, delegation
+- Plan documents for graceful-lifecycle, llama-server-manager, and parallel-benchmark
+
+### Changed
+- Companion window is now the primary window on launch (was Network Debug)
+- Cmd+1 shows Companion, Cmd+2 shows Network Debug (was Cmd+2 for Companion)
+- App stays running when last window closed (applicationShouldTerminateAfterLastWindowClosed returns false)
+- CFBundleExecutable fixed to "GlassSlipper" (was "Glass Slipper" — broke codesign)
+- CFBundleShortVersionString aligned with VERSION file
+- Binary resolution simplified: bundle-only, no dev fallbacks
+- modelFilePath() consolidated to single source of truth in LlamaServerManager
+- package-macos.sh: embeds glass-slipper-mcp, verifies all four binaries including GlassSlipper
+- copy-helpers.sh exits with error if any helper binary is missing
+
+### Fixed
+- Health poll timeout: 60s limit prevents permanent "Starting..." state
+- Double-start guard in LlamaServerManager prevents process orphaning
+- bench-parallel.py: try/finally ensures server cleanup on Ctrl-C
+- bench-parallel.py: sample stddev (Bessel's correction) instead of population stddev
+- bench-parallel.py: find_llama_server() checks build/ dir instead of non-existent App Support path
+- killLlamaServer() uses LlamaServerManager.port constant instead of hardcoded ":8787"
+
 ## [0.1.5] - 2026-05-05
 
 ### Added

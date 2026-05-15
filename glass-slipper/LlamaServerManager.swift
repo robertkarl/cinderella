@@ -23,6 +23,7 @@ final class LlamaServerManager {
 
     private var process: Process?
     private var healthTimer: Timer?
+    private var healthPollStart: Date?
 
     static let binaryName = "llama-server"
     static let port: UInt16 = 8787
@@ -66,6 +67,9 @@ final class LlamaServerManager {
 
     /// Start llama-server. Pass explicit paths or nil to auto-resolve.
     func start(binaryPath: String? = nil, modelPath: String? = nil) {
+        if case .starting = state { return }
+        if case .running = state { return }
+
         let binary = binaryPath ?? Self.findLlamaServer()
         guard let binary = binary, FileManager.default.isExecutableFile(atPath: binary) else {
             setState(.failed("llama-server not found"))
@@ -121,13 +125,25 @@ final class LlamaServerManager {
 
     // MARK: - Health polling
 
+    private static let healthTimeoutSeconds: TimeInterval = 60
+
     private func startHealthPolling() {
+        healthPollStart = Date()
         healthTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             self?.checkHealth()
         }
     }
 
     private func checkHealth() {
+        if let start = healthPollStart, Date().timeIntervalSince(start) > Self.healthTimeoutSeconds {
+            healthTimer?.invalidate()
+            healthTimer = nil
+            healthPollStart = nil
+            stop()
+            setState(.failed("Health check timed out after \(Int(Self.healthTimeoutSeconds))s"))
+            return
+        }
+
         var request = URLRequest(url: Self.healthURL)
         request.timeoutInterval = 2
         URLSession.shared.dataTask(with: request) { [weak self] _, response, _ in
@@ -136,6 +152,7 @@ final class LlamaServerManager {
                 if let http = response as? HTTPURLResponse, http.statusCode == 200 {
                     self.healthTimer?.invalidate()
                     self.healthTimer = nil
+                    self.healthPollStart = nil
                     self.setState(.running)
                 }
             }

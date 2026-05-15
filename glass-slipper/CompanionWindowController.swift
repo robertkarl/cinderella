@@ -29,9 +29,7 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
 
     // State
     private var isModelDownloaded: Bool {
-        // Check directly — the manifest Codable may fail on extra fields.
-        let path = NSHomeDirectory() + "/Library/Application Support/Glass Slipper/Models/Qwen3.5-9B-Q5_K_M.gguf"
-        return FileManager.default.fileExists(atPath: path)
+        FileManager.default.fileExists(atPath: LlamaServerManager.modelFilePath())
     }
 
     private var isServerRunning: Bool {

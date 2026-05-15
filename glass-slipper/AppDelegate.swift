@@ -443,7 +443,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func killLlamaServer() -> Bool {
         let lsof = Process()
         lsof.executableURL = URL(fileURLWithPath: "/usr/sbin/lsof")
-        lsof.arguments = ["-ti", ":8787"]
+        lsof.arguments = ["-ti", ":\(LlamaServerManager.port)"]
         let pipe = Pipe()
         lsof.standardOutput = pipe
         lsof.standardError = Pipe()
@@ -485,17 +485,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Model path
 
     private func modelFilePath() -> String {
-        let home = NSHomeDirectory()
-        let appSupportPath = home + "/Library/Application Support/Glass Slipper/Models/Qwen3.5-9B-Q5_K_M.gguf"
-        if FileManager.default.fileExists(atPath: appSupportPath) {
-            return appSupportPath
-        }
-        // Legacy path for development machines with models in ~/models/
-        let legacyPath = home + "/models/Qwen3.5-9B-Q5_K_M.gguf"
-        if FileManager.default.fileExists(atPath: legacyPath) {
-            return legacyPath
-        }
-        return appSupportPath
+        LlamaServerManager.modelFilePath()
     }
 
     // MARK: - Pipe reading
