@@ -1,9 +1,12 @@
 # What is this
 
-Glass Slipper makes small, open-weights models like Qwen 3.5 9B capable of performing
-meaningful work on modern Macs (Apple Silicon / 18GB+ unified RAM).
+Glass Slipper runs a local LLM and teaches Claude to delegate to it.
 
-On more capable machines with more unified memory, Cindy picks the "LLM that fits perfectly" and is even more capable.
+You can download a DMG here: https://glass-slipper.cc/
+
+Or build from source.
+
+You'll need an Apple Silicon Mac and 18GB+ RAM.
 
 # Tenets
 
