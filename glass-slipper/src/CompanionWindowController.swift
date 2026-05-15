@@ -18,6 +18,7 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
     private var modelRow: SetupRow!
     private var serverRow: SetupRow!
     private var mcpRow: SetupRow!
+    private var codexRow: SetupRow!
 
     // Dashboard views
     private var dashboardStack: NSStackView!
@@ -91,7 +92,15 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
             action: { [weak self] in self?.handleMCPInstall() }
         )
 
-        setupStack = NSStackView(views: [modelRow, serverRow, mcpRow])
+        codexRow = SetupRow(
+            step: "",
+            title: "Codex CLI",
+            detail: CodexMCPInstaller.isCodexAvailable ? "Not configured" : "Codex CLI not found",
+            actionTitle: CodexMCPInstaller.isCodexAvailable ? "Install" : "Open Terminal",
+            action: { [weak self] in self?.handleCodexInstall() }
+        )
+
+        setupStack = NSStackView(views: [modelRow, serverRow, mcpRow, codexRow])
         setupStack.orientation = .vertical
         setupStack.spacing = Spacing.md
         setupStack.translatesAutoresizingMaskIntoConstraints = false
@@ -187,6 +196,20 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
             mcpRow.updateDetail("Configured")
         }
 
+        // Codex row: optional, not gating allDone
+        let codexAvailable = CodexMCPInstaller.isCodexAvailable
+        codexRow.setComplete(CodexMCPInstaller.isInstalled)
+        if !codexAvailable {
+            codexRow.updateDetail("Codex CLI not found")
+        } else if CodexMCPInstaller.isInstalled {
+            codexRow.updateDetail("Configured")
+        } else {
+            codexRow.updateDetail("Not configured")
+        }
+
+        // Fire async refresh so cached state catches up with reality
+        CodexMCPInstaller.refreshState()
+
         let allDone = modelOK && serverOK && mcpOK
         setupStack.isHidden = allDone
         dashboardStack.isHidden = !allDone
@@ -216,6 +239,35 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
             alert.runModal()
         }
         refreshState()
+    }
+
+    private func handleCodexInstall() {
+        if !CodexMCPInstaller.isCodexAvailable {
+            CodexMCPInstaller.openTerminalFallback()
+            return
+        }
+
+        if CodexMCPInstaller.isInstalled {
+            CodexMCPInstaller.uninstall { [weak self] error in
+                if let error = error {
+                    let alert = NSAlert()
+                    alert.messageText = "Codex Uninstall Failed"
+                    alert.informativeText = error
+                    alert.runModal()
+                }
+                self?.refreshState()
+            }
+        } else {
+            CodexMCPInstaller.install { [weak self] error in
+                if let error = error {
+                    let alert = NSAlert()
+                    alert.messageText = "Codex Install Failed"
+                    alert.informativeText = error
+                    alert.runModal()
+                }
+                self?.refreshState()
+            }
+        }
     }
 
     // MARK: - MCPActivityLogDelegate

@@ -20,6 +20,8 @@
 		DD000001 /* GlassSlipperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000002 /* GlassSlipperTests.swift */; };
 		EE000001 /* LlamaServerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000002 /* LlamaServerManager.swift */; };
 		EE000003 /* LlamaServerManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000004 /* LlamaServerManagerTests.swift */; };
+		FF000001 /* CodexMCPInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF000002 /* CodexMCPInstaller.swift */; };
+		FF000003 /* CodexMCPInstallerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF000004 /* CodexMCPInstallerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,6 +35,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1357C8042FB7830E00F98631 /* GlassSlipper.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassSlipper.entitlements; sourceTree = "<group>"; };
 		A2000005 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		A2000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A2000007 /* GlassSlipper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassSlipper.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -49,6 +52,8 @@
 		DD000005 /* GlassSlipperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlassSlipperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE000002 /* LlamaServerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaServerManager.swift; sourceTree = "<group>"; };
 		EE000004 /* LlamaServerManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaServerManagerTests.swift; sourceTree = "<group>"; };
+		FF000002 /* CodexMCPInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexMCPInstaller.swift; sourceTree = "<group>"; };
+		FF000004 /* CodexMCPInstallerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexMCPInstallerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,32 +75,34 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		A4000001 = {
+		134354EB2FB782B100403042 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				A4000002 /* . */,
-				DD000007 /* GlassSlipperTests */,
-				A4000003 /* Frameworks */,
-				A4000004 /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		A4000002 /* . */ = {
-			isa = PBXGroup;
-			children = (
-				A200000A /* AppDelegate.swift */,
 				A2000008 /* CinderellaScaffold.swift */,
 				A200000B /* main.swift */,
 				A200000C /* ModelDownloadManager.swift */,
 				A200000D /* StatusBarView.swift */,
 				BB000002 /* MemoryBannerViews.swift */,
 				CC000002 /* MCPInstaller.swift */,
+				FF000002 /* CodexMCPInstaller.swift */,
 				CC000004 /* MCPActivityLog.swift */,
 				CC000006 /* CompanionWindowController.swift */,
 				EE000002 /* LlamaServerManager.swift */,
-				A2000006 /* Info.plist */,
+				A200000A /* AppDelegate.swift */,
 			);
-			path = .;
+			path = src;
+			sourceTree = "<group>";
+		};
+		A4000001 = {
+			isa = PBXGroup;
+			children = (
+				1357C8042FB7830E00F98631 /* GlassSlipper.entitlements */,
+				A2000006 /* Info.plist */,
+				134354EB2FB782B100403042 /* src */,
+				DD000007 /* GlassSlipperTests */,
+				A4000003 /* Frameworks */,
+				A4000004 /* Products */,
+			);
 			sourceTree = "<group>";
 		};
 		A4000003 /* Frameworks */ = {
@@ -120,6 +127,7 @@
 			children = (
 				DD000002 /* GlassSlipperTests.swift */,
 				EE000004 /* LlamaServerManagerTests.swift */,
+				FF000004 /* CodexMCPInstallerTests.swift */,
 			);
 			path = GlassSlipperTests;
 			sourceTree = "<group>";
@@ -234,6 +242,7 @@
 				A1000008 /* StatusBarView.swift in Sources */,
 				BB000001 /* MemoryBannerViews.swift in Sources */,
 				CC000001 /* MCPInstaller.swift in Sources */,
+				FF000001 /* CodexMCPInstaller.swift in Sources */,
 				CC000003 /* MCPActivityLog.swift in Sources */,
 				CC000005 /* CompanionWindowController.swift in Sources */,
 				EE000001 /* LlamaServerManager.swift in Sources */,
@@ -246,6 +255,7 @@
 			files = (
 				DD000001 /* GlassSlipperTests.swift in Sources */,
 				EE000003 /* LlamaServerManagerTests.swift in Sources */,
+				FF000003 /* CodexMCPInstallerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -368,11 +378,13 @@
 		A7000006 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = GlassSlipper.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = E7FAHT2694;
+				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Glass Slipper";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.robertkarl.glass-slipper";
@@ -385,11 +397,13 @@
 		A7000007 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = GlassSlipper.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = E7FAHT2694;
+				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Glass Slipper";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.robertkarl.glass-slipper";

@@ -1,0 +1,86 @@
+Glass Slipper — Source File Summaries
+======================================
+
+AppDelegate.swift (803 lines)
+  Central coordinator for the app's lifecycle, UI setup, and interaction with
+  a background glass-slipper diagnostic process. Manages window creation
+  (companion window and network debug view), handles model download logic, and
+  parses JSONL output from the child process to update the UI with hardware
+  info, diagnosis steps, and memory warnings. Implements cleanup routines to
+  terminate child processes on app quit and logs structured events to temporary
+  JSONL and app-specific log files.
+
+CinderellaScaffold.swift (1006 lines)
+  Design-system scaffold defining color, typography, and spacing tokens for
+  consistent styling. Implements row view classes (CheckRowView,
+  DiagnosisRowView, UserPromptRowView, etc.) that compose these tokens to
+  render different event types in a scrollable spine layout. Includes a factory
+  pattern for dynamically creating rows based on an Event enum and a
+  SpineViewController to manage the event stream.
+
+CompanionWindowController.swift (436 lines)
+  Window controller for the setup wizard and live savings dashboard. Integrates
+  with MCPActivityLog to track cost savings, token usage, and delegated tasks,
+  while controlling a local Llama server for offline inference. Dynamically
+  switches between a three-step setup view (Model, Server, MCP) and a dashboard
+  showing real-time statistics once all components are configured.
+
+LlamaServerManager.swift (149 lines)
+  Manages the lifecycle of a local llama-server process. Handles binary
+  resolution, model path detection (checking specific directories for a Qwen3.5
+  model), and process launch with configurable arguments like context size and
+  GPU layer usage. Implements a state machine (notRunning, starting, running,
+  failed) and uses periodic HTTP health checks to confirm the server is
+  responsive before marking it as running.
+
+main.swift (6 lines)
+  Standard AppKit entry point. Initializes NSApplication, assigns AppDelegate,
+  and launches the application.
+
+MCPActivityLog.swift (108 lines)
+  Polls a JSONL log file at ~/Library/Application Support/Glass Slipper/
+  mcp-activity.jsonl every 2 seconds for new activity entries. Parses each line
+  into structured data (token counts, latency, cost estimates), maintains
+  running totals for savings and delegated tasks, and notifies a delegate when
+  updates occur. Handles missing files or malformed JSON gracefully.
+
+MCPInstaller.swift (78 lines)
+  Manages the glass-slipper MCP server configuration within ~/.claude.json.
+  Provides methods to check installation status, install the server by adding
+  its binary path to the config, and uninstall by removing the entry. Creates
+  the config file if it doesn't exist.
+
+MemoryBannerViews.swift (245 lines)
+  Three custom NSView subclasses for displaying memory pressure events:
+  WarningBannerView for active memory pressure with swap options,
+  ModelSwapBannerView for informational model switches, and
+  PromotionBannerView for suggesting a return to a lighter model. Uses Auto
+  Layout, custom colors, and delegate callbacks for user interactions.
+
+ModelDownloadManager.swift (231 lines)
+  Handles first-run download of a Qwen GGUF model. Manages the full lifecycle:
+  checking for existing models, verifying available disk space, resuming
+  interrupted downloads, and performing SHA-256 integrity verification before
+  finalizing. Supports progress reporting via delegate protocol.
+
+StatusBarView.swift (97 lines)
+  Persistent model status bar with a health indicator dot and text label. Uses
+  a HealthDotState enum to manage dot colors representing normal, warning, and
+  critical states. Dynamically formats text to show model name and
+  tokens-per-second rate.
+
+GlassSlipperTests/GlassSlipperTests.swift (146 lines)
+  Unit tests for AppDelegate, CompanionWindowController, ModelDownloadManager,
+  and MCPInstaller. Verifies locating the llama-server binary, constructing
+  correct command-line arguments, resolving model file paths, handling tool
+  display names, and graceful failure scenarios.
+
+GlassSlipperTests/LlamaServerManagerTests.swift (59 lines)
+  Unit tests for LlamaServerManager. Verifies argument construction, file path
+  resolution, state transitions (missing binary/model -> failed), stop no-op
+  from notRunning, and delegate notifications via a StateSpy helper.
+
+copy-helpers.sh (35 lines)
+  Xcode build phase script that copies three binaries (glass-slipper-agent,
+  glass-slipper-mcp, llama-server) from the build directory into the app
+  bundle's Contents/MacOS/ folder. Warns if any binary is missing.

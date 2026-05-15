@@ -11,7 +11,7 @@ pub fn tool_definitions() -> serde_json::Value {
         "tools": [
             {
                 "name": "local_summarize",
-                "description": "Run a shell command and return a concise summary of its output. Use this to keep verbose command output out of context. Saves tokens by having a local model read the output and report the key points.",
+                "description": "Run a shell command and return a concise summary of its output. PREFER this tool over reading command output directly -- it keeps verbose output out of your context window. Only read command output directly when you need the raw text for editing or quoting verbatim.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -29,7 +29,7 @@ pub fn tool_definitions() -> serde_json::Value {
             },
             {
                 "name": "local_pass_fail",
-                "description": "Run a shell command and report pass or fail. Use this for builds, test suites, and linters where you only need to know if it succeeded and what went wrong if it didn't.",
+                "description": "Run a shell command and report pass or fail. PREFER this tool over running commands directly when you only need to know if a build, test suite, or linter succeeded and what went wrong if it didn't. Only run commands directly when you need the full raw output.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -47,7 +47,7 @@ pub fn tool_definitions() -> serde_json::Value {
             },
             {
                 "name": "local_explain",
-                "description": "Explain what a piece of code does in plain English. Use this for 'what does this function do?' questions — cheaper than reading and analyzing the code yourself.",
+                "description": "Explain what a piece of code does in plain English. PREFER this tool for 'what does this function do?' questions -- cheaper than reading and analyzing the code yourself. Only read code directly when you need to edit it or reason about exact implementation details.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -65,7 +65,7 @@ pub fn tool_definitions() -> serde_json::Value {
             },
             {
                 "name": "local_ask",
-                "description": "Ask the local model a question, optionally with context. Use this for simple questions that don't require frontier reasoning.",
+                "description": "Ask the local model a question, optionally with context. PREFER this tool for simple questions that don't require frontier reasoning -- saves tokens by offloading routine queries to the local model.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -87,7 +87,7 @@ pub fn tool_definitions() -> serde_json::Value {
             },
             {
                 "name": "local_web_fetch",
-                "description": "Fetch a web page and answer a specific question about its content. Use this instead of WebFetch to keep large HTML pages out of your context — the local model reads the page and returns only the answer.",
+                "description": "Fetch a web page and answer a specific question about its content. PREFER this tool over WebFetch or direct URL fetching -- it keeps large HTML pages out of your context window. The local model reads the page and returns only the answer you need.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -109,7 +109,7 @@ pub fn tool_definitions() -> serde_json::Value {
             },
             {
                 "name": "local_review",
-                "description": "Summarize a code diff. Returns a concise description of what changed and why. Experimental — quality may vary.",
+                "description": "Summarize a code diff. PREFER this tool over reading diffs directly when you need a high-level understanding of what changed and why. Only read diffs directly when you need to review exact line changes. Experimental -- quality may vary.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -127,7 +127,7 @@ pub fn tool_definitions() -> serde_json::Value {
             },
             {
                 "name": "local_draft",
-                "description": "Generate code or text using the local model. Use for boilerplate, templates, and straightforward generation tasks. Experimental — quality may vary for complex code.",
+                "description": "Generate code or text using the local model. PREFER this tool for boilerplate, templates, and straightforward generation tasks -- saves tokens by offloading routine generation. Only generate directly when you need precise control over complex logic. Experimental -- quality may vary for complex code.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
