@@ -8,6 +8,35 @@ Or build from source.
 
 You'll need an Apple Silicon Mac and 18GB+ RAM.
 
+# Usage
+
+```
+
+❯ summarize Code/cpython/objects/bytesobject.c using the local model.
+
+⏺ glass-slipper - local_summarize (MCP)(command: "cat /Users/robertkarl/Code/cpython/Objects/bytesobject.c", context_tokens: 15000)
+
+⏺ Here's the summary from your local model:
+
+  bytesobject.c implements Python's bytes type in C. It covers:
+
+  - Core operations: creation, concatenation, slicing
+  - Formatting: sprintf-style (%) format syntax
+  - String methods: split, strip, translate, hex, etc.
+  - Type infrastructure: type struct, method table
+  - Internal utilities: _PyBytesWriter for efficient buffer management
+
+✻ Worked for 2m 11s
+```
+
+# Getting started
+Setup:
+- Drag the app to Applications.
+- Click "Download" to download the model.
+- Click "Start" to start llama-server.
+- Click "Install" to put 1 line in your ~/.claude.json for the mcp server
+
+
 # Tenets
 
 - Small models are capable of performing meaningful development and testing work
