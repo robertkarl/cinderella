@@ -54,6 +54,8 @@ pub struct ModelDef {
     pub cache_type_k: String,
     #[serde(default = "default_cache_type")]
     pub cache_type_v: String,
+    #[serde(default = "default_auto_select")]
+    pub auto_select: bool,
 }
 
 fn default_min_macos() -> String {
@@ -66,6 +68,10 @@ fn default_arch() -> String {
 
 fn default_cache_type() -> String {
     "q8_0".to_string()
+}
+
+fn default_auto_select() -> bool {
+    true
 }
 
 impl Manifest {
@@ -449,6 +455,38 @@ mod tests {
         let model = manifest.default_model().unwrap();
         assert_eq!(model.cache_type_k, "q4_0");
         assert_eq!(model.cache_type_v, "q5_0");
+    }
+
+    #[test]
+    fn test_auto_select_defaults_to_true() {
+        let manifest = Manifest::from_str(TEST_MANIFEST).unwrap();
+        let model = manifest.default_model().unwrap();
+        assert!(model.auto_select);
+    }
+
+    #[test]
+    fn test_auto_select_explicit_false() {
+        let json = r#"{
+            "version": 1,
+            "models": [{
+                "id": "test",
+                "name": "Test",
+                "filename": "test.gguf",
+                "quant": "Q5_K_M",
+                "size_bytes": 100,
+                "sha256": "abc",
+                "url": "https://example.com/test.gguf",
+                "min_ram_gb": 8,
+                "ctx_size": 4096,
+                "n_gpu_layers": -1,
+                "app_support_subdir": "Glass Slipper/Models",
+                "auto_select": false
+            }],
+            "default_model": "test"
+        }"#;
+        let manifest = Manifest::from_str(json).unwrap();
+        let model = manifest.default_model().unwrap();
+        assert!(!model.auto_select);
     }
 
     #[test]
