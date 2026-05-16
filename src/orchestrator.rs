@@ -48,8 +48,8 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
     // Step 2: Load manifest and select model for this machine's RAM
     let manifest = crate::model_manifest::find_manifest()
         .context("Failed to load model manifest")?;
-    let active_model = manifest.model_for_ram(hw.total_ram_gb as u32)
-        .context("No model fits this machine's RAM")?;
+    let active_model = manifest.select_initial_model(hw.total_ram_gb as u32)
+        .context("No model fits this machine's available RAM")?;
 
     // Step 3: Find model file
     let model_path = match cfg.model_path {
@@ -142,7 +142,7 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
     let pressure_rx = crate::memory_ffi::start_pressure_listener();
 
     // Determine if we're on a smaller model than the machine can handle
-    let best_model = manifest.model_for_ram(hw.total_ram_gb as u32);
+    let best_model = manifest.select_initial_model(hw.total_ram_gb as u32);
     let on_smaller_model = best_model.map(|m| m.tier != active_model.tier).unwrap_or(false);
 
     // Spawn the memory monitor
@@ -237,7 +237,7 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
                         }
                     }
                     crate::memory_monitor::SystemHealth::PromotionAvailable => {
-                        if let Some(best) = health_manifest.model_for_ram(health_total_ram as u32) {
+                        if let Some(best) = health_manifest.select_initial_model(health_total_ram as u32) {
                             if best.id != current_model_id {
                                 let _ = health_agent_tx.send(
                                     crate::agent::AgentEvent::PromotionAvailable {

@@ -95,18 +95,34 @@ impl Manifest {
             .with_context(|| format!("Default model '{}' not found in manifest", self.default_model))
     }
 
-    /// Return the largest model whose `min_ram_gb` fits within `total_ram_gb`.
-    /// Models are checked from largest tier to smallest.
-    /// Returns None if no model fits (system has less RAM than even the smallest model needs).
-    pub fn model_for_ram(&self, total_ram_gb: u32) -> Option<&ModelDef> {
+    /// Select the initial model for startup.
+    /// Starts at the Default tier (9B), walks down if RAM is insufficient.
+    /// Never auto-selects upward. Models with auto_select=false are skipped.
+    pub fn select_initial_model(&self, available_ram_gb: u32) -> Option<&ModelDef> {
+        // Collect auto-selectable models, sorted by min_ram_gb descending
         let mut candidates: Vec<&ModelDef> = self
             .models
             .iter()
-            .filter(|m| m.min_ram_gb <= total_ram_gb)
+            .filter(|m| m.auto_select)
             .collect();
-        // Sort by tier descending — pick the largest that fits
-        candidates.sort_by(|a, b| b.tier.cmp(&a.tier));
-        candidates.into_iter().next()
+        candidates.sort_by(|a, b| b.min_ram_gb.cmp(&a.min_ram_gb));
+
+        // Find the Default tier model (9B) — this is our starting point
+        let default_model = candidates.iter().find(|m| m.tier == ModelTier::Default);
+
+        // If the default fits, use it (never go higher)
+        if let Some(model) = default_model {
+            if model.min_ram_gb <= available_ram_gb {
+                return Some(model);
+            }
+        }
+
+        // Walk down: pick the largest auto-selectable model that fits
+        // but is smaller than Default tier
+        candidates
+            .into_iter()
+            .filter(|m| m.tier < ModelTier::Default && m.min_ram_gb <= available_ram_gb)
+            .next()
     }
 
     /// Given a model, return the model one tier below it.
@@ -390,36 +406,123 @@ mod tests {
         assert_eq!(large.tier, ModelTier::Large);
     }
 
+    const FIVE_MODEL_MANIFEST: &str = r#"{
+    "version": 1,
+    "models": [
+        {
+            "id": "qwen3.5-0.8b-q5",
+            "name": "Qwen 3.5 0.8B",
+            "filename": "Qwen3.5-0.8B-Q5_K_M.gguf",
+            "quant": "Q5_K_M",
+            "size_bytes": 590057728,
+            "sha256": "TODO-0.8b",
+            "url": "https://example.com/0.8b.gguf",
+            "min_ram_gb": 4,
+            "ctx_size": 8192,
+            "n_gpu_layers": -1,
+            "app_support_subdir": "Glass Slipper/Models",
+            "tier": "small"
+        },
+        {
+            "id": "qwen3.5-4b-q5",
+            "name": "Qwen 3.5 4B",
+            "filename": "Qwen3.5-4B-Q5_K_M.gguf",
+            "quant": "Q5_K_M",
+            "size_bytes": 3143656608,
+            "sha256": "TODO-4b",
+            "url": "https://example.com/4b.gguf",
+            "min_ram_gb": 8,
+            "ctx_size": 16384,
+            "n_gpu_layers": -1,
+            "app_support_subdir": "Glass Slipper/Models",
+            "tier": "small"
+        },
+        {
+            "id": "qwen3.5-9b-q5",
+            "name": "Qwen 3.5 9B",
+            "filename": "Qwen3.5-9B-Q5_K_M.gguf",
+            "quant": "Q5_K_M",
+            "size_bytes": 6577841376,
+            "sha256": "dc2a39aef291f91a9116ad214058da0d86eb648743a124bd8c333787c4b9c91c",
+            "url": "https://example.com/9b.gguf",
+            "min_ram_gb": 16,
+            "ctx_size": 32768,
+            "n_gpu_layers": -1,
+            "app_support_subdir": "Glass Slipper/Models",
+            "tier": "default"
+        },
+        {
+            "id": "qwen3.5-27b-q5",
+            "name": "Qwen 3.5 27B",
+            "filename": "Qwen3.5-27B-Q5_K_M.gguf",
+            "quant": "Q5_K_M",
+            "size_bytes": 19608995744,
+            "sha256": "TODO-27b",
+            "url": "https://example.com/27b.gguf",
+            "min_ram_gb": 32,
+            "ctx_size": 32768,
+            "n_gpu_layers": -1,
+            "app_support_subdir": "Glass Slipper/Models",
+            "tier": "large",
+            "auto_select": false
+        },
+        {
+            "id": "qwen3.5-35b-moe-q5",
+            "name": "Qwen 3.5 35B MoE",
+            "filename": "Qwen3.5-35B-MoE-Q5_K_M.gguf",
+            "quant": "Q5_K_M",
+            "size_bytes": 20000000000,
+            "sha256": "TODO-35b",
+            "url": "https://example.com/35b.gguf",
+            "min_ram_gb": 64,
+            "ctx_size": 32768,
+            "n_gpu_layers": -1,
+            "app_support_subdir": "Glass Slipper/Models",
+            "tier": "large",
+            "auto_select": false
+        }
+    ],
+    "default_model": "qwen3.5-9b-q5"
+}"#;
+
     #[test]
-    fn test_model_for_ram_picks_largest_fitting() {
-        let manifest = Manifest::from_str(TIERED_MANIFEST).unwrap();
-
-        // 128 GB — should pick Large (min_ram 64)
-        let model = manifest.model_for_ram(128).unwrap();
-        assert_eq!(model.id, "qwen3.5-35b-moe-q5");
-        assert_eq!(model.tier, ModelTier::Large);
-
-        // 64 GB — exactly meets Large threshold
-        let model = manifest.model_for_ram(64).unwrap();
-        assert_eq!(model.id, "qwen3.5-35b-moe-q5");
-
-        // 32 GB — too small for Large, picks Default (min_ram 16)
-        let model = manifest.model_for_ram(32).unwrap();
+    fn test_select_initial_model_picks_9b_when_ram_sufficient() {
+        let manifest = Manifest::from_str(FIVE_MODEL_MANIFEST).unwrap();
+        // 96 GB — plenty of RAM, but should still pick 9B (never auto-selects up)
+        let model = manifest.select_initial_model(96).unwrap();
         assert_eq!(model.id, "qwen3.5-9b-q5");
-        assert_eq!(model.tier, ModelTier::Default);
+    }
 
-        // 16 GB — exactly meets Default threshold
-        let model = manifest.model_for_ram(16).unwrap();
-        assert_eq!(model.id, "qwen3.5-9b-q5");
+    #[test]
+    fn test_select_initial_model_falls_to_4b_when_9b_too_big() {
+        let manifest = Manifest::from_str(FIVE_MODEL_MANIFEST).unwrap();
+        // 12 GB — 9B needs 16 GB min, should fall to 4B
+        let model = manifest.select_initial_model(12).unwrap();
+        assert_eq!(model.id, "qwen3.5-4b-q5");
+    }
 
-        // 8 GB — only Small fits
-        let model = manifest.model_for_ram(8).unwrap();
-        assert_eq!(model.id, "qwen3.5-4b-q4");
-        assert_eq!(model.tier, ModelTier::Small);
+    #[test]
+    fn test_select_initial_model_falls_to_0_8b() {
+        let manifest = Manifest::from_str(FIVE_MODEL_MANIFEST).unwrap();
+        // 6 GB — 4B needs 8 GB, should fall to 0.8B
+        let model = manifest.select_initial_model(6).unwrap();
+        assert_eq!(model.id, "qwen3.5-0.8b-q5");
+    }
 
-        // 4 GB — nothing fits
-        let result = manifest.model_for_ram(4);
+    #[test]
+    fn test_select_initial_model_none_when_nothing_fits() {
+        let manifest = Manifest::from_str(FIVE_MODEL_MANIFEST).unwrap();
+        // 2 GB — nothing fits
+        let result = manifest.select_initial_model(2);
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_select_initial_model_never_picks_opt_in() {
+        let manifest = Manifest::from_str(FIVE_MODEL_MANIFEST).unwrap();
+        // 128 GB — even with tons of RAM, should pick 9B not 27B/35B
+        let model = manifest.select_initial_model(128).unwrap();
+        assert_eq!(model.id, "qwen3.5-9b-q5");
     }
 
     #[test]
