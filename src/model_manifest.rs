@@ -13,6 +13,7 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ModelTier {
+    Tiny,
     Small,
     Default,
     Large,
@@ -132,7 +133,8 @@ impl Manifest {
         let lower_tier = match current.tier {
             ModelTier::Large => ModelTier::Default,
             ModelTier::Default => ModelTier::Small,
-            ModelTier::Small => return None,
+            ModelTier::Small => ModelTier::Tiny,
+            ModelTier::Tiny => return None,
         };
         self.models.iter().find(|m| m.tier == lower_tier)
     }
@@ -609,5 +611,47 @@ mod tests {
         let small = manifest.models.iter().find(|m| m.tier == ModelTier::Small).unwrap();
         let down = manifest.one_tier_down(small);
         assert!(down.is_none());
+    }
+
+    #[test]
+    fn test_one_tier_down_with_tiny() {
+        let json = r#"{
+            "version": 1,
+            "models": [
+                {
+                    "id": "tiny", "name": "Tiny", "filename": "t.gguf",
+                    "quant": "Q5", "size_bytes": 100, "sha256": "a",
+                    "url": "https://example.com/t.gguf", "min_ram_gb": 4,
+                    "ctx_size": 4096, "n_gpu_layers": -1,
+                    "app_support_subdir": "Glass Slipper/Models",
+                    "tier": "tiny"
+                },
+                {
+                    "id": "small", "name": "Small", "filename": "s.gguf",
+                    "quant": "Q5", "size_bytes": 200, "sha256": "b",
+                    "url": "https://example.com/s.gguf", "min_ram_gb": 8,
+                    "ctx_size": 8192, "n_gpu_layers": -1,
+                    "app_support_subdir": "Glass Slipper/Models",
+                    "tier": "small"
+                },
+                {
+                    "id": "default", "name": "Default", "filename": "d.gguf",
+                    "quant": "Q5", "size_bytes": 300, "sha256": "c",
+                    "url": "https://example.com/d.gguf", "min_ram_gb": 16,
+                    "ctx_size": 32768, "n_gpu_layers": -1,
+                    "app_support_subdir": "Glass Slipper/Models",
+                    "tier": "default"
+                }
+            ],
+            "default_model": "default"
+        }"#;
+        let manifest = Manifest::from_str(json).unwrap();
+
+        let small = manifest.models.iter().find(|m| m.id == "small").unwrap();
+        let down = manifest.one_tier_down(small).unwrap();
+        assert_eq!(down.id, "tiny");
+
+        let tiny = manifest.models.iter().find(|m| m.id == "tiny").unwrap();
+        assert!(manifest.one_tier_down(tiny).is_none());
     }
 }
