@@ -340,10 +340,10 @@ mod tests {
         "version": 1,
         "models": [
             {
-                "id": "qwen3.5-4b-q4",
+                "id": "qwen3.5-4b-q5",
                 "name": "Qwen 3.5 4B",
-                "filename": "Qwen3.5-4B-Q4_K_M.gguf",
-                "quant": "Q4_K_M",
+                "filename": "Qwen3.5-4B-Q5_K_M.gguf",
+                "quant": "Q5_K_M",
                 "size_bytes": 2740000000,
                 "sha256": "TODO-4b-sha256",
                 "url": "https://example.com/4b.gguf",
@@ -398,7 +398,7 @@ mod tests {
         let manifest = Manifest::from_str(TIERED_MANIFEST).unwrap();
         assert_eq!(manifest.models.len(), 3);
 
-        let small = manifest.models.iter().find(|m| m.id == "qwen3.5-4b-q4").unwrap();
+        let small = manifest.models.iter().find(|m| m.id == "qwen3.5-4b-q5").unwrap();
         assert_eq!(small.tier, ModelTier::Small);
 
         let default = manifest.models.iter().find(|m| m.id == "qwen3.5-9b-q5").unwrap();
@@ -606,7 +606,7 @@ mod tests {
         let default = manifest.models.iter().find(|m| m.tier == ModelTier::Default).unwrap();
         let down = manifest.one_tier_down(default).unwrap();
         assert_eq!(down.tier, ModelTier::Small);
-        assert_eq!(down.id, "qwen3.5-4b-q4");
+        assert_eq!(down.id, "qwen3.5-4b-q5");
 
         let small = manifest.models.iter().find(|m| m.tier == ModelTier::Small).unwrap();
         let down = manifest.one_tier_down(small);
