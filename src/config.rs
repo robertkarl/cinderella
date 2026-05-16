@@ -15,6 +15,8 @@ pub struct ServerConfig {
     pub ctx_size: u32,
     pub n_gpu_layers: i32,
     pub jinja: bool,
+    pub cache_type_k: String,
+    pub cache_type_v: String,
 }
 
 impl ServerConfig {
@@ -25,6 +27,8 @@ impl ServerConfig {
             ctx_size: model.ctx_size,
             n_gpu_layers: model.n_gpu_layers,
             jinja: true,
+            cache_type_k: model.cache_type_k.clone(),
+            cache_type_v: model.cache_type_v.clone(),
         }
     }
 
@@ -39,6 +43,10 @@ impl ServerConfig {
             "--n-gpu-layers".to_string(),
             self.n_gpu_layers.to_string(),
         ];
+        args.push("--cache-type-k".to_string());
+        args.push(self.cache_type_k.clone());
+        args.push("--cache-type-v".to_string());
+        args.push(self.cache_type_v.clone());
         if self.jinja {
             args.push("--jinja".to_string());
             args.push("--chat-template-kwargs".to_string());
@@ -351,6 +359,23 @@ mod tests {
         assert!(args.contains(&r#"{"enable_thinking":false}"#.to_string()));
         assert!(args.contains(&"--port".to_string()));
         assert!(args.contains(&"8787".to_string()));
+    }
+
+    #[test]
+    fn test_server_config_args_include_cache_types() {
+        let cfg = ServerConfig {
+            model_path: std::path::PathBuf::from("/tmp/model.gguf"),
+            port: 8787,
+            ctx_size: 32768,
+            n_gpu_layers: -1,
+            jinja: true,
+            cache_type_k: "q8_0".to_string(),
+            cache_type_v: "q8_0".to_string(),
+        };
+        let args = cfg.to_args();
+        assert!(args.contains(&"--cache-type-k".to_string()));
+        assert!(args.contains(&"q8_0".to_string()));
+        assert!(args.contains(&"--cache-type-v".to_string()));
     }
 
     #[test]

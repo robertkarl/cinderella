@@ -50,6 +50,10 @@ pub struct ModelDef {
     pub app_support_subdir: String,
     #[serde(default = "default_tier")]
     pub tier: ModelTier,
+    #[serde(default = "default_cache_type")]
+    pub cache_type_k: String,
+    #[serde(default = "default_cache_type")]
+    pub cache_type_v: String,
 }
 
 fn default_min_macos() -> String {
@@ -58,6 +62,10 @@ fn default_min_macos() -> String {
 
 fn default_arch() -> String {
     "arm64".to_string()
+}
+
+fn default_cache_type() -> String {
+    "q8_0".to_string()
 }
 
 impl Manifest {
@@ -406,6 +414,41 @@ mod tests {
         // 4 GB — nothing fits
         let result = manifest.model_for_ram(4);
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_cache_type_defaults() {
+        let manifest = Manifest::from_str(TEST_MANIFEST).unwrap();
+        let model = manifest.default_model().unwrap();
+        assert_eq!(model.cache_type_k, "q8_0");
+        assert_eq!(model.cache_type_v, "q8_0");
+    }
+
+    #[test]
+    fn test_cache_type_explicit() {
+        let json = r#"{
+            "version": 1,
+            "models": [{
+                "id": "test",
+                "name": "Test",
+                "filename": "test.gguf",
+                "quant": "Q5_K_M",
+                "size_bytes": 100,
+                "sha256": "abc",
+                "url": "https://example.com/test.gguf",
+                "min_ram_gb": 8,
+                "ctx_size": 4096,
+                "n_gpu_layers": -1,
+                "app_support_subdir": "Glass Slipper/Models",
+                "cache_type_k": "q4_0",
+                "cache_type_v": "q5_0"
+            }],
+            "default_model": "test"
+        }"#;
+        let manifest = Manifest::from_str(json).unwrap();
+        let model = manifest.default_model().unwrap();
+        assert_eq!(model.cache_type_k, "q4_0");
+        assert_eq!(model.cache_type_v, "q5_0");
     }
 
     #[test]

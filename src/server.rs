@@ -219,6 +219,8 @@ mod tests {
             ctx_size,
             n_gpu_layers: -1,
             jinja: true,
+            cache_type_k: "q8_0".to_string(),
+            cache_type_v: "q8_0".to_string(),
         }
     }
 
