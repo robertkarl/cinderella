@@ -132,6 +132,7 @@ impl LlmClient {
         let start = Instant::now();
         let mut buffer = String::new();
         let mut done = false;
+        let mut finish_reason: Option<String> = None;
 
         while let Some(chunk) = stream.next().await {
             if done {
@@ -147,6 +148,32 @@ impl LlmClient {
                 &mut token_count,
                 start,
                 &mut on_event,
+                &mut finish_reason,
+            );
+        }
+
+        // If the stream ended without a proper [DONE] signal, llama-server likely
+        // truncated the response (context window full, OOM, etc.). Treat this as
+        // a hard error rather than silently returning a partial response.
+        if !done {
+            anyhow::bail!(
+                "Stream ended without completion signal (truncated response). \
+                 Content length: {} chars, tool calls: {}, tokens: {}",
+                content.len(),
+                tool_calls.len(),
+                token_count,
+            );
+        }
+
+        // finish_reason: "length" means llama-server hit the context window limit
+        // and truncated the response. Don't silently accept this.
+        if finish_reason.as_deref() == Some("length") {
+            anyhow::bail!(
+                "Response truncated: context window full (finish_reason=length). \
+                 Content length: {} chars, tool calls: {}, tokens: {}",
+                content.len(),
+                tool_calls.len(),
+                token_count,
             );
         }
 
@@ -182,6 +209,7 @@ fn process_sse_buffer(
     token_count: &mut u64,
     start: Instant,
     on_event: &mut impl FnMut(StreamEvent),
+    last_finish_reason: &mut Option<String>,
 ) -> bool {
     while let Some(pos) = buffer.find('\n') {
         let line = buffer[..pos].trim().to_string();
@@ -197,6 +225,9 @@ fn process_sse_buffer(
                 if let Ok(chunk) = serde_json::from_str::<SseChunk>(data) {
                     for choice in &chunk.choices {
                         process_choice_delta(choice, content, tool_calls, token_count, start, on_event);
+                        if let Some(ref fr) = choice.finish_reason {
+                            *last_finish_reason = Some(fr.clone());
+                        }
                     }
                 }
             }
