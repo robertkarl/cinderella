@@ -1,10 +1,14 @@
 
 llama=/opt/homebrew/bin/llama-server
-modelcachedir=/Users/robertkarl/Library/Caches/llama.cpp
+modelcachedir=/Users/robertkarl/Library/Application Support/Glass Slipper/Models
+qwen36=Qwen3.6-35B-A3B-UD-Q5_K_M.gguf
 9boblit=mradermacher_Huihui-Qwen3.5-9B-abliterated-GGUF_Huihui-Qwen3.5-9B-abliterated.Q4_K_M.gguf
 
 startllama_9boblit_ctx16k:
 	${llama} --model  "${modelcachedir}/${9boblit}" --host localhost --port 8081 --ctx-size 16384 --jinja 
+
+startllama_qwen36:
+	${llama} --model  "${modelcachedir}/${qwen36}" --host localhost --port 8081 --ctx-size 200000 --jinja --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0
 
 startllama_9boblit_32k:
 	${llama} --model  "${modelcachedir}/${9boblit}" --host localhost --port 8081 --ctx-size 32768 --jinja 

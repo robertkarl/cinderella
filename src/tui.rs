@@ -62,7 +62,7 @@ fn print_prompt() {
     if std::env::var("NO_COLOR").is_ok() {
         print!("\n> ");
     } else {
-        print!("\n\x1b[1m$\x1b[0m ");
+        print!("\n\x1b[1m>\x1b[0m ");
     }
     let _ = io::stdout().flush();
 }
