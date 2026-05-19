@@ -1,43 +1,17 @@
 //
 //  CinderellaScaffold.swift
-//  Glass Slipper — AppKit starter
+//  Glass Slipper — AppKit design tokens, row views, spine controller
 //
-//  PURPOSE
-//  -------
-//  Design-system scaffold + one fully worked row view (CheckRowView) as a
-//  pattern reference. Other row kinds (UserPromptRowView, PlanRowView,
-//  ThoughtRowView, DiagnosisRowView, and future WaterfallRowView /
-//  MiniChartRowView) are stubbed. Implement them by COMPOSING TOKENS, not
-//  by inventing new visual decisions.
-//
-//  THE ONE RULE
-//  ------------
-//  If you find yourself reaching for a literal value — a hex color, a font
-//  size, a padding number — STOP and add it to the appropriate token
-//  section first. Then use the token. This is the only thing keeping the
-//  per-view drift that fucked up the last port from happening again.
-//
-//  WIRING
-//  ------
-//  - Spine is NSScrollView wrapping NSStackView. ~20 events: stack view
-//    is fine. If history grows past a few hundred events later, swap to
-//    NSTableView with cell reuse. Don't preoptimize.
-//  - Append events from your glass-slipper JSON stream by calling
-//    SpineViewController.append(_:) on the main thread.
-//
-//  DEV LOOP
-//  --------
-//  Add InjectionIII (https://github.com/johnno1962/InjectionForXcode) so
-//  edits to row views hot-reload without rebuild. Without it the loop
-//  with Claude Code is too slow to iterate on visual details.
+//  Colors use macOS semantic system colors (NSColor.labelColor, etc.)
+//  so light/dark mode works automatically. Spacing and typography are
+//  defined as tokens below — use those, not raw literals.
 //
 
 import AppKit
 
-// MARK: - Hex helper
+// MARK: - Hex helper (used by StatusBarView health dots)
 
 extension NSColor {
-    /// Init from 0xRRGGBB literal. Keeps the token table readable.
     convenience init(hex: UInt32, alpha: CGFloat = 1) {
         let r = CGFloat((hex >> 16) & 0xFF) / 255
         let g = CGFloat((hex >>  8) & 0xFF) / 255
@@ -48,73 +22,65 @@ extension NSColor {
 
 // MARK: - Color tokens
 //
-// Mapped 1:1 from the React mock's Tailwind palette. Uses NSColor(name:)
-// dynamic providers so colors adapt to system light/dark appearance.
+// Uses macOS semantic system colors so everything adapts to
+// light/dark mode automatically. No hex values, no custom providers.
 
 extension NSColor {
-    /// Helper: create a dynamic color that resolves per-appearance.
-    private static func dynamic(light: UInt32, dark: UInt32) -> NSColor {
-        NSColor(name: nil) { appearance in
-            let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            return isDark ? NSColor(hex: dark) : NSColor(hex: light)
-        }
-    }
-
     // Surfaces
-    static let surfacePrimary    = dynamic(light: 0xFFFFFF, dark: 0x1C1C1E)
-    static let surfaceMuted      = dynamic(light: 0xFAFAFA, dark: 0x2C2C2E)
-    static let surfaceHeader     = dynamic(light: 0xF4F4F5, dark: 0x3A3A3C)
-    static let surfaceDiagnosis  = dynamic(light: 0xECFDF5, dark: 0x0D2818)
-    static let surfaceDiagWarn   = dynamic(light: 0xFFFBEB, dark: 0x2D1F00)
-    static let surfaceDiagFail   = dynamic(light: 0xFEF2F2, dark: 0x2D0F0F)
+    static let surfacePrimary    = NSColor.windowBackgroundColor
+    static let surfaceMuted      = NSColor.controlBackgroundColor
+    static let surfaceHeader     = NSColor.underPageBackgroundColor
+    static let surfaceDiagnosis  = NSColor.controlBackgroundColor
+    static let surfaceDiagWarn   = NSColor.controlBackgroundColor
+    static let surfaceDiagFail   = NSColor.controlBackgroundColor
 
     // Text
-    static let textPrimary       = dynamic(light: 0x18181B, dark: 0xF4F4F5)
-    static let textSecondary     = dynamic(light: 0x71717A, dark: 0xA1A1AA)
-    static let textQuiet         = dynamic(light: 0xA1A1AA, dark: 0x71717A)
+    static let textPrimary       = NSColor.labelColor
+    static let textSecondary     = NSColor.secondaryLabelColor
+    static let textQuiet         = NSColor.tertiaryLabelColor
 
     // Lines & accents
-    static let separatorHairline = dynamic(light: 0xF4F4F5, dark: 0x3A3A3C)
-    static let accentDiagnosis   = dynamic(light: 0x10B981, dark: 0x34D399)
-    static let accentDiagLabel   = dynamic(light: 0x047857, dark: 0x6EE7B7)
-    static let accentDiagWarn    = dynamic(light: 0xF59E0B, dark: 0xFBBF24)
-    static let accentDiagWarnLbl = dynamic(light: 0x92400E, dark: 0xFDE68A)
-    static let accentDiagFail    = dynamic(light: 0xEF4444, dark: 0xF87171)
-    static let accentDiagFailLbl = dynamic(light: 0xB91C1C, dark: 0xFCA5A5)
-    static let accentProgress    = dynamic(light: 0x3B82F6, dark: 0x60A5FA)
+    static let separatorHairline = NSColor.separatorColor
+    static let accentDiagnosis   = NSColor.systemGreen
+    static let accentDiagLabel   = NSColor.systemGreen
+    static let accentDiagWarn    = NSColor.systemYellow
+    static let accentDiagWarnLbl = NSColor.systemOrange
+    static let accentDiagFail    = NSColor.systemRed
+    static let accentDiagFailLbl = NSColor.systemRed
+    static let accentProgress    = NSColor.systemBlue
 
     // Memory pressure banners
-    static let surfaceWarningBanner  = dynamic(light: 0xFEFCE8, dark: 0x2D2800)
-    static let accentWarningBanner   = dynamic(light: 0xEAB308, dark: 0xFACC15)
-    static let textWarningBanner     = dynamic(light: 0x713F12, dark: 0xFEF08A)
-    static let surfaceCriticalBanner = dynamic(light: 0xFEF2F2, dark: 0x2D0F0F)
-    static let accentCriticalBanner  = dynamic(light: 0xEF4444, dark: 0xF87171)
-    static let textCriticalBanner    = dynamic(light: 0x7F1D1D, dark: 0xFCA5A5)
-    static let surfacePromotionBanner = dynamic(light: 0xECFDF5, dark: 0x0D2818)
-    static let accentPromotionBanner  = dynamic(light: 0x10B981, dark: 0x34D399)
-    static let textPromotionBanner    = dynamic(light: 0x064E3B, dark: 0xA7F3D0)
+    static let surfaceWarningBanner  = NSColor.controlBackgroundColor
+    static let accentWarningBanner   = NSColor.systemYellow
+    static let textWarningBanner     = NSColor.labelColor
+    static let surfaceCriticalBanner = NSColor.controlBackgroundColor
+    static let accentCriticalBanner  = NSColor.systemRed
+    static let textCriticalBanner    = NSColor.labelColor
+    static let surfacePromotionBanner = NSColor.controlBackgroundColor
+    static let accentPromotionBanner  = NSColor.systemGreen
+    static let textPromotionBanner    = NSColor.labelColor
 
     // Status pill — backgrounds
-    static let statusOKBg        = dynamic(light: 0xD1FAE5, dark: 0x064E3B)
-    static let statusERRBg       = dynamic(light: 0xFEE2E2, dark: 0x7F1D1D)
-    static let statusWARNBg      = dynamic(light: 0xFEF3C7, dark: 0x713F12)
-    static let statusINFOBg      = dynamic(light: 0xDBEAFE, dark: 0x1E3A5F)
+    static let statusOKBg        = NSColor.systemGreen.withAlphaComponent(0.15)
+    static let statusERRBg       = NSColor.systemRed.withAlphaComponent(0.15)
+    static let statusWARNBg      = NSColor.systemYellow.withAlphaComponent(0.15)
+    static let statusINFOBg      = NSColor.systemBlue.withAlphaComponent(0.15)
 
     // Status pill — text
-    static let statusOKFg        = dynamic(light: 0x047857, dark: 0x6EE7B7)
-    static let statusERRFg       = dynamic(light: 0xB91C1C, dark: 0xFCA5A5)
-    static let statusWARNFg      = dynamic(light: 0x854D0E, dark: 0xFDE68A)
-    static let statusINFOFg      = dynamic(light: 0x1D4ED8, dark: 0x93C5FD)
+    static let statusOKFg        = NSColor.systemGreen
+    static let statusERRFg       = NSColor.systemRed
+    static let statusWARNFg      = NSColor.systemOrange
+    static let statusINFOFg      = NSColor.systemBlue
 
     // MCP Companion — savings
-    static let savingsGreen       = dynamic(light: 0x4ADE80, dark: 0x4ADE80)
-    static let savingsGreenMuted  = dynamic(light: 0xBBF7D0, dark: 0x166534)
-    static let companionBlue      = dynamic(light: 0x60A5FA, dark: 0x60A5FA)
-    static let companionPurple    = dynamic(light: 0xC084FC, dark: 0xC084FC)
-    static let setupStepBg        = dynamic(light: 0xF8FAFC, dark: 0x2C2C2E)
-    static let setupCheckmark     = dynamic(light: 0x22C55E, dark: 0x4ADE80)
-    static let setupActionBg      = dynamic(light: 0x3B82F6, dark: 0x3B82F6)
-    static let setupActionFg      = dynamic(light: 0xFFFFFF, dark: 0xFFFFFF)
+    static let savingsGreen       = NSColor.systemGreen
+    static let savingsGreenMuted  = NSColor.systemGreen.withAlphaComponent(0.2)
+    static let companionBlue      = NSColor.systemBlue
+    static let companionPurple    = NSColor.systemPurple
+    static let setupStepBg        = NSColor.controlBackgroundColor
+    static let setupCheckmark     = NSColor.systemGreen
+    static let setupActionBg      = NSColor.systemBlue
+    static let setupActionFg      = NSColor.white
 }
 
 // MARK: - Typography tokens
@@ -256,20 +222,21 @@ final class HairlineDivider: NSView {
 
 // MARK: - Appearance-aware background view
 
-/// NSView subclass that re-applies its dynamic background color when
-/// the system appearance changes (light ↔ dark). Use for any long-lived
-/// container whose layer background must stay in sync.
+/// NSView subclass that re-applies its background color when the system
+/// appearance changes (light ↔ dark). Needed because layer.backgroundColor
+/// is a CGColor snapshot that doesn't auto-update with NSColor.
 class AppearanceAwareView: NSView {
     private var dynamicBgColor: NSColor?
+
+    override var wantsUpdateLayer: Bool { true }
 
     func setDynamicBackground(_ color: NSColor) {
         dynamicBgColor = color
         wantsLayer = true
-        layer?.backgroundColor = color.cgColor
+        needsDisplay = true
     }
 
-    override func viewDidChangeEffectiveAppearance() {
-        super.viewDidChangeEffectiveAppearance()
+    override func updateLayer() {
         if let color = dynamicBgColor {
             layer?.backgroundColor = color.cgColor
         }
@@ -313,17 +280,7 @@ enum EventRowFactory {
     }
 }
 
-// MARK: - CheckRowView (THE WORKED EXAMPLE — copy this pattern)
-//
-// Anatomy:
-//   [pill]  Title (cardTitle, textPrimary)
-//           detail (detailText, textSecondary, wraps)
-//
-// Padding: rowHorizontal × rowVertical
-// Background: surfacePrimary
-//
-// Notice: every value comes from a token. No literals. Replicate this
-// discipline in the stubs below.
+// MARK: - CheckRowView
 
 final class CheckRowView: NSView {
     private let pill: StatusPillView
@@ -377,10 +334,9 @@ final class CheckRowView: NSView {
     required init?(coder: NSCoder) { fatalError("not in IB") }
 }
 
-// MARK: - Stub rows — implement following the CheckRowView pattern
+// MARK: - Row views — follow the CheckRowView pattern
 //
-// REMINDER: tokens only. Hex literals, raw font sizes, raw padding numbers
-// in this section are bugs. Add to the token sections above first.
+// Use system colors and spacing tokens. No raw literals.
 
 final class UserPromptRowView: NSView {
     private let glyphLabel = NSTextField(labelWithString: "→")
