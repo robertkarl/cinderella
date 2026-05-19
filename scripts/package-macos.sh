@@ -25,12 +25,7 @@ APP_NAME="Glass Slipper"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 
 # Signing identity
-IDENTITY="${DEVELOPER_ID:--}"
-if [ "$IDENTITY" = "-" ]; then
-    echo "WARNING: No DEVELOPER_ID set. Using ad-hoc signing (not distributable)."
-    echo "Set DEVELOPER_ID='Developer ID Application: Your Name (TEAMID)' for release."
-    echo ""
-fi
+IDENTITY="${DEVELOPER_ID:-Developer ID Application: Robert Karl (E7FAHT2694)}"
 
 echo "=== package-macos.sh ==="
 echo "Output: $APP_BUNDLE"

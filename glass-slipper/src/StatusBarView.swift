@@ -20,7 +20,7 @@ enum HealthDotState {
     }
 }
 
-final class StatusBarView: NSView {
+final class StatusBarView: AppearanceAwareView {
     private let dotView = NSView()
     private let label = NSTextField(labelWithString: "")
 
@@ -35,8 +35,7 @@ final class StatusBarView: NSView {
     required init?(coder: NSCoder) { fatalError("not in IB") }
 
     private func setup() {
-        wantsLayer = true
-        layer?.backgroundColor = NSColor.surfaceHeader.cgColor
+        setDynamicBackground(.surfaceHeader)
         translatesAutoresizingMaskIntoConstraints = false
 
         dotView.wantsLayer = true

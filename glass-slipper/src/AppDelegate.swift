@@ -22,8 +22,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var warningDismissedUntil: Date?
     /// When non-nil, suppress promotion banners until this date.
     private var promotionDismissedUntil: Date?
-    /// Structured app-side log (glass-slipper-app.log).
-    private var appLogHandle: FileHandle?
 
     private var process: Process?
     private var stdoutPipe: Pipe?
@@ -40,7 +38,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Application lifecycle
 
+    // MARK: - Directories
+
+    static let appSupportDir: String = {
+        NSHomeDirectory() + "/Library/Application Support/Glass Slipper"
+    }()
+
+    static let logsDir: String = {
+        NSHomeDirectory() + "/Library/Logs/Glass Slipper"
+    }()
+
+    /// Eagerly create required directories at launch, before anything else
+    /// tries to read/write them.
+    private func ensureDirectories() {
+        let fm = FileManager.default
+        for dir in [Self.appSupportDir, Self.appSupportDir + "/Models", Self.logsDir] {
+            try? fm.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        }
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        ensureDirectories()
+        AppLogger.start()
+        AppLogger.log("app_launch")
         setupMenuBar()
         setupCompanionWindow()
         if #available(macOS 14.0, *) {
@@ -144,6 +164,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let appMenuItem = NSMenuItem()
         menubar.addItem(appMenuItem)
         let appMenu = NSMenu()
+        appMenu.addItem(withTitle: "About Glass Slipper", action: #selector(showAboutPanel), keyEquivalent: "")
+        appMenu.addItem(NSMenuItem.separator())
         appMenu.addItem(withTitle: "Quit Glass Slipper", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appMenuItem.submenu = appMenu
 
@@ -166,6 +188,95 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         windowMenuItem.submenu = windowMenu
 
         NSApp.mainMenu = menubar
+    }
+
+    private var aboutWindowController: NSWindowController?
+
+    @objc private func showAboutPanel() {
+        if let wc = aboutWindowController {
+            wc.showWindow(nil)
+            wc.window?.makeKeyAndOrderFront(nil)
+            return
+        }
+
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 240),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "About Glass Slipper"
+        window.center()
+
+        let contentView = AppearanceAwareView()
+        contentView.setDynamicBackground(.surfacePrimary)
+        window.contentView = contentView
+
+        let title = NSTextField(labelWithString: "Glass Slipper")
+        title.font = .systemFont(ofSize: 18, weight: .bold)
+        title.textColor = .textPrimary
+        title.alignment = .center
+        title.translatesAutoresizingMaskIntoConstraints = false
+
+        let versionLabel = NSTextField(labelWithString: "v\(version)")
+        versionLabel.font = .systemFont(ofSize: 13)
+        versionLabel.textColor = .textSecondary
+        versionLabel.alignment = .center
+        versionLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let subtitle = NSTextField(labelWithString: "Local AI for Claude Code")
+        subtitle.font = .systemFont(ofSize: 11)
+        subtitle.textColor = .textQuiet
+        subtitle.alignment = .center
+        subtitle.translatesAutoresizingMaskIntoConstraints = false
+
+        let logsButton = NSButton(title: "Application Logs…", target: self, action: #selector(openLogsDirectory))
+        logsButton.bezelStyle = .rounded
+        logsButton.translatesAutoresizingMaskIntoConstraints = false
+
+        let supportButton = NSButton(title: "Application Support…", target: self, action: #selector(openAppSupportDirectory))
+        supportButton.bezelStyle = .rounded
+        supportButton.translatesAutoresizingMaskIntoConstraints = false
+
+        let buttonStack = NSStackView(views: [logsButton, supportButton])
+        buttonStack.orientation = .horizontal
+        buttonStack.spacing = Spacing.md
+        buttonStack.translatesAutoresizingMaskIntoConstraints = false
+
+        contentView.addSubview(title)
+        contentView.addSubview(versionLabel)
+        contentView.addSubview(subtitle)
+        contentView.addSubview(buttonStack)
+
+        NSLayoutConstraint.activate([
+            title.topAnchor.constraint(equalTo: contentView.topAnchor, constant: Spacing.xxl),
+            title.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+
+            versionLabel.topAnchor.constraint(equalTo: title.bottomAnchor, constant: Spacing.sm),
+            versionLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+
+            subtitle.topAnchor.constraint(equalTo: versionLabel.bottomAnchor, constant: Spacing.md),
+            subtitle.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+
+            buttonStack.topAnchor.constraint(equalTo: subtitle.bottomAnchor, constant: Spacing.xxl),
+            buttonStack.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            buttonStack.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -Spacing.xxl),
+        ])
+
+        let wc = NSWindowController(window: window)
+        aboutWindowController = wc
+        wc.showWindow(nil)
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    @objc private func openLogsDirectory() {
+        NSWorkspace.shared.open(URL(fileURLWithPath: Self.logsDir, isDirectory: true))
+    }
+
+    @objc private func openAppSupportDirectory() {
+        NSWorkspace.shared.open(URL(fileURLWithPath: Self.appSupportDir, isDirectory: true))
     }
 
     @objc private func showCompanionWindow() {
@@ -388,19 +499,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         isRunning = true
         diagnoseButton.title = "Stop"
 
-        // Open JSONL log file for tail -f debugging (after proc.run succeeds)
-        let logPath = NSTemporaryDirectory() + "glass-slipper.jsonl"
+        // Open JSONL log file in persistent logs directory
+        let logPath = Self.logsDir + "/glass-slipper.jsonl"
         FileManager.default.createFile(atPath: logPath, contents: nil)
         logFileHandle = FileHandle(forWritingAtPath: logPath)
-        logFileHandle?.truncateFile(atOffset: 0)
+        logFileHandle?.seekToEndOfFile()
         NSLog("Glass Slipper log: %@", logPath)
 
-        // App-side structured log
-        let appLogPath = NSTemporaryDirectory() + "glass-slipper-app.log"
-        FileManager.default.createFile(atPath: appLogPath, contents: nil)
-        appLogHandle = FileHandle(forWritingAtPath: appLogPath)
-        appLogHandle?.truncateFile(atOffset: 0)
-        NSLog("Glass Slipper app log: %@", appLogPath)
+        AppLogger.log("diagnosis_start", ["url": url])
     }
 
     // MARK: - Stop diagnosis
@@ -677,22 +783,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Write a structured JSONL entry to the app log.
     private func logAppEvent(_ eventName: String, details: [String: Any]) {
-        guard let handle = appLogHandle else { return }
-        var entry: [String: Any] = [
-            "timestamp": ISO8601DateFormatter().string(from: Date()),
-            "event": eventName,
-        ]
-        for (key, value) in details {
-            entry[key] = value
-        }
-        guard let data = try? JSONSerialization.data(withJSONObject: entry),
-              let line = String(data: data, encoding: .utf8) else { return }
-        if let lineData = (line + "\n").data(using: .utf8) {
-            handle.write(lineData)
-            handle.synchronizeFile()
-        }
+        AppLogger.log(eventName, details)
     }
 
     // MARK: - Termination
@@ -718,8 +810,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         logFileHandle?.closeFile()
         logFileHandle = nil
 
-        appLogHandle?.closeFile()
-        appLogHandle = nil
+        AppLogger.log("diagnosis_end", ["exit_code": task.terminationStatus])
     }
 }
 

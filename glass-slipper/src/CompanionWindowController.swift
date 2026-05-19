@@ -8,10 +8,11 @@
 
 import AppKit
 
-final class CompanionWindowController: NSWindowController, MCPActivityLogDelegate, LlamaServerManagerDelegate {
+final class CompanionWindowController: NSWindowController, MCPActivityLogDelegate, LlamaServerManagerDelegate, ModelDownloadManagerDelegate {
 
     private let activityLog = MCPActivityLog()
     private let serverManager = LlamaServerManager()
+    private var downloadManager: ModelDownloadManager?
 
     // Setup views
     private var setupStack: NSStackView!
@@ -65,9 +66,11 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
     // MARK: - UI Construction
 
     private func buildUI() {
+        // Replace the window's content view with an appearance-aware one
+        let awareView = AppearanceAwareView()
+        awareView.setDynamicBackground(.surfacePrimary)
+        window?.contentView = awareView
         guard let contentView = window?.contentView else { return }
-        contentView.wantsLayer = true
-        contentView.layer?.backgroundColor = NSColor.surfacePrimary.cgColor
 
         // Setup rows
         modelRow = SetupRow(
@@ -196,6 +199,13 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
             mcpRow.updateDetail("Configured")
         }
 
+        // Surface manifest errors eagerly so the user sees them before clicking
+        if !modelOK {
+            if ModelDownloadManager.loadManifest() == nil {
+                modelRow.showError("Model manifest not found. The app bundle may be damaged — try reinstalling.")
+            }
+        }
+
         // Codex row: optional, not gating allDone
         let codexAvailable = CodexMCPInstaller.isCodexAvailable
         codexRow.setComplete(CodexMCPInstaller.isInstalled)
@@ -224,19 +234,40 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
     // MARK: - Actions
 
     private func handleModelDownload() {
-        refreshState()
+        guard let manifest = ModelDownloadManager.loadManifest() else {
+            modelRow.showError("Could not load model manifest. The app bundle may be damaged — try reinstalling.")
+            AppLogger.log("manifest_load_failed")
+            return
+        }
+        guard let modelDef = manifest.models.first(where: { $0.id == manifest.default_model }) else {
+            modelRow.showError("Default model '\(manifest.default_model)' not found in manifest.")
+            return
+        }
+
+        let manager = ModelDownloadManager(model: modelDef)
+        manager.delegate = self
+        self.downloadManager = manager
+
+        if manager.isModelPresent {
+            modelRow.setComplete(true)
+            refreshState()
+            return
+        }
+
+        modelRow.updateDetail("Downloading…")
+        AppLogger.log("model_download_start", ["model": modelDef.id])
+        manager.startDownload()
     }
 
     private func handleServerStart() {
+        serverRow.clearError()
         serverManager.start()
     }
 
     private func handleMCPInstall() {
+        mcpRow.clearError()
         if let error = MCPInstaller.install() {
-            let alert = NSAlert()
-            alert.messageText = "MCP Install Failed"
-            alert.informativeText = error
-            alert.runModal()
+            mcpRow.showError(error)
         }
         refreshState()
     }
@@ -247,23 +278,18 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
             return
         }
 
+        codexRow.clearError()
         if CodexMCPInstaller.isInstalled {
             CodexMCPInstaller.uninstall { [weak self] error in
                 if let error = error {
-                    let alert = NSAlert()
-                    alert.messageText = "Codex Uninstall Failed"
-                    alert.informativeText = error
-                    alert.runModal()
+                    self?.codexRow.showError(error)
                 }
                 self?.refreshState()
             }
         } else {
             CodexMCPInstaller.install { [weak self] error in
                 if let error = error {
-                    let alert = NSAlert()
-                    alert.messageText = "Codex Install Failed"
-                    alert.informativeText = error
-                    alert.runModal()
+                    self?.codexRow.showError(error)
                 }
                 self?.refreshState()
             }
@@ -295,18 +321,50 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
     func serverStateDidChange(_ state: LlamaServerState) {
         switch state {
         case .starting:
+            serverRow.clearError()
             serverRow.updateDetail("Starting…")
+            AppLogger.log("server_starting")
         case .running:
             serverRow.setComplete(true)
             serverRow.updateDetail("llama-server · Port 8787")
+            AppLogger.log("server_running")
             refreshState()
         case .failed(let msg):
             serverRow.setComplete(false)
-            serverRow.updateDetail("Failed: \(msg)")
+            serverRow.updateDetail("llama-server · Port 8787")
+            serverRow.showError(msg)
+            AppLogger.log("server_failed", ["error": msg])
         case .notRunning:
             serverRow.setComplete(false)
             serverRow.updateDetail("llama-server · Port 8787")
         }
+    }
+
+    // MARK: - ModelDownloadManagerDelegate
+
+    func downloadDidUpdateProgress(downloaded: Int64, total: Int64) {
+        let pct = total > 0 ? Double(downloaded) / Double(total) : 0
+        let dlGB = String(format: "%.1f", Double(downloaded) / 1_073_741_824)
+        let totalGB = String(format: "%.1f", Double(total) / 1_073_741_824)
+        modelRow.updateDetail("\(dlGB) / \(totalGB) GB (\(Int(pct * 100))%)")
+    }
+
+    func downloadDidBeginVerification() {
+        modelRow.updateDetail("Verifying integrity…")
+    }
+
+    func downloadDidFinish() {
+        modelRow.setComplete(true)
+        modelRow.updateDetail("Qwen 3.5 9B · Q5_K_M")
+        AppLogger.log("model_download_complete")
+        serverManager.start()
+        refreshState()
+    }
+
+    func downloadDidFail(error: String) {
+        modelRow.updateDetail("Qwen 3.5 9B · Q5_K_M")
+        modelRow.showError(error)
+        AppLogger.log("model_download_failed", ["error": error])
     }
 
     // MARK: - Helpers
@@ -399,10 +457,11 @@ final class CompanionWindowController: NSWindowController, MCPActivityLogDelegat
 
 // MARK: - SetupRow
 
-final class SetupRow: NSView {
+final class SetupRow: AppearanceAwareView {
     private let stepLabel = NSTextField(labelWithString: "")
     private let titleLabel = NSTextField(labelWithString: "")
     private let detailLabel = NSTextField(labelWithString: "")
+    private let errorLabel = NSTextField(wrappingLabelWithString: "")
     private let actionButton: NSButton
     private let checkmark = NSTextField(labelWithString: "✓")
     private var onAction: (() -> Void)?
@@ -412,8 +471,7 @@ final class SetupRow: NSView {
         self.onAction = action
         super.init(frame: .zero)
 
-        wantsLayer = true
-        layer?.backgroundColor = NSColor.setupStepBg.cgColor
+        setDynamicBackground(.setupStepBg)
         layer?.cornerRadius = 6
         translatesAutoresizingMaskIntoConstraints = false
 
@@ -442,9 +500,16 @@ final class SetupRow: NSView {
         checkmark.translatesAutoresizingMaskIntoConstraints = false
         checkmark.isHidden = true
 
+        errorLabel.font = .detailText
+        errorLabel.textColor = .statusERRFg
+        errorLabel.translatesAutoresizingMaskIntoConstraints = false
+        errorLabel.isHidden = true
+        errorLabel.maximumNumberOfLines = 3
+
         addSubview(stepLabel)
         addSubview(titleLabel)
         addSubview(detailLabel)
+        addSubview(errorLabel)
         addSubview(actionButton)
         addSubview(checkmark)
 
@@ -459,7 +524,12 @@ final class SetupRow: NSView {
 
             detailLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
             detailLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),
-            detailLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Spacing.md),
+            detailLabel.trailingAnchor.constraint(lessThanOrEqualTo: actionButton.leadingAnchor, constant: -Spacing.md),
+
+            errorLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            errorLabel.topAnchor.constraint(equalTo: detailLabel.bottomAnchor, constant: 2),
+            errorLabel.trailingAnchor.constraint(lessThanOrEqualTo: actionButton.leadingAnchor, constant: -Spacing.md),
+            errorLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Spacing.md),
 
             actionButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Spacing.lg),
             actionButton.centerYAnchor.constraint(equalTo: centerYAnchor),
@@ -467,17 +537,37 @@ final class SetupRow: NSView {
             checkmark.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Spacing.lg),
             checkmark.centerYAnchor.constraint(equalTo: centerYAnchor),
         ])
+
+        // When no error, detail is the bottom anchor
+        detailBottomConstraint = detailLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Spacing.md)
+        detailBottomConstraint?.priority = .defaultHigh
+        detailBottomConstraint?.isActive = true
     }
+
+    private var detailBottomConstraint: NSLayoutConstraint?
 
     required init?(coder: NSCoder) { fatalError("not in IB") }
 
     func setComplete(_ complete: Bool) {
         actionButton.isHidden = complete
         checkmark.isHidden = !complete
+        if complete { clearError() }
     }
 
     func updateDetail(_ text: String) {
         detailLabel.stringValue = text
+    }
+
+    func showError(_ message: String) {
+        errorLabel.stringValue = message
+        errorLabel.isHidden = false
+        detailBottomConstraint?.isActive = false
+    }
+
+    func clearError() {
+        errorLabel.stringValue = ""
+        errorLabel.isHidden = true
+        detailBottomConstraint?.isActive = true
     }
 
     @objc private func buttonClicked() {

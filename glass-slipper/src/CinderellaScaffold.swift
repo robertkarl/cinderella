@@ -48,66 +48,73 @@ extension NSColor {
 
 // MARK: - Color tokens
 //
-// Mapped 1:1 from the React mock's Tailwind palette so visual parity is
-// possible to verify with a screenshot diff. Light-mode only for v0.
-// Adapt to dynamic appearance later by swapping these for NSColor sets.
+// Mapped 1:1 from the React mock's Tailwind palette. Uses NSColor(name:)
+// dynamic providers so colors adapt to system light/dark appearance.
 
 extension NSColor {
+    /// Helper: create a dynamic color that resolves per-appearance.
+    private static func dynamic(light: UInt32, dark: UInt32) -> NSColor {
+        NSColor(name: nil) { appearance in
+            let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            return isDark ? NSColor(hex: dark) : NSColor(hex: light)
+        }
+    }
+
     // Surfaces
-    static let surfacePrimary    = NSColor(hex: 0xFFFFFF)               // white
-    static let surfaceMuted      = NSColor(hex: 0xFAFAFA)               // zinc-50  (thought row, hover)
-    static let surfaceHeader     = NSColor(hex: 0xF4F4F5)               // zinc-100 (input header bar)
-    static let surfaceDiagnosis  = NSColor(hex: 0xECFDF5)               // emerald-50
-    static let surfaceDiagWarn   = NSColor(hex: 0xFFFBEB)               // amber-50
-    static let surfaceDiagFail   = NSColor(hex: 0xFEF2F2)               // red-50
+    static let surfacePrimary    = dynamic(light: 0xFFFFFF, dark: 0x1C1C1E)
+    static let surfaceMuted      = dynamic(light: 0xFAFAFA, dark: 0x2C2C2E)
+    static let surfaceHeader     = dynamic(light: 0xF4F4F5, dark: 0x3A3A3C)
+    static let surfaceDiagnosis  = dynamic(light: 0xECFDF5, dark: 0x0D2818)
+    static let surfaceDiagWarn   = dynamic(light: 0xFFFBEB, dark: 0x2D1F00)
+    static let surfaceDiagFail   = dynamic(light: 0xFEF2F2, dark: 0x2D0F0F)
 
     // Text
-    static let textPrimary       = NSColor(hex: 0x18181B)               // zinc-900
-    static let textSecondary     = NSColor(hex: 0x71717A)               // zinc-500
-    static let textQuiet         = NSColor(hex: 0xA1A1AA)               // zinc-400
+    static let textPrimary       = dynamic(light: 0x18181B, dark: 0xF4F4F5)
+    static let textSecondary     = dynamic(light: 0x71717A, dark: 0xA1A1AA)
+    static let textQuiet         = dynamic(light: 0xA1A1AA, dark: 0x71717A)
 
     // Lines & accents
-    static let separatorHairline = NSColor(hex: 0xF4F4F5)               // zinc-100
-    static let accentDiagnosis   = NSColor(hex: 0x10B981)               // emerald-500 (left border)
-    static let accentDiagLabel   = NSColor(hex: 0x047857)               // emerald-700 (DIAGNOSIS text)
-    static let accentDiagWarn    = NSColor(hex: 0xF59E0B)               // amber-500
-    static let accentDiagWarnLbl = NSColor(hex: 0x92400E)               // amber-800
-    static let accentDiagFail    = NSColor(hex: 0xEF4444)               // red-500
-    static let accentDiagFailLbl = NSColor(hex: 0xB91C1C)               // red-700
-    static let accentProgress    = NSColor(hex: 0x3B82F6)               // blue-500
+    static let separatorHairline = dynamic(light: 0xF4F4F5, dark: 0x3A3A3C)
+    static let accentDiagnosis   = dynamic(light: 0x10B981, dark: 0x34D399)
+    static let accentDiagLabel   = dynamic(light: 0x047857, dark: 0x6EE7B7)
+    static let accentDiagWarn    = dynamic(light: 0xF59E0B, dark: 0xFBBF24)
+    static let accentDiagWarnLbl = dynamic(light: 0x92400E, dark: 0xFDE68A)
+    static let accentDiagFail    = dynamic(light: 0xEF4444, dark: 0xF87171)
+    static let accentDiagFailLbl = dynamic(light: 0xB91C1C, dark: 0xFCA5A5)
+    static let accentProgress    = dynamic(light: 0x3B82F6, dark: 0x60A5FA)
 
     // Memory pressure banners
-    static let surfaceWarningBanner = NSColor(hex: 0xFEFCE8)       // yellow-50
-    static let accentWarningBanner  = NSColor(hex: 0xEAB308)       // yellow-500
-    static let textWarningBanner    = NSColor(hex: 0x713F12)       // yellow-900
-    static let surfaceCriticalBanner = NSColor(hex: 0xFEF2F2)      // red-50
-    static let accentCriticalBanner  = NSColor(hex: 0xEF4444)      // red-500
-    static let textCriticalBanner    = NSColor(hex: 0x7F1D1D)      // red-900
-    static let surfacePromotionBanner = NSColor(hex: 0xECFDF5)     // emerald-50
-    static let accentPromotionBanner  = NSColor(hex: 0x10B981)     // emerald-500
-    static let textPromotionBanner    = NSColor(hex: 0x064E3B)     // emerald-900
+    static let surfaceWarningBanner  = dynamic(light: 0xFEFCE8, dark: 0x2D2800)
+    static let accentWarningBanner   = dynamic(light: 0xEAB308, dark: 0xFACC15)
+    static let textWarningBanner     = dynamic(light: 0x713F12, dark: 0xFEF08A)
+    static let surfaceCriticalBanner = dynamic(light: 0xFEF2F2, dark: 0x2D0F0F)
+    static let accentCriticalBanner  = dynamic(light: 0xEF4444, dark: 0xF87171)
+    static let textCriticalBanner    = dynamic(light: 0x7F1D1D, dark: 0xFCA5A5)
+    static let surfacePromotionBanner = dynamic(light: 0xECFDF5, dark: 0x0D2818)
+    static let accentPromotionBanner  = dynamic(light: 0x10B981, dark: 0x34D399)
+    static let textPromotionBanner    = dynamic(light: 0x064E3B, dark: 0xA7F3D0)
 
     // Status pill — backgrounds
-    static let statusOKBg        = NSColor(hex: 0xD1FAE5)               // emerald-100
-    static let statusERRBg       = NSColor(hex: 0xFEE2E2)               // red-100
-    static let statusWARNBg      = NSColor(hex: 0xFEF3C7)               // yellow-100
-    static let statusINFOBg      = NSColor(hex: 0xDBEAFE)               // blue-100
+    static let statusOKBg        = dynamic(light: 0xD1FAE5, dark: 0x064E3B)
+    static let statusERRBg       = dynamic(light: 0xFEE2E2, dark: 0x7F1D1D)
+    static let statusWARNBg      = dynamic(light: 0xFEF3C7, dark: 0x713F12)
+    static let statusINFOBg      = dynamic(light: 0xDBEAFE, dark: 0x1E3A5F)
 
     // Status pill — text
-    static let statusOKFg        = NSColor(hex: 0x047857)               // emerald-700
-    static let statusERRFg       = NSColor(hex: 0xB91C1C)               // red-700
-    static let statusWARNFg      = NSColor(hex: 0x854D0E)               // yellow-800
-    static let statusINFOFg      = NSColor(hex: 0x1D4ED8)               // blue-700
+    static let statusOKFg        = dynamic(light: 0x047857, dark: 0x6EE7B7)
+    static let statusERRFg       = dynamic(light: 0xB91C1C, dark: 0xFCA5A5)
+    static let statusWARNFg      = dynamic(light: 0x854D0E, dark: 0xFDE68A)
+    static let statusINFOFg      = dynamic(light: 0x1D4ED8, dark: 0x93C5FD)
 
     // MCP Companion — savings
-    static let savingsGreen       = NSColor(hex: 0x4ADE80)               // green-400 (big $ number)
-    static let savingsGreenMuted  = NSColor(hex: 0xBBF7D0)               // green-200 (savings bg)
-    static let companionBlue      = NSColor(hex: 0x60A5FA)               // blue-400 (delegated count)
-    static let companionPurple    = NSColor(hex: 0xC084FC)               // purple-400 (tokens count)
-    static let setupStepBg        = NSColor(hex: 0xF8FAFC)               // slate-50 (setup row bg)
-    static let setupCheckmark     = NSColor(hex: 0x22C55E)               // green-500 (done checkmark)
-    static let setupActionBg      = NSColor(hex: 0x3B82F6)               // blue-500 (Install button bg)
-    static let setupActionFg      = NSColor(hex: 0xFFFFFF)               // white (Install button text)
+    static let savingsGreen       = dynamic(light: 0x4ADE80, dark: 0x4ADE80)
+    static let savingsGreenMuted  = dynamic(light: 0xBBF7D0, dark: 0x166534)
+    static let companionBlue      = dynamic(light: 0x60A5FA, dark: 0x60A5FA)
+    static let companionPurple    = dynamic(light: 0xC084FC, dark: 0xC084FC)
+    static let setupStepBg        = dynamic(light: 0xF8FAFC, dark: 0x2C2C2E)
+    static let setupCheckmark     = dynamic(light: 0x22C55E, dark: 0x4ADE80)
+    static let setupActionBg      = dynamic(light: 0x3B82F6, dark: 0x3B82F6)
+    static let setupActionFg      = dynamic(light: 0xFFFFFF, dark: 0xFFFFFF)
 }
 
 // MARK: - Typography tokens
@@ -245,6 +252,28 @@ final class HairlineDivider: NSView {
         heightAnchor.constraint(equalToConstant: 1).isActive = true
     }
     required init?(coder: NSCoder) { fatalError("not in IB") }
+}
+
+// MARK: - Appearance-aware background view
+
+/// NSView subclass that re-applies its dynamic background color when
+/// the system appearance changes (light ↔ dark). Use for any long-lived
+/// container whose layer background must stay in sync.
+class AppearanceAwareView: NSView {
+    private var dynamicBgColor: NSColor?
+
+    func setDynamicBackground(_ color: NSColor) {
+        dynamicBgColor = color
+        wantsLayer = true
+        layer?.backgroundColor = color.cgColor
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        if let color = dynamicBgColor {
+            layer?.backgroundColor = color.cgColor
+        }
+    }
 }
 
 // MARK: - Flipped document view (top-aligned scroll content)
@@ -878,9 +907,8 @@ final class SpineViewController: NSViewController {
     private(set) var lastAddedView: NSView?
 
     override func loadView() {
-        let root = NSView(frame: NSRect(x: 0, y: 0, width: 720, height: 720))
-        root.wantsLayer = true
-        root.layer?.backgroundColor = NSColor.surfacePrimary.cgColor
+        let root = AppearanceAwareView(frame: NSRect(x: 0, y: 0, width: 720, height: 720))
+        root.setDynamicBackground(.surfacePrimary)
         view = root
 
         scrollView.translatesAutoresizingMaskIntoConstraints = false

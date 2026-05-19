@@ -22,6 +22,7 @@
 		EE000003 /* LlamaServerManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000004 /* LlamaServerManagerTests.swift */; };
 		FF000001 /* CodexMCPInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF000002 /* CodexMCPInstaller.swift */; };
 		FF000003 /* CodexMCPInstallerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF000004 /* CodexMCPInstallerTests.swift */; };
+		GG000001 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = GG000002 /* AppLogger.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,6 +55,7 @@
 		EE000004 /* LlamaServerManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaServerManagerTests.swift; sourceTree = "<group>"; };
 		FF000002 /* CodexMCPInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexMCPInstaller.swift; sourceTree = "<group>"; };
 		FF000004 /* CodexMCPInstallerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexMCPInstallerTests.swift; sourceTree = "<group>"; };
+		GG000002 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +91,7 @@
 				CC000006 /* CompanionWindowController.swift */,
 				EE000002 /* LlamaServerManager.swift */,
 				A200000A /* AppDelegate.swift */,
+				GG000002 /* AppLogger.swift */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -246,6 +249,7 @@
 				CC000003 /* MCPActivityLog.swift in Sources */,
 				CC000005 /* CompanionWindowController.swift in Sources */,
 				EE000001 /* LlamaServerManager.swift in Sources */,
+				GG000001 /* AppLogger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

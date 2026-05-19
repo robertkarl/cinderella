@@ -40,16 +40,7 @@ final class LlamaServerManager {
     }
 
     static func modelFilePath() -> String {
-        let home = NSHomeDirectory()
-        let appSupportPath = home + "/Library/Application Support/Glass Slipper/Models/Qwen3.5-9B-Q5_K_M.gguf"
-        if FileManager.default.fileExists(atPath: appSupportPath) {
-            return appSupportPath
-        }
-        let legacyPath = home + "/models/Qwen3.5-9B-Q5_K_M.gguf"
-        if FileManager.default.fileExists(atPath: legacyPath) {
-            return legacyPath
-        }
-        return appSupportPath
+        NSHomeDirectory() + "/Library/Application Support/Glass Slipper/Models/Qwen3.5-9B-Q5_K_M.gguf"
     }
 
     static func buildArguments(modelPath: String, port: UInt16 = 8787) -> [String] {
