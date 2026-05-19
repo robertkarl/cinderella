@@ -264,12 +264,11 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
 
 /// Run with a remote API — no local server.
 async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
-    // Load manifest to get ctx_size even in remote mode
-    let manifest = crate::model_manifest::find_manifest()
-        .context("Failed to load model manifest")?;
-    let default_model = manifest.default_model()
-        .context("No default model in manifest")?;
-    let ctx_size = default_model.ctx_size;
+    // Load manifest to get ctx_size even in remote mode; fall back to 8192 if missing
+    let ctx_size = crate::model_manifest::find_manifest()
+        .ok()
+        .and_then(|m| m.default_model().ok().map(|d| d.ctx_size))
+        .unwrap_or(8192);
 
     // Prompt mode
     if let Some(ref prompt) = cfg.prompt {
