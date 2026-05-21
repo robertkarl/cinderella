@@ -28,6 +28,10 @@ pub struct OrchestratorConfig {
     pub prompt: Option<String>,
     /// Output format: true for JSON-lines, false for plain text.
     pub format_json: bool,
+    /// Max consecutive tool failures before stopping.
+    pub max_tool_failures: Option<u32>,
+    /// Skip all permission checks (auto-approve every tool call).
+    pub skip_permissions: bool,
 }
 
 /// Run the full orchestration flow.
@@ -93,6 +97,8 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
             prompt,
             cfg.format_json,
             active_model.ctx_size,
+            cfg.max_tool_failures,
+            cfg.skip_permissions,
         )
         .await;
         server.stop().await;
@@ -157,6 +163,8 @@ pub async fn run(cfg: OrchestratorConfig) -> Result<()> {
         agent_tx.clone(),
         cmd_rx,
         Some(tok_tx),
+        cfg.max_tool_failures,
+        cfg.skip_permissions,
     );
 
     // Health event handler — reacts to MemoryMonitor state transitions
@@ -280,6 +288,8 @@ async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
             prompt,
             cfg.format_json,
             ctx_size,
+            cfg.max_tool_failures,
+            cfg.skip_permissions,
         )
         .await;
     }
@@ -315,6 +325,8 @@ async fn run_remote(api_url: &str, cfg: &OrchestratorConfig) -> Result<()> {
         agent_tx,
         cmd_rx,
         None,
+        cfg.max_tool_failures,
+        cfg.skip_permissions,
     );
 
     tui::run(agent_rx, cmd_tx, &project_name, initial_status).await?;
@@ -334,8 +346,10 @@ async fn run_prompt(
     prompt: &str,
     format_json: bool,
     ctx_size: u32,
+    max_tool_failures: Option<u32>,
+    skip_permissions: bool,
 ) -> Result<()> {
-    let mut agent = Agent::new(api_url, project_dir, ctx_size, model_name, safety_profile, format_json, None);
+    let mut agent = Agent::new(api_url, project_dir, ctx_size, model_name, safety_profile, format_json, None, max_tool_failures, skip_permissions);
 
     if format_json {
         // Emit hardware info before agent starts
@@ -375,10 +389,12 @@ fn spawn_agent_loop(
     agent_tx: mpsc::Sender<crate::agent::AgentEvent>,
     mut cmd_rx: mpsc::Receiver<TuiCommand>,
     tok_per_sec_tx: Option<tokio::sync::watch::Sender<Option<f64>>>,
+    max_tool_failures: Option<u32>,
+    skip_permissions: bool,
 ) -> tokio::task::JoinHandle<()> {
     let api_url = api_url.to_string();
     tokio::spawn(async move {
-        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name, safety_profile, false, tok_per_sec_tx);
+        let mut agent = Agent::new(&api_url, project_dir, ctx_size, &model_name, safety_profile, false, tok_per_sec_tx, max_tool_failures, skip_permissions);
 
         while let Some(cmd) = cmd_rx.recv().await {
             match cmd {

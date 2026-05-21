@@ -55,6 +55,15 @@ struct Cli {
     /// Output format. Use "json" for JSON-lines output (for machine consumption).
     #[arg(long, default_value = "text")]
     format: String,
+
+    /// Max consecutive tool failures before stopping (default: 3).
+    #[arg(long)]
+    max_tool_failures: Option<u32>,
+
+    /// Skip all permission checks (auto-approve every tool call).
+    /// Only use in sandboxed/containerized environments.
+    #[arg(long)]
+    dangerously_skip_permissions: bool,
 }
 
 #[tokio::main]
@@ -107,6 +116,8 @@ async fn main() -> Result<()> {
             safety_profile,
             prompt: cli.prompt,
             format_json,
+            max_tool_failures: cli.max_tool_failures,
+            skip_permissions: cli.dangerously_skip_permissions,
         };
         return orchestrator::run(cfg).await;
     }
@@ -128,6 +139,8 @@ async fn main() -> Result<()> {
         safety_profile,
         prompt: cli.prompt,
         format_json,
+        max_tool_failures: cli.max_tool_failures,
+        skip_permissions: cli.dangerously_skip_permissions,
     };
 
     orchestrator::run(cfg).await

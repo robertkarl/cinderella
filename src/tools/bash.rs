@@ -138,7 +138,7 @@ pub fn classify_command(command: &str, project_dir: &Path, profile: SafetyProfil
 }
 
 /// Execute a bash command (after classification/approval).
-pub async fn execute(args: &Value, project_dir: &Path, profile: SafetyProfile) -> ToolResult {
+pub async fn execute(args: &Value, project_dir: &Path, profile: SafetyProfile, skip_permissions: bool) -> ToolResult {
     let command = match args.get("command").and_then(|v| v.as_str()) {
         Some(c) => c,
         None => {
@@ -149,34 +149,36 @@ pub async fn execute(args: &Value, project_dir: &Path, profile: SafetyProfile) -
         }
     };
 
-    // Classify the command
-    let classification = classify_command(command, project_dir, profile);
+    if !skip_permissions {
+        // Classify the command
+        let classification = classify_command(command, project_dir, profile);
 
-    match classification.policy {
-        CommandPolicy::Deny(caps) => {
-            let cap_names: Vec<String> = caps.iter().map(|c| c.to_string()).collect();
-            return ToolResult {
-                output: format!(
-                    "Command denied. Requires: {}",
-                    cap_names.join(", ")
-                ),
-                success: false,
-            };
+        match classification.policy {
+            CommandPolicy::Deny(caps) => {
+                let cap_names: Vec<String> = caps.iter().map(|c| c.to_string()).collect();
+                return ToolResult {
+                    output: format!(
+                        "Command denied. Requires: {}",
+                        cap_names.join(", ")
+                    ),
+                    success: false,
+                };
+            }
+            CommandPolicy::Ask(caps) => {
+                // TODO: wire TUI confirmation flow for interactive approval.
+                // Until then, default to deny for safety.
+                let cap_names: Vec<String> = caps.iter().map(|c| c.to_string()).collect();
+                return ToolResult {
+                    output: format!(
+                        "Command requires confirmation: {}. \
+                         Interactive approval not yet implemented — command denied.",
+                        cap_names.join(", ")
+                    ),
+                    success: false,
+                };
+            }
+            CommandPolicy::Allow => {}
         }
-        CommandPolicy::Ask(caps) => {
-            // TODO: wire TUI confirmation flow for interactive approval.
-            // Until then, default to deny for safety.
-            let cap_names: Vec<String> = caps.iter().map(|c| c.to_string()).collect();
-            return ToolResult {
-                output: format!(
-                    "Command requires confirmation: {}. \
-                     Interactive approval not yet implemented — command denied.",
-                    cap_names.join(", ")
-                ),
-                success: false,
-            };
-        }
-        CommandPolicy::Allow => {}
     }
 
     let result = timeout(

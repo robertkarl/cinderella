@@ -12,7 +12,7 @@ const MAX_TOOL_RESULT_CHARS: usize = 8000;
 const SUMMARIZE_AFTER_TURNS: usize = 10;
 const CONTEXT_WARN_PERCENT: f64 = 0.8;
 const MAX_RETRY_ON_PARSE_FAILURE: u32 = 2;
-const MAX_CONSECUTIVE_TOOL_FAILURES: u32 = 3;
+const DEFAULT_MAX_CONSECUTIVE_TOOL_FAILURES: u32 = 3;
 const MAX_AGENT_ITERATIONS: u32 = 25;
 
 /// Events the agent sends to the TUI.
@@ -313,6 +313,8 @@ pub struct Agent {
     safety_profile: SafetyProfile,
     step_tracker: StepTracker,
     tok_per_sec_tx: Option<tokio::sync::watch::Sender<Option<f64>>>,
+    max_tool_failures: u32,
+    skip_permissions: bool,
 }
 
 impl Agent {
@@ -324,6 +326,8 @@ impl Agent {
         safety_profile: SafetyProfile,
         step_tracking: bool,
         tok_per_sec_tx: Option<tokio::sync::watch::Sender<Option<f64>>>,
+        max_tool_failures: Option<u32>,
+        skip_permissions: bool,
     ) -> Self {
         let client = LlmClient::new(api_url, model_name);
 
@@ -343,6 +347,8 @@ impl Agent {
             safety_profile,
             step_tracker: StepTracker::new(step_tracking),
             tok_per_sec_tx,
+            max_tool_failures: max_tool_failures.unwrap_or(DEFAULT_MAX_CONSECUTIVE_TOOL_FAILURES),
+            skip_permissions,
         }
     }
 
@@ -467,7 +473,7 @@ impl Agent {
             }
         }
 
-        if *consecutive_failures >= MAX_CONSECUTIVE_TOOL_FAILURES {
+        if *consecutive_failures >= self.max_tool_failures {
             let bail_msg = format!(
                 "{} consecutive tool failures. Stopping to avoid an infinite loop. \
                  Re-read the error messages above and try a different approach, \
@@ -518,7 +524,7 @@ impl Agent {
         });
 
         let result =
-            crate::tools::execute(&tc.function.name, &args, &self.project_dir, self.safety_profile)
+            crate::tools::execute(&tc.function.name, &args, &self.project_dir, self.safety_profile, self.skip_permissions)
                 .await;
 
         let display_output = truncate_for_display(&result.output, 5);
